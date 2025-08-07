@@ -33,6 +33,22 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
     const apiToken = "76b4jfL5SsXI48nS";
 
     try {
+      // --- PASSO DE DIAGNÓSTICO ---
+      addDebugLog('[IA] Verificando buckets existentes no Supabase...');
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      if (listError) {
+        addDebugLog(`[IA] ERRO ao listar buckets: ${listError.message}`);
+      } else {
+        const bucketNames = buckets.map(b => b.name).join(', ');
+        addDebugLog(`[IA] Buckets encontrados: [${bucketNames || 'Nenhum'}]`);
+        if (!buckets.some(b => b.name === 'image-references')) {
+            addDebugLog("[IA] ⚠️ AVISO: O bucket 'image-references' não foi encontrado na lista de buckets visíveis.");
+        } else {
+            addDebugLog("[IA] ✅ SUCESSO: O bucket 'image-references' está visível para a aplicação.");
+        }
+      }
+      // --- FIM DO PASSO DE DIAGNÓSTICO ---
+
       const encodedPrompt = encodeURIComponent(prompt);
       
       if (characterImage && useCharacter) {
