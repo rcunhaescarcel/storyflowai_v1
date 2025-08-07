@@ -6,6 +6,7 @@ import { Loader2, Wand2, UserSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { resizeImage } from '@/lib/imageUtils';
 
 interface ImageGenerationModalProps {
   isOpen: boolean;
@@ -34,9 +35,14 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
     try {
       const encodedPrompt = encodeURIComponent(prompt);
       
-      if (characterImage && useCharacter && characterImagePreview) {
+      if (characterImage && useCharacter) {
+        // Resize the image to a smaller size to reduce URL length
+        addDebugLog('[IA] Redimensionando imagem de referência para a API...');
+        const resizedForApi = await resizeImage(characterImage, 512, 512);
+        addDebugLog('[IA] Imagem redimensionada com sucesso.');
+
         const model = 'kontext';
-        const encodedImageURL = encodeURIComponent(characterImagePreview);
+        const encodedImageURL = encodeURIComponent(resizedForApi);
         const seed = Math.floor(Math.random() * 1000000);
         const width = 1280;
         const height = 720;
@@ -50,7 +56,7 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
       }
 
       // Log para depuração na UI
-      addDebugLog(`[IA] Gerando imagem com a URL: ${targetUrl}`);
+      addDebugLog(`[IA] Gerando imagem com a URL (primeiros 200 caracteres): ${targetUrl.substring(0, 200)}...`);
 
       const response = await fetch(targetUrl);
 
