@@ -6,7 +6,7 @@ import { Loader2, Wand2, UserSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { resizeImage } from '@/lib/imageUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ImageGenerationModalProps {
   isOpen: boolean;
@@ -36,13 +36,37 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
       const encodedPrompt = encodeURIComponent(prompt);
       
       if (characterImage && useCharacter) {
-        // Resize the image to a smaller size to reduce URL length
-        addDebugLog('[IA] Redimensionando imagem de referência para a API...');
-        const resizedForApi = await resizeImage(characterImage, 512, 512);
-        addDebugLog('[IA] Imagem redimensionada com sucesso.');
+        addDebugLog('[IA] Fazendo upload da imagem de referência para o Supabase Storage...');
+        
+        const fileExt = characterImage.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `public/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('image-references')
+          .upload(filePath, characterImage);
+
+        if (uploadError) {
+          addDebugLog(`[IA] ERRO no upload para o Supabase: ${uploadError.message}`);
+          toast.error("Falha no upload. Verifique se o bucket 'image-references' existe e é público.");
+          throw new Error(`Falha ao fazer upload da imagem de referência: ${uploadError.message}`);
+        }
+        addDebugLog('[IA] Upload concluído com sucesso.');
+
+        const { data: urlData } = supabase.storage
+          .from('image-references')
+          .getPublicUrl(filePath);
+
+        if (!urlData?.publicUrl) {
+            addDebugLog('[IA] ERRO: Não foi possível obter a URL pública da imagem.');
+            throw new Error('Não foi possível obter a URL pública da imagem.');
+        }
+        
+        const publicUrl = urlData.publicUrl;
+        addDebugLog(`[IA] URL pública obtida: ${publicUrl}`);
 
         const model = 'kontext';
-        const encodedImageURL = encodeURIComponent(resizedForApi);
+        const encodedImageURL = encodeURIComponent(publicUrl);
         const seed = Math.floor(Math.random() * 1000000);
         const width = 1280;
         const height = 720;
@@ -55,14 +79,13 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}&token=${apiToken}`;
       }
 
-      // Log para depuração na UI
-      addDebugLog(`[IA] Gerando imagem com a URL (primeiros 200 caracteres): ${targetUrl.substring(0, 200)}...`);
+      addDebugLog(`[IA] Gerando imagem com a URL: ${targetUrl.substring(0, 200)}...`);
 
       const response = await fetch(targetUrl);
 
       if (!response.ok) {
         const errorBody = await response.text();
-        addDebugLog(`[IA] ERRO: ${errorBody}`);
+        addDebugLog(`[IA] ERRO na API de imagem: ${errorBody}`);
         throw new Error(`A geração da imagem falhou com o status: ${response.status}`);
       }
 
@@ -75,8 +98,9 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
       onClose();
     } catch (error) {
       console.error("Image generation failed:", error);
-      toast.error("Falha ao gerar a imagem. Verifique o console para mais detalhes.");
-      addDebugLog(`[IA] Falha na requisição: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
+      toast.error(`Falha ao gerar a imagem: ${errorMessage}`);
+      addDebugLog(`[IA] Falha na requisição: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
