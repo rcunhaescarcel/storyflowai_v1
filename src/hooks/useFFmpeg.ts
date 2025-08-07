@@ -242,8 +242,8 @@ export const useFFmpeg = () => {
         if (scene.fadeOutDuration > 0) videoFilter += `,fade=t=out:st=${sceneDuration - scene.fadeOutDuration}:d=${scene.fadeOutDuration}`;
         
         if (scene.srtFile || scene.subtitle) {
-          addDebugLog(`🔤 Aplicando legenda com fonte Roboto...`);
-          videoFilter += `,ass=filename=subtitle_${i}.ass:fontsdir=/fonts`;
+          addDebugLog(`🔤 Aplicando legenda com fonte Roboto usando o filtro 'subtitles'...`);
+          videoFilter += `,subtitles=filename=subtitle_${i}.ass:fontsdir=/fonts`;
         }
 
         cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-pix_fmt', 'yuv420p');
