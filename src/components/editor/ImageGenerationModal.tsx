@@ -34,7 +34,6 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
       const encodedPrompt = encodeURIComponent(prompt);
       
       if (characterImage && useCharacter && characterImagePreview) {
-        // Estrutura exata da URL que funciona para o modelo 'kontext'
         const model = 'kontext';
         const encodedImageURL = encodeURIComponent(characterImagePreview);
         const seed = Math.floor(Math.random() * 1000000);
@@ -45,10 +44,13 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=${width}&height=${height}&seed=${seed}&model=${model}&image=${encodedImageURL}&enhance=true&referrer=${referrer}&token=${apiToken}`;
         
       } else {
-        // Usa o modelo 'flux' para geração padrão
         const model = 'flux';
         targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}&token=${apiToken}`;
       }
+
+      // Log para depuração
+      console.log("Gerando imagem com a seguinte URL:", targetUrl);
+      toast.info("URL de geração registrada no console do navegador para depuração.");
 
       const response = await fetch(targetUrl);
 
@@ -70,7 +72,6 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
       toast.error("Falha ao gerar a imagem. Verifique o console para mais detalhes.");
     } finally {
       setIsLoading(false);
-      setPrompt('');
     }
   };
 
