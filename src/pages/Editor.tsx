@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -14,12 +13,10 @@ import { useNavigate } from "react-router-dom";
 import { 
   Plus, 
   Upload, 
-  Play, 
   Trash2, 
   Video, 
   ArrowLeft,
   Settings,
-  FileText,
   Music,
   Image as ImageIcon,
   ZoomIn,
@@ -27,10 +24,11 @@ import {
   FileVideo,
   Clock,
   Download,
-  Globe
+  Globe,
+  Palette
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Scene, useFFmpeg } from "@/hooks/useFFmpeg";
+import { Scene, useFFmpeg, SubtitleStyle } from "@/hooks/useFFmpeg";
 
 const Editor = () => {
   const navigate = useNavigate();
@@ -39,6 +37,12 @@ const Editor = () => {
   const [globalSrtFile, setGlobalSrtFile] = useState<File | null>(null);
   const [backgroundMusic, setBackgroundMusic] = useState<File | null>(null);
   
+  // Global Subtitle Styles
+  const [fontFamily, setFontFamily] = useState("Arial");
+  const [fontSize, setFontSize] = useState(24);
+  const [fontColor, setFontColor] = useState("#ffffff");
+  const [shadowColor, setShadowColor] = useState("#000000");
+
   const { 
     renderVideo, 
     isProcessing, 
@@ -52,11 +56,6 @@ const Editor = () => {
   const addNewScene = () => {
     const newScene: Scene = {
       id: crypto.randomUUID(),
-      subtitle: "",
-      fontFamily: "Arial",
-      fontSize: 24,
-      fontColor: "#ffffff",
-      shadowColor: "#000000",
       effect: "fade",
       zoomEnabled: false,
       zoomIntensity: 20,
@@ -133,7 +132,8 @@ const Editor = () => {
     try {
       setVideoUrl(null);
       clearDebugLogs();
-      const result = await renderVideo(scenes, globalSrtFile, backgroundMusic);
+      const subtitleStyle: SubtitleStyle = { fontFamily, fontSize, fontColor, shadowColor };
+      const result = await renderVideo(scenes, globalSrtFile, backgroundMusic, subtitleStyle);
       if (result) {
         setVideoUrl(result);
         toast({ title: "Sucesso!", description: "Vídeo renderizado com sucesso" });
@@ -239,30 +239,6 @@ const Editor = () => {
                       </div>
                     </div>
                     
-                    {/* Manual Subtitle */}
-                    <div>
-                      <Label className="text-sm font-medium mb-2 flex items-center gap-2"><FileText className="w-4 h-4" />Legenda (por cena)</Label>
-                      <Textarea
-                        placeholder={globalSrtFile ? "Legenda global carregada, este texto será ignorado." : "Digite a legenda para esta cena específica..."}
-                        value={scene.subtitle}
-                        onChange={(e) => updateScene(scene.id, { subtitle: e.target.value })}
-                        className="min-h-[80px] bg-white border-gray-300"
-                        disabled={!!globalSrtFile}
-                      />
-                      {globalSrtFile && <p className="text-xs text-muted-foreground mt-1">Para usar legendas por cena, remova a legenda global no painel à direita.</p>}
-                    </div>
-
-                    {/* Subtitle Styling */}
-                    <div className="border-t border-gray-200 pt-6">
-                      <Label className="text-sm font-medium mb-4 flex items-center gap-2"><Settings className="w-4 h-4" />Personalização da Legenda</Label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div><Label className="text-xs text-gray-600 mb-1">Fonte</Label><Select value={scene.fontFamily} onValueChange={(value) => updateScene(scene.id, { fontFamily: value })}><SelectTrigger className="bg-white border-gray-300"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Arial">Arial</SelectItem><SelectItem value="Helvetica">Helvetica</SelectItem><SelectItem value="Times New Roman">Times New Roman</SelectItem><SelectItem value="Courier New">Courier New</SelectItem><SelectItem value="Verdana">Verdana</SelectItem><SelectItem value="Georgia">Georgia</SelectItem><SelectItem value="Impact">Impact</SelectItem><SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem></SelectContent></Select></div>
-                        <div><Label className="text-xs text-gray-600 mb-1">Tamanho</Label><Input type="number" min="12" max="72" value={scene.fontSize} onChange={(e) => updateScene(scene.id, { fontSize: Number(e.target.value) })} className="bg-white border-gray-300" /></div>
-                        <div><Label className="text-xs text-gray-600 mb-1">Cor</Label><Input type="color" value={scene.fontColor} onChange={(e) => updateScene(scene.id, { fontColor: e.target.value })} className="bg-white border-gray-300" /></div>
-                        <div><Label className="text-xs text-gray-600 mb-1">Sombra</Label><Input type="color" value={scene.shadowColor} onChange={(e) => updateScene(scene.id, { shadowColor: e.target.value })} className="bg-white border-gray-300" /></div>
-                      </div>
-                    </div>
-
                     {/* Visual Effects */}
                     <div className="border-t border-gray-200 pt-6">
                       <Label className="text-sm font-medium mb-4 flex items-center gap-2"><Sparkles className="w-4 h-4" />Efeitos Visuais</Label>
@@ -282,7 +258,7 @@ const Editor = () => {
             {/* Global Settings */}
             <Card className="bg-white/80 backdrop-blur-sm border-gray-200 sticky top-24">
               <CardHeader><CardTitle className="text-lg text-gray-900 flex items-center gap-2"><Globe className="w-5 h-5" />Configurações Gerais</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 {/* Background Music */}
                 <div>
                   <Label className="text-sm font-medium mb-2 flex items-center gap-2"><Music className="w-4 h-4" />Trilha Sonora (Fundo)</Label>
@@ -290,18 +266,32 @@ const Editor = () => {
                   <Button variant="outline" size="sm" onClick={() => document.getElementById('bg-music-upload')?.click()} className="w-full bg-white hover:bg-gray-50">Selecionar Música</Button>
                   {backgroundMusic && <div className="bg-gray-100 rounded-lg p-3 mt-2"><div className="flex items-center justify-between"><div className="flex items-center gap-2 text-sm text-gray-700 truncate"><Music className="w-4 h-4 flex-shrink-0" /><span className="truncate">{backgroundMusic.name}</span></div><Button variant="ghost" size="sm" onClick={() => setBackgroundMusic(null)} className="h-6 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"><Trash2 className="w-3 h-3" /></Button></div></div>}
                 </div>
+                
                 {/* Global SRT */}
-                <div>
+                <div className="border-t pt-6">
                   <Label className="text-sm font-medium mb-2 flex items-center gap-2"><FileVideo className="w-4 h-4" />Legenda Global (SRT)</Label>
                   <Input type="file" accept=".srt,text/plain" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleSrtUpload(file); }} className="hidden" id="srt-upload" />
                   <Button variant="outline" size="sm" onClick={() => document.getElementById('srt-upload')?.click()} className="w-full bg-white hover:bg-gray-50">Selecionar Arquivo SRT</Button>
                   {globalSrtFile && <div className="bg-gray-100 rounded-lg p-3 mt-2"><div className="flex items-center justify-between"><div className="flex items-center gap-2 text-sm text-gray-700 truncate"><FileVideo className="w-4 h-4 flex-shrink-0" /><span className="truncate">{globalSrtFile.name}</span></div><Button variant="ghost" size="sm" onClick={() => setGlobalSrtFile(null)} className="h-6 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"><Trash2 className="w-3 h-3" /></Button></div></div>}
                 </div>
+
+                {/* Subtitle Styling */}
+                {globalSrtFile && (
+                  <div className="border-t pt-6 space-y-4">
+                    <Label className="text-sm font-medium flex items-center gap-2"><Palette className="w-4 h-4" />Estilo da Legenda</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><Label className="text-xs text-gray-600 mb-1">Fonte</Label><Select value={fontFamily} onValueChange={setFontFamily}><SelectTrigger className="bg-white border-gray-300"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Arial">Arial</SelectItem><SelectItem value="Helvetica">Helvetica</SelectItem><SelectItem value="Times New Roman">Times New Roman</SelectItem><SelectItem value="Courier New">Courier New</SelectItem><SelectItem value="Verdana">Verdana</SelectItem><SelectItem value="Georgia">Georgia</SelectItem><SelectItem value="Impact">Impact</SelectItem><SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem></SelectContent></Select></div>
+                      <div><Label className="text-xs text-gray-600 mb-1">Tamanho</Label><Input type="number" min="12" max="72" value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} className="bg-white border-gray-300" /></div>
+                      <div><Label className="text-xs text-gray-600 mb-1">Cor</Label><Input type="color" value={fontColor} onChange={(e) => setFontColor(e.target.value)} className="bg-white border-gray-300" /></div>
+                      <div><Label className="text-xs text-gray-600 mb-1">Sombra</Label><Input type="color" value={shadowColor} onChange={(e) => setShadowColor(e.target.value)} className="bg-white border-gray-300" /></div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Render Panel */}
-            <Card className="bg-white/80 backdrop-blur-sm border-gray-200 sticky top-96">
+            <Card className="bg-white/80 backdrop-blur-sm border-gray-200 sticky top-[calc(24px+var(--card-height,600px))]">
               <CardHeader><CardTitle className="text-lg text-gray-900 flex items-center gap-2"><Video className="w-5 h-5" />Renderização</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 {isProcessing && <div className="space-y-3"><div className="flex items-center justify-between text-sm"><span className="text-gray-600">Progresso</span><span className="text-gray-900 font-medium">{Math.round(progress)}%</span></div><Progress value={progress} className="h-2" /><div className="flex items-center gap-2 text-sm text-gray-600"><Clock className="w-4 h-4 animate-spin" />Processando...</div></div>}

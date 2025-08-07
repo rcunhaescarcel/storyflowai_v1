@@ -6,25 +6,15 @@ const getCompatibleFont = (font: string): string => {
   return 'Arial';
 };
 
-const createASSSubtitle = (scene: Scene, duration: number): string => {
-  const { subtitle, fontFamily, fontSize, fontColor, shadowColor } = scene;
-  const hexToBGR = (hex: string) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `&H00${b.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${r.toString(16).padStart(2, '0')}&`;
-  };
-  const compatibleFont = getCompatibleFont(fontFamily);
-  const primaryColor = hexToBGR(fontColor);
-  const outlineColor = hexToBGR(shadowColor);
-  const styleHeader = `[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,${compatibleFont},${fontSize},${primaryColor},&H000000FF,${outlineColor},&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,10,1`;
-  const eventsHeader = `[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`;
-  const dialogue = `Dialogue: 0,0:00:00.00,0:00:${duration.toString().padStart(2, '0')}.00,Default,,0,0,0,,${subtitle}`;
-  return `[Script Info]\nTitle: Viflow IA Subtitle\nScriptType: v4.00+\n\n${styleHeader}\n\n${eventsHeader}\n${dialogue}`;
-};
+export interface SubtitleStyle {
+  fontFamily: string;
+  fontSize: number;
+  fontColor: string;
+  shadowColor: string;
+}
 
-const convertSRTtoASS = (srtText: string, scene: Scene): string => {
-  const { fontFamily, fontSize, fontColor, shadowColor } = scene;
+const convertSRTtoASS = (srtText: string, style: SubtitleStyle): string => {
+  const { fontFamily, fontSize, fontColor, shadowColor } = style;
   const hexToBGR = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
@@ -58,11 +48,6 @@ export interface Scene {
   image?: File;
   imagePreview?: string;
   audio?: File; // Per-scene narration
-  subtitle: string;
-  fontFamily: string;
-  fontSize: number;
-  fontColor: string;
-  shadowColor: string;
   effect: string;
   zoomEnabled: boolean;
   zoomIntensity: number;
@@ -109,7 +94,8 @@ export const useFFmpeg = () => {
   const renderVideo = useCallback(async (
     scenes: Scene[],
     globalSrtFile: File | null,
-    backgroundMusic: File | null
+    backgroundMusic: File | null,
+    subtitleStyle: SubtitleStyle
   ): Promise<string | null> => {
     addDebugLog(`🎬 Iniciando renderização de vídeo com ${scenes.length} cenas...`);
     if (!isLoaded) {
@@ -144,10 +130,6 @@ export const useFFmpeg = () => {
         addDebugLog(`📝 Processando cena ${i + 1}/${scenes.length}`);
         if (scene.image) await ffmpeg.writeFile(`image_${i}.jpg`, await fetchFile(scene.image));
         if (scene.audio) await ffmpeg.writeFile(`audio_${i}.mp3`, await fetchFile(scene.audio));
-        if (!globalSrtFile && scene.subtitle) {
-          const assContent = createASSSubtitle(scene, sceneDuration);
-          await ffmpeg.writeFile(`subtitle_${i}.ass`, new TextEncoder().encode(assContent));
-        }
       }
 
       let concatList = '';
@@ -165,9 +147,7 @@ export const useFFmpeg = () => {
         }
         if (scene.fadeInDuration > 0) videoFilter += `,fade=t=in:st=0:d=${scene.fadeInDuration}`;
         if (scene.fadeOutDuration > 0) videoFilter += `,fade=t=out:st=${sceneDuration - scene.fadeOutDuration}:d=${scene.fadeOutDuration}`;
-        if (!globalSrtFile && scene.subtitle) {
-          videoFilter += `,subtitles=filename=subtitle_${i}.ass:fontsdir=.`;
-        }
+        
         cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-pix_fmt', 'yuv420p');
         if (scene.audio) cmd.push('-c:a', 'aac', '-shortest'); else cmd.push('-an');
         cmd.push('-y', outputName);
@@ -184,7 +164,7 @@ export const useFFmpeg = () => {
       addDebugLog('--- PASSAGEM 2: Adicionando trilha sonora e legendas globais ---');
       if (globalSrtFile) {
         const srtText = await globalSrtFile.text();
-        const assContent = convertSRTtoASS(srtText, scenes[0]); // Use first scene for style
+        const assContent = convertSRTtoASS(srtText, subtitleStyle);
         await ffmpeg.writeFile('global_subtitle.ass', new TextEncoder().encode(assContent));
         addDebugLog('✅ Legenda global convertida para ASS.');
       }
@@ -211,11 +191,10 @@ export const useFFmpeg = () => {
 
       // Audio mapping and filtering
       if (backgroundMusic) {
-        // Mix narration (if exists) with background music
         filterComplex.push('[0:a]volume=1.0[a_narration];[1:a]volume=0.5[a_music];[a_narration][a_music]amix=inputs=2:duration=first[a_out]');
         mapCmd.push('-map', '[a_out]');
       } else {
-        mapCmd.push('-map', '0:a?'); // Map narration only if it exists
+        mapCmd.push('-map', '0:a?');
       }
 
       if (filterComplex.length > 0) {

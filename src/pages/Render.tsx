@@ -13,7 +13,7 @@ import {
   AlertCircle 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useFFmpeg, Scene } from "@/hooks/useFFmpeg";
+import { useFFmpeg, Scene, SubtitleStyle } from "@/hooks/useFFmpeg";
 
 const Render = () => {
   const location = useLocation();
@@ -55,8 +55,16 @@ const Render = () => {
       setStatus('processing');
       setCurrentStep('Iniciando renderização...');
       
+      // Default subtitle style for rendering when not coming from editor
+      const subtitleStyle: SubtitleStyle = {
+        fontFamily: 'Arial',
+        fontSize: 24,
+        fontColor: '#FFFFFF',
+        shadowColor: '#000000'
+      };
+
       // Start the actual video rendering, passing null for global files
-      const videoUrl = await renderVideo(scenes, null, null);
+      const videoUrl = await renderVideo(scenes, null, null, subtitleStyle);
       
       if (videoUrl) {
         setVideoUrl(videoUrl);
@@ -305,14 +313,8 @@ const Render = () => {
                         )}
                       </div>
                       
-                      {scene.subtitle && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {`"${scene.subtitle}"`}
-                        </p>
-                      )}
-                      
                       <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                        <div>Fonte: {scene.fontFamily} | Tamanho: {scene.fontSize}px | Efeito: {scene.effect}</div>
+                        <div>Efeito: {scene.effect}</div>
                         {scene.zoomEnabled && (
                           <div className="flex items-center gap-1">
                             🔍 Zoom {scene.zoomDirection === 'in' ? 'In' : 'Out'} ({scene.zoomIntensity}%)
