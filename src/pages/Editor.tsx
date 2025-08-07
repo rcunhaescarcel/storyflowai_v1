@@ -18,13 +18,15 @@ import {
   Clock,
   Download,
   Globe,
-  Palette
+  Palette,
+  Volume2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Scene, useFFmpeg, SubtitleStyle } from "@/hooks/useFFmpeg";
 import { ImageUploader } from "@/components/editor/ImageUploader";
 import { AudioUploader } from "@/components/editor/AudioUploader";
 import { EffectsPopover } from "@/components/editor/EffectsPopover";
+import { Slider } from "@/components/ui/slider";
 
 const Editor = () => {
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ const Editor = () => {
   const [scenes, setScenes] = useState<Scene[]>([]);
   const [globalSrtFile, setGlobalSrtFile] = useState<File | null>(null);
   const [backgroundMusic, setBackgroundMusic] = useState<File | null>(null);
+  const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.5);
   
   const [fontFamily, setFontFamily] = useState("Arial");
   const [fontSize, setFontSize] = useState(24);
@@ -128,7 +131,7 @@ const Editor = () => {
       setVideoUrl(null);
       clearDebugLogs();
       const subtitleStyle: SubtitleStyle = { fontFamily, fontSize, fontColor, shadowColor };
-      const result = await renderVideo(scenes, globalSrtFile, backgroundMusic, subtitleStyle);
+      const result = await renderVideo(scenes, globalSrtFile, backgroundMusic, subtitleStyle, backgroundMusicVolume);
       if (result) {
         setVideoUrl(result);
         toast({ title: "Sucesso!", description: "Vídeo renderizado com sucesso" });
@@ -246,7 +249,30 @@ const Editor = () => {
                     <Label className="text-sm font-medium mb-2 flex items-center gap-2"><Music className="w-4 h-4" />Trilha Sonora (Fundo)</Label>
                     <Input type="file" accept="audio/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleBackgroundMusicUpload(file); }} className="hidden" id="bg-music-upload" />
                     <Button variant="outline" size="sm" onClick={() => document.getElementById('bg-music-upload')?.click()} className="w-full">Selecionar Música</Button>
-                    {backgroundMusic && <div className="bg-muted/50 rounded-lg p-3 mt-2 flex items-center justify-between"><div className="flex items-center gap-2 text-sm text-foreground truncate"><Music className="w-4 h-4 flex-shrink-0" /><span className="truncate">{backgroundMusic.name}</span></div><Button variant="ghost" size="icon" onClick={() => setBackgroundMusic(null)} className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"><Trash2 className="w-4 h-4" /></Button></div>}
+                    {backgroundMusic && (
+                      <div className="bg-muted/50 rounded-lg p-3 mt-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-foreground truncate">
+                            <Music className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{backgroundMusic.name}</span>
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => setBackgroundMusic(null)} className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="mt-4">
+                          <Label className="text-xs text-muted-foreground flex items-center gap-1.5"><Volume2 className="w-3.5 h-3.5" />Volume ({Math.round(backgroundMusicVolume * 100)}%)</Label>
+                          <Slider
+                            value={[backgroundMusicVolume]}
+                            onValueChange={(value) => setBackgroundMusicVolume(value[0])}
+                            max={1}
+                            min={0}
+                            step={0.05}
+                            className="mt-2"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="border-t pt-6">

@@ -95,7 +95,8 @@ export const useFFmpeg = () => {
     scenes: Scene[],
     globalSrtFile: File | null,
     backgroundMusic: File | null,
-    subtitleStyle: SubtitleStyle
+    subtitleStyle: SubtitleStyle,
+    backgroundMusicVolume: number
   ): Promise<string | null> => {
     addDebugLog(`🎬 Iniciando renderização de vídeo com ${scenes.length} cenas...`);
     if (!isLoaded) {
@@ -191,7 +192,7 @@ export const useFFmpeg = () => {
 
       // Audio mapping and filtering
       if (backgroundMusic) {
-        filterComplex.push('[0:a]volume=1.0[a_narration];[1:a]volume=0.5[a_music];[a_narration][a_music]amix=inputs=2:duration=first[a_out]');
+        filterComplex.push(`[0:a]volume=1.0[a_narration];[1:a]volume=${backgroundMusicVolume}[a_music];[a_narration][a_music]amix=inputs=2:duration=first[a_out]`);
         mapCmd.push('-map', '[a_out]');
       } else {
         mapCmd.push('-map', '0:a?');

@@ -63,8 +63,8 @@ const Render = () => {
         shadowColor: '#000000'
       };
 
-      // Start the actual video rendering, passing null for global files
-      const videoUrl = await renderVideo(scenes, null, null, subtitleStyle);
+      // Start the actual video rendering, passing null for global files and default volume
+      const videoUrl = await renderVideo(scenes, null, null, subtitleStyle, 0.5);
       
       if (videoUrl) {
         setVideoUrl(videoUrl);
