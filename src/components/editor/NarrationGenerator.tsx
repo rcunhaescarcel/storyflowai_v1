@@ -25,9 +25,12 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
     }
     setIsLoading(true);
     try {
+      // Codifica o texto da narração para ser usado na URL
       const encodedTextPrompt = encodeURIComponent(narrationText);
       const token = "76b4jfL5SsXI48nS";
       const referrer = "https://vidflow.com.br/";
+      
+      // Constrói a URL final, substituindo a parte do texto dinamicamente
       const targetUrl = `https://text.pollinations.ai/${encodedTextPrompt}?model=openai-audio&voice=${selectedVoice}&referrer=${referrer}&token=${token}`;
 
       const response = await fetch(targetUrl);
