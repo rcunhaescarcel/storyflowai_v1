@@ -1,6 +1,8 @@
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 
 interface ViewImageModalProps {
@@ -14,8 +16,13 @@ export const ViewImageModal = ({ isOpen, onClose, imageUrl }: ViewImageModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl p-2 bg-transparent border-none shadow-none">
-        <img src={imageUrl} alt="Visualização da Imagem" className="w-full h-auto rounded-lg" />
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Visualização da Imagem</DialogTitle>
+        </DialogHeader>
+        <div className="mt-4">
+          <img src={imageUrl} alt="Visualização da Imagem" className="w-full h-auto rounded-lg" />
+        </div>
       </DialogContent>
     </Dialog>
   );
