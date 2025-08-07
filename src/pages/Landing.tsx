@@ -30,7 +30,7 @@ const Landing = () => {
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container grid lg:grid-cols-2 place-items-center py-20 md:py-32 gap-10">
+        <section className="container grid lg:grid-cols-2 place-items-center py-20 md:py-32 gap-10 px-4 md:px-8">
           <div className="text-center lg:text-start space-y-6">
             <main className="text-5xl md:text-6xl font-bold">
               <h1 className="inline">
@@ -87,7 +87,7 @@ const Landing = () => {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="container py-24 sm:py-32 space-y-8">
+        <section id="features" className="container py-24 sm:py-32 space-y-8 px-4 md:px-8">
           <h2 className="text-3xl lg:text-4xl font-bold md:text-center">
             Tudo que você precisa para{" "}
             <span className="bg-gradient-to-r from-primary to-primary/80 text-transparent bg-clip-text">
@@ -106,7 +106,7 @@ const Landing = () => {
         </section>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className="container text-center py-24 sm:py-32">
+        <section id="how-it-works" className="container text-center py-24 sm:py-32 px-4 md:px-8">
           <h2 className="text-3xl md:text-4xl font-bold">
             Como Funciona em{" "}
             <span className="bg-gradient-to-r from-primary to-primary/80 text-transparent bg-clip-text">
@@ -144,7 +144,7 @@ const Landing = () => {
 
         {/* CTA Section */}
         <section id="cta" className="bg-muted/50">
-          <div className="container py-24 sm:py-32 text-center">
+          <div className="container py-24 sm:py-32 text-center px-4 md:px-8">
             <h2 className="text-3xl md:text-4xl font-bold">
               Pronto para dar vida às suas ideias?
             </h2>
