@@ -5,8 +5,8 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 // Helper function to get a compatible font name for FFmpeg
 const getCompatibleFont = (font: string): string => {
   // All fonts are mapped to Roboto, as it's the one we are loading dynamically.
-  // This ensures subtitles always render.
-  console.log(`Mapping font ${font} to Roboto`);
+  // The ASS file will request the font "Roboto". We are loading the font file
+  // and saving it as "Roboto.ttf" in the virtual /fonts directory to ensure libass finds it.
   return 'Roboto';
 };
 
@@ -185,8 +185,8 @@ export const useFFmpeg = () => {
         addDebugLog('📥 Baixando arquivo de fonte (necessário apenas uma vez)...');
         const fontUrl = 'https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto-Regular.ttf';
         await ffmpeg.createDir('/fonts');
-        await ffmpeg.writeFile('/fonts/Roboto-Regular.ttf', await fetchFile(fontUrl));
-        addDebugLog('✅ Fonte carregada em /fonts/Roboto-Regular.ttf');
+        await ffmpeg.writeFile('/fonts/Roboto.ttf', await fetchFile(fontUrl));
+        addDebugLog('✅ Fonte carregada em /fonts/Roboto.ttf');
         setIsFontLoaded(true);
       }
 
