@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, UserSquare, AlertTriangle } from 'lucide-react';
+import { Loader2, Wand2, UserSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -27,21 +27,30 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
     }
     setIsLoading(true);
 
-    let finalPrompt = prompt;
-    if (characterImage && useCharacter) {
-      // Simulação: A API real usaria a imagem de referência.
-      // Aqui, apenas adicionamos um texto ao prompt para indicar o uso.
-      finalPrompt = `(Usando personagem de referência) ${prompt}`;
-      toast.info("Simulando uso de personagem de referência. A API real usaria a imagem diretamente.", {
-        duration: 5000,
-      });
-    }
+    let targetUrl = '';
 
     try {
-      const encodedPrompt = encodeURIComponent(finalPrompt);
-      const response = await fetch(`https://image.pollinations.ai/prompt/${encodedPrompt}`);
+      const encodedPrompt = encodeURIComponent(prompt);
+
+      if (characterImage && useCharacter && characterImagePreview) {
+        // Endpoint para geração com imagem de referência
+        const encodedImageURL = encodeURIComponent(characterImagePreview); // Envia a imagem como data URL
+        const seed = Math.floor(Math.random() * 1000000);
+        const width = 1024;
+        const height = 1024;
+        
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=${width}&height=${height}&seed=${seed}&image=${encodedImageURL}&enhance=true&referrer=https://vidflow.com.br/`;
+        
+      } else {
+        // Endpoint padrão de texto-para-imagem
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
+      }
+
+      const response = await fetch(targetUrl);
 
       if (!response.ok) {
+        const errorBody = await response.text();
+        console.error("API Error:", errorBody);
         throw new Error(`A geração da imagem falhou com o status: ${response.status}`);
       }
 
@@ -54,7 +63,7 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
       onClose();
     } catch (error) {
       console.error("Image generation failed:", error);
-      toast.error("Falha ao gerar a imagem. Tente um prompt diferente ou tente novamente mais tarde.");
+      toast.error("Falha ao gerar a imagem. A URL pode ser muito longa ou a API pode estar indisponível.");
     } finally {
       setIsLoading(false);
       setPrompt('');
@@ -93,14 +102,11 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
                 />
               </div>
               {useCharacter && (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 mt-2">
                   <img src={characterImagePreview} alt="Character Preview" className="w-16 h-16 rounded-md object-cover" />
-                  <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-md flex items-start gap-2">
-                    <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0" />
-                    <span>
-                      **Aviso:** Esta é uma simulação. A API real usaria a imagem, mas aqui apenas adaptamos o prompt de texto.
-                    </span>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    A imagem de referência será usada para guiar a IA.
+                  </p>
                 </div>
               )}
             </div>
