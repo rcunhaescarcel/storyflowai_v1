@@ -65,7 +65,7 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         const publicUrl = urlData.publicUrl;
         addDebugLog(`[IA] URL pública obtida: ${publicUrl}`);
 
-        const model = 'kontext';
+        const model = 'ip-adapter';
         const encodedImageURL = encodeURIComponent(publicUrl);
         const width = 1024;
         const height = 576;
