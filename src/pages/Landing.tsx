@@ -1,26 +1,12 @@
-import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Play, Zap, Wand2, ShieldCheck, ArrowRight } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+import heroImage from "@/assets/hero-bg.jpg";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    if (videoElement) {
-      // Tentamos forçar a reprodução via código, que é mais confiável
-      const playPromise = videoElement.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("A reprodução automática foi bloqueada pelo navegador. Isso é esperado e o vídeo deve tocar assim que o usuário interagir com a página.", error);
-        });
-      }
-    }
-  }, []);
 
   const features = [
     {
@@ -90,14 +76,10 @@ const Landing = () => {
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   </div>
                 </div>
-                <video
-                  ref={videoRef}
-                  src="https://longstories.ai/hero_video.mp4"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full object-cover object-center"
+                <img
+                  src={heroImage}
+                  alt="Criação de vídeo com IA"
+                  className="w-full h-full object-cover object-center"
                 />
               </div>
             </div>
