@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Play, Zap, Wand2, ShieldCheck, ArrowRight } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
-import heroImage from "@/assets/hero-bg.jpg";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -77,7 +76,7 @@ const Landing = () => {
                   </div>
                 </div>
                 <img
-                  src={heroImage}
+                  src="https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1754575804125x446543522981079230/ChatGPT%20Image%205%20de%20ago.%20de%202025%2C%2018_10_34.png"
                   alt="Criação de vídeo com IA"
                   className="w-full h-full object-cover object-center"
                 />
