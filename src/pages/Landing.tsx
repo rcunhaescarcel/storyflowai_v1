@@ -76,8 +76,8 @@ const Landing = () => {
                   </div>
                 </div>
                 <img
-                  src="https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1753310818875x988386395140663500/close-up-of-a-thoughtful-person-in-a-cozy-room-soft-golden-light-illuminating-brain-imagery-overlay.jpg"
-                  alt="Pessoa pensativa em uma sala aconchegante com sobreposição de imagens do cérebro"
+                  src="https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1754575804125x446543522981079230/ChatGPT%20Image%205%20de%20ago.%20de%202025%2C%2018_10_34.png"
+                  alt="Personagem 3D em um ambiente criativo, no estilo Pixar"
                   className="w-full object-cover object-center"
                 />
               </div>
