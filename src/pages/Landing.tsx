@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Play, Zap, Wand2, ShieldCheck, ArrowRight } from "lucide-react";
@@ -6,6 +7,15 @@ import Footer from "@/components/landing/Footer";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(error => {
+        console.error("Erro ao tentar reproduzir o vídeo automaticamente:", error);
+      });
+    }
+  }, []);
 
   const features = [
     {
@@ -76,6 +86,7 @@ const Landing = () => {
                   </div>
                 </div>
                 <video
+                  ref={videoRef}
                   src="https://longstories.ai/hero_video.mp4"
                   autoPlay
                   loop
