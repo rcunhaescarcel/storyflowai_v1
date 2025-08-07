@@ -2,6 +2,22 @@ import { useState, useCallback, useEffect } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
+// Helper function to get a compatible font name for FFmpeg
+const getCompatibleFont = (font: string): string => {
+  const fontMap: { [key: string]: string } = {
+    'Poppins': 'Arial',
+    'Roboto': 'Arial',
+    'Helvetica': 'Arial',
+    'Times New Roman': 'Times',
+    'Courier New': 'Courier',
+    'Verdana': 'Arial',
+    'Georgia': 'Georgia',
+    'Impact': 'Impact',
+    'Comic Sans MS': 'Arial'
+  };
+  return fontMap[font] || 'Arial';
+};
+
 export interface Scene {
   id: string;
   image?: File;
@@ -235,7 +251,7 @@ export const useFFmpeg = () => {
             if (srtExists) {
               try {
                 const srtContent = await ffmpeg.readFile(`subtitle_${i}.srt`);
-                const srtText = new TextDecoder().decode(srtContent);
+                const srtText = new TextDecoder().decode(srtContent as Uint8Array);
                 addDebugLog(`📄 Arquivo lido de volta: ${srtText.substring(0, 200)}...`);
               } catch (readError) {
                 addDebugLog(`⚠️ Erro ao ler arquivo SRT: ${readError}`);
@@ -324,22 +340,6 @@ export const useFFmpeg = () => {
             addDebugLog(`⚠️ Erro ao listar arquivos: ${listError}`);
           }
           
-          // Mapear fonte para versão compatível com FFmpeg
-          const getCompatibleFont = (font: string): string => {
-            const fontMap: { [key: string]: string } = {
-              'Poppins': 'Arial',
-              'Roboto': 'Arial',
-              'Helvetica': 'Arial',
-              'Times New Roman': 'Times',
-              'Courier New': 'Courier',
-              'Verdana': 'Arial',
-              'Georgia': 'Georgia',
-              'Impact': 'Impact',
-              'Comic Sans MS': 'Arial'
-            };
-            return fontMap[font] || 'Arial';
-          };
-          
           const compatibleFont = getCompatibleFont(scene.fontFamily);
           addDebugLog(`🔤 Fonte original: ${scene.fontFamily} → Compatível: ${compatibleFont}`);
           
@@ -403,7 +403,7 @@ export const useFFmpeg = () => {
       const data = await ffmpeg.readFile('final_video.mp4');
       addDebugLog(`📊 Tamanho do vídeo: ${data.length} bytes`);
       
-      const videoBlob = new Blob([data], { type: 'video/mp4' });
+      const videoBlob = new Blob([new Uint8Array(data as Uint8Array)], { type: 'video/mp4' });
       const videoUrl = URL.createObjectURL(videoBlob);
       addDebugLog(`🎬 URL do vídeo criada: ${videoUrl.substring(0, 50)}...`);
 
@@ -442,23 +442,6 @@ export const useFFmpeg = () => {
 // Função para criar legenda no formato ASS
 const createASSSubtitle = (scene: Scene, duration: number): string => {
   const { subtitle, fontFamily, fontSize, fontColor, shadowColor } = scene;
-  
-  // Mapear fontes para versões compatíveis com FFmpeg
-  const getCompatibleFont = (font: string): string => {
-    const fontMap: { [key: string]: string } = {
-      'Poppins': 'Arial',
-      'Roboto': 'Arial',
-      'Helvetica': 'Arial',
-      'Times New Roman': 'Times',
-      'Courier New': 'Courier',
-      'Verdana': 'Arial',
-      'Georgia': 'Georgia',
-      'Impact': 'Impact',
-      'Comic Sans MS': 'Arial'
-    };
-    
-    return fontMap[font] || 'Arial';
-  };
   
   // Converter cor hex para formato ASS (BGR)
   const hexToBGR = (hex: string) => {
