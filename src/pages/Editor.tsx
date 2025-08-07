@@ -39,7 +39,7 @@ import { EffectsPopover } from "@/components/editor/EffectsPopover";
 import { NarrationGenerator } from "@/components/editor/NarrationGenerator";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { resizeImage } from "@/lib/imageUtils";
+import { resizeImage, dataURLtoFile } from "@/lib/imageUtils";
 import { ViewImageModal } from "@/components/editor/ViewImageModal";
 
 type VideoQuality = 'hd' | 'fullhd';
@@ -173,12 +173,15 @@ const Editor = () => {
   };
 
   const handleCharacterImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    const originalFile = e.target.files?.[0];
+    if (originalFile && originalFile.type.startsWith('image/')) {
       try {
-        const resizedImagePreview = await resizeImage(file, 1024, 1024);
-        setCharacterImage(file);
+        const resizedImagePreview = await resizeImage(originalFile, 1024, 1024);
+        const resizedFile = dataURLtoFile(resizedImagePreview, originalFile.name);
+        
+        setCharacterImage(resizedFile);
         setCharacterImagePreview(resizedImagePreview);
+        
         toast({
           title: "Personagem de Referência Carregado",
           description: "A imagem foi otimizada e está pronta para ser usada.",
