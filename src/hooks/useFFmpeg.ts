@@ -4,10 +4,8 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 // Helper function to get a compatible font name for FFmpeg
 const getCompatibleFont = (font: string): string => {
-  // All fonts are mapped to Roboto, as it's the one we are loading dynamically.
-  // The ASS file will request the font "Roboto". We are loading the font file
-  // and saving it as "Roboto.ttf" in the virtual /fonts directory to ensure libass finds it.
-  return 'Roboto';
+  // All fonts are now mapped to Arial, as it's the one we are loading from the user-provided URL.
+  return 'Arial';
 };
 
 // Função para criar legenda no formato ASS a partir de texto simples
@@ -182,11 +180,10 @@ export const useFFmpeg = () => {
     try {
       // Load font if not already loaded
       if (!isFontLoaded) {
-        addDebugLog('📥 Baixando arquivo de fonte (necessário apenas uma vez)...');
-        const fontUrl = 'https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto-Regular.ttf';
-        await ffmpeg.createDir('/fonts');
-        await ffmpeg.writeFile('/fonts/Roboto.ttf', await fetchFile(fontUrl));
-        addDebugLog('✅ Fonte carregada em /fonts/Roboto.ttf');
+        addDebugLog('📥 Baixando arquivo de fonte (Arial) da URL fornecida...');
+        const fontUrl = 'https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749513085962x560310166625130240/Arial.otf';
+        await ffmpeg.writeFile('Arial.otf', await fetchFile(fontUrl));
+        addDebugLog('✅ Fonte carregada em /Arial.otf (raiz)');
         setIsFontLoaded(true);
       }
 
@@ -242,8 +239,8 @@ export const useFFmpeg = () => {
         if (scene.fadeOutDuration > 0) videoFilter += `,fade=t=out:st=${sceneDuration - scene.fadeOutDuration}:d=${scene.fadeOutDuration}`;
         
         if (scene.srtFile || scene.subtitle) {
-          addDebugLog(`🔤 Aplicando legenda com fonte Roboto usando o filtro 'subtitles'...`);
-          videoFilter += `,subtitles=filename=subtitle_${i}.ass:fontsdir=/fonts`;
+          addDebugLog(`🔤 Aplicando legenda com fonte Arial usando o filtro 'subtitles'...`);
+          videoFilter += `,subtitles=filename=subtitle_${i}.ass:fontsdir=.`;
         }
 
         cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-pix_fmt', 'yuv420p');
