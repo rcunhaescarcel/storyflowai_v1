@@ -41,7 +41,8 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         const width = 1024;
         const height = 1024;
         
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=${width}&height=${height}&seed=${seed}&model=${model}&image=${encodedImageURL}&enhance=true&referrer=https://vidflow.com.br/`;
+        // URL simplificada, removendo parâmetros extras (nologo, enhance, referrer)
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&model=${model}&image=${encodedImageURL}`;
         
       } else {
         // Usa o modelo 'flux' para geração padrão
@@ -65,7 +66,7 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
       onClose();
     } catch (error) {
       console.error("Image generation failed:", error);
-      toast.error("Falha ao gerar a imagem. A URL pode ser muito longa ou a API pode estar indisponível.");
+      toast.error("Falha ao gerar a imagem. Verifique o console para mais detalhes.");
     } finally {
       setIsLoading(false);
       setPrompt('');
