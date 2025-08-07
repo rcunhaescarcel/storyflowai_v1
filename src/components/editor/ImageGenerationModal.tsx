@@ -33,13 +33,27 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
     const apiToken = "76b4jfL5SsXI48nS";
 
     try {
-      addDebugLog('[IA] Verificando buckets existentes no Supabase...');
+      addDebugLog('[IA] Verificando bucket de referência de imagem...');
       const { data: buckets, error: listError } = await supabase.storage.listBuckets();
       if (listError) {
         addDebugLog(`[IA] ERRO ao listar buckets: ${listError.message}`);
+        throw new Error(`Falha ao verificar buckets: ${listError.message}`);
+      }
+
+      const bucketExists = buckets.some(bucket => bucket.name === 'image-references');
+      if (!bucketExists) {
+        addDebugLog("[IA] Bucket 'image-references' não encontrado. Criando...");
+        const { error: createError } = await supabase.storage.createBucket('image-references', {
+          public: true,
+          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
+        });
+        if (createError) {
+          addDebugLog(`[IA] ERRO ao criar bucket: ${createError.message}`);
+          throw new Error(`Falha ao criar bucket de armazenamento: ${createError.message}`);
+        }
+        addDebugLog("[IA] Bucket 'image-references' criado com sucesso.");
       } else {
-        const bucketNames = buckets.map(b => b.name).join(', ');
-        addDebugLog(`[IA] Buckets encontrados: [${bucketNames || 'Nenhum'}]`);
+        addDebugLog("[IA] Bucket 'image-references' já existe.");
       }
 
       const encodedPrompt = encodeURIComponent(prompt);
@@ -49,7 +63,7 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         
         const fileExt = characterImage.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `public/${fileName}`;
+        const filePath = fileName;
 
         const { error: uploadError } = await supabase.storage
           .from('image-references')
