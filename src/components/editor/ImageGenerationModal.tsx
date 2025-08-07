@@ -28,6 +28,7 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
     setIsLoading(true);
 
     let targetUrl = '';
+    const apiToken = "76b4jfL5SsXI48nS";
 
     try {
       const encodedPrompt = encodeURIComponent(prompt);
@@ -41,12 +42,11 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         const width = 1024;
         const height = 1024;
         
-        // URL simplificada, removendo parâmetros extras (nologo, enhance, referrer)
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&model=${model}&image=${encodedImageURL}`;
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&model=${model}&image=${encodedImageURL}&token=${apiToken}`;
         
       } else {
         // Usa o modelo 'flux' para geração padrão
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}`;
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}&token=${apiToken}`;
       }
 
       const response = await fetch(targetUrl);
