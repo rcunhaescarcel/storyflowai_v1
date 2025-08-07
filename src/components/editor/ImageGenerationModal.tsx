@@ -2,18 +2,23 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2 } from 'lucide-react';
+import { Loader2, Wand2, UserSquare, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface ImageGenerationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImageGenerated: (file: File) => void;
+  characterImage?: File | null;
+  characterImagePreview?: string | null;
 }
 
-export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated }: ImageGenerationModalProps) => {
+export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, characterImage, characterImagePreview }: ImageGenerationModalProps) => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [useCharacter, setUseCharacter] = useState(true);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -21,9 +26,19 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated }: Imag
       return;
     }
     setIsLoading(true);
+
+    let finalPrompt = prompt;
+    if (characterImage && useCharacter) {
+      // Simulação: A API real usaria a imagem de referência.
+      // Aqui, apenas adicionamos um texto ao prompt para indicar o uso.
+      finalPrompt = `(Usando personagem de referência) ${prompt}`;
+      toast.info("Simulando uso de personagem de referência. A API real usaria a imagem diretamente.", {
+        duration: 5000,
+      });
+    }
+
     try {
-      // Usando a API Pollinations para gerar a imagem a partir do prompt
-      const encodedPrompt = encodeURIComponent(prompt);
+      const encodedPrompt = encodeURIComponent(finalPrompt);
       const response = await fetch(`https://image.pollinations.ai/prompt/${encodedPrompt}`);
 
       if (!response.ok) {
@@ -59,9 +74,40 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated }: Imag
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          {characterImage && characterImagePreview && (
+            <div className="space-y-4 rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="use-character" className="flex flex-col space-y-1">
+                  <span className="font-medium flex items-center gap-2">
+                    <UserSquare className="w-4 h-4" />
+                    Usar Personagem de Referência
+                  </span>
+                  <span className="font-normal leading-snug text-muted-foreground">
+                    Usa a imagem abaixo como base.
+                  </span>
+                </Label>
+                <Switch
+                  id="use-character"
+                  checked={useCharacter}
+                  onCheckedChange={setUseCharacter}
+                />
+              </div>
+              {useCharacter && (
+                <div className="flex items-center gap-4">
+                  <img src={characterImagePreview} alt="Character Preview" className="w-16 h-16 rounded-md object-cover" />
+                  <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-md flex items-start gap-2">
+                    <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0" />
+                    <span>
+                      **Aviso:** Esta é uma simulação. A API real usaria a imagem, mas aqui apenas adaptamos o prompt de texto.
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <Input
             id="prompt"
-            placeholder="Ex: um astronauta fofo em um cavalo, estilo aquarela"
+            placeholder="Ex: personagem em uma floresta mágica, noite"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={isLoading}

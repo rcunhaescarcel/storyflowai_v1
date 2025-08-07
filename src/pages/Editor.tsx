@@ -25,7 +25,8 @@ import {
   CornerUpLeft,
   CornerUpRight,
   CornerDownLeft,
-  CornerDownRight
+  CornerDownRight,
+  UserSquare
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
@@ -49,6 +50,8 @@ const Editor = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoPosition, setLogoPosition] = useState<LogoPosition>('top-right');
+  const [characterImage, setCharacterImage] = useState<File | null>(null);
+  const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
   
   const [fontFamily, setFontFamily] = useState("Arial");
   const [fontSize, setFontSize] = useState(24);
@@ -144,6 +147,22 @@ const Editor = () => {
       toast({
         title: "Logotipo Carregado",
         description: "O logotipo será adicionado ao vídeo.",
+      });
+    }
+  };
+
+  const handleCharacterImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setCharacterImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCharacterImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      toast({
+        title: "Personagem de Referência Carregado",
+        description: "A imagem será usada como contexto para a IA.",
       });
     }
   };
@@ -267,6 +286,8 @@ const Editor = () => {
                           imagePreview={scene.imagePreview}
                           onImageUpload={(file) => handleImageUpload(scene.id, file)}
                           onImageRemove={() => updateScene(scene.id, { image: undefined, imagePreview: undefined })}
+                          characterImage={characterImage}
+                          characterImagePreview={characterImagePreview}
                         />
                       </div>
                     </div>
@@ -294,6 +315,25 @@ const Editor = () => {
                         <SelectItem value="hd">HD (720p)</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <Label className="text-sm font-medium mb-2 flex items-center gap-2"><UserSquare className="w-4 h-4" />Personagem (Contexto)</Label>
+                    <Input type="file" accept="image/png, image/jpeg" onChange={handleCharacterImageUpload} className="hidden" id="character-upload" />
+                    <Button variant="outline" size="sm" onClick={() => document.getElementById('character-upload')?.click()} className="w-full">Selecionar Imagem</Button>
+                    {characterImage && (
+                      <div className="bg-muted/50 rounded-lg p-3 mt-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-foreground truncate">
+                            {characterImagePreview && <img src={characterImagePreview} alt="character preview" className="w-10 h-10 object-contain rounded" />}
+                            <span className="truncate">{characterImage.name}</span>
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => { setCharacterImage(null); setCharacterImagePreview(null); }} className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="border-t pt-6">

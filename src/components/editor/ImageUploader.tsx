@@ -9,9 +9,11 @@ interface ImageUploaderProps {
   onImageUpload: (file: File) => void;
   onImageRemove: () => void;
   sceneId: string;
+  characterImage?: File | null;
+  characterImagePreview?: string | null;
 }
 
-export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, sceneId }: ImageUploaderProps) => {
+export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, sceneId, characterImage, characterImagePreview }: ImageUploaderProps) => {
   const inputId = `image-upload-${sceneId}`;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -80,6 +82,8 @@ export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, scen
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onImageGenerated={onImageUpload}
+        characterImage={characterImage}
+        characterImagePreview={characterImagePreview}
       />
     </>
   );
