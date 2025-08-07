@@ -198,31 +198,36 @@ export const useFFmpeg = () => {
         finalCmd.push('-c', 'copy', '-y', 'final_video.mp4');
       } else {
         let videoFilterChain = '[0:v]';
-        let audioFilterChain = '[0:a]';
+        let audioFilterChain = '';
         let filterComplexParts = [];
+        let hasVideoFilters = false;
 
-        // Build video filter chain
         if (logoFile) {
-          const logoInputIndex = backgroundMusic ? 2 : 1;
-          const positionMap = {
-            'top-left': '15:15',
-            'top-right': 'main_w-overlay_w-15:15',
-            'bottom-left': '15:main_h-overlay_h-15',
-            'bottom-right': 'main_w-overlay_w-15:main_h-overlay_h-15',
-          };
-          videoFilterChain += `[${logoInputIndex}:v]overlay=${positionMap[logoPosition]}`;
+            const logoInputIndex = backgroundMusic ? '[2:v]' : '[1:v]';
+            const positionMap = {
+                'top-left': '15:15',
+                'top-right': 'main_w-overlay_w-15:15',
+                'bottom-left': '15:main_h-overlay_h-15',
+                'bottom-right': 'main_w-overlay_w-15:main_h-overlay_h-15',
+            };
+            videoFilterChain += `${logoInputIndex}overlay=${positionMap[logoPosition]}`;
+            hasVideoFilters = true;
         }
         if (globalSrtFile) {
-          videoFilterChain += `${videoFilterChain.includes('overlay') ? ',' : ''}subtitles=filename=global_subtitle.ass:fontsdir=.`;
+            videoFilterChain += `${hasVideoFilters ? ',' : ''}subtitles=filename=global_subtitle.ass:fontsdir=.`;
+            hasVideoFilters = true;
+        }
+
+        if (!hasVideoFilters) {
+            videoFilterChain += 'null';
         }
         filterComplexParts.push(`${videoFilterChain}[v_out]`);
 
-        // Build audio filter chain
         if (backgroundMusic) {
-          const musicInput = '[1:a]';
-          audioFilterChain = `[0:a]volume=1.0[a1];${musicInput}volume=${backgroundMusicVolume}[a2];[a1][a2]amix=inputs=2:duration=first[a_out]`;
+            const musicInput = '[1:a]';
+            audioFilterChain = `[0:a]volume=1.0[a1];${musicInput}volume=${backgroundMusicVolume}[a2];[a1][a2]amix=inputs=2:duration=first[a_out]`;
         } else {
-          audioFilterChain = '[0:a]acopy[a_out]';
+            audioFilterChain = `[0:a]acopy[a_out]`;
         }
         filterComplexParts.push(audioFilterChain);
         
