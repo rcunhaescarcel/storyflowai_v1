@@ -13,6 +13,8 @@ export interface SubtitleStyle {
   shadowColor: string;
 }
 
+export type LogoPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
 const convertSRTtoASS = (srtText: string, style: SubtitleStyle): string => {
   const { fontFamily, fontSize, fontColor, shadowColor } = style;
   const hexToBGR = (hex: string) => {
@@ -97,7 +99,9 @@ export const useFFmpeg = () => {
     backgroundMusic: File | null,
     subtitleStyle: SubtitleStyle,
     backgroundMusicVolume: number,
-    quality: 'hd' | 'fullhd'
+    quality: 'hd' | 'fullhd',
+    logoFile: File | null,
+    logoPosition: LogoPosition
   ): Promise<string | null> => {
     addDebugLog(`🎬 Iniciando renderização de vídeo com ${scenes.length} cenas...`);
     if (!isLoaded) {
@@ -165,8 +169,8 @@ export const useFFmpeg = () => {
       await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'concat_list.txt', '-c', 'copy', '-y', 'concatenated.mp4']);
       addDebugLog('✅ Passagem 1 concluída: Cenas concatenadas em concatenated.mp4');
 
-      // --- PASS 2: Add global audio and subtitles ---
-      addDebugLog('--- PASSAGEM 2: Adicionando trilha sonora e legendas globais ---');
+      // --- PASS 2: Add global audio, subtitles, and logo ---
+      addDebugLog('--- PASSAGEM 2: Adicionando trilha sonora, legendas e logotipo ---');
       if (globalSrtFile) {
         const srtText = await globalSrtFile.text();
         const assContent = convertSRTtoASS(srtText, subtitleStyle);
@@ -177,29 +181,49 @@ export const useFFmpeg = () => {
         await ffmpeg.writeFile('background_music.mp3', await fetchFile(backgroundMusic));
         addDebugLog('✅ Trilha sonora de fundo carregada.');
       }
+      if (logoFile) {
+        await ffmpeg.writeFile('logo.png', await fetchFile(logoFile));
+        addDebugLog('✅ Logotipo carregado.');
+      }
 
       let finalCmd = ['-i', 'concatenated.mp4'];
       if (backgroundMusic) finalCmd.push('-i', 'background_music.mp3');
+      if (logoFile) finalCmd.push('-i', 'logo.png');
 
       let filterComplex = [];
       let mapCmd = [];
 
-      // Video mapping and filtering
-      let videoChain = '[0:v]';
+      let videoInput = '[0:v]';
+      let audioInput = '[0:a]';
+
+      // Logo Overlay
+      if (logoFile) {
+        const logoInput = backgroundMusic ? '[2:v]' : '[1:v]';
+        const positionMap = {
+          'top-left': '15:15',
+          'top-right': 'main_w-overlay_w-15:15',
+          'bottom-left': '15:main_h-overlay_h-15',
+          'bottom-right': 'main_w-overlay_w-15:main_h-overlay_h-15',
+        };
+        filterComplex.push(`${videoInput}${logoInput}overlay=${positionMap[logoPosition]}[v_with_logo]`);
+        videoInput = '[v_with_logo]';
+      }
+
+      // Subtitles
       if (globalSrtFile) {
-        videoChain += `subtitles=filename=global_subtitle.ass:fontsdir=.[v_out]`;
+        filterComplex.push(`${videoInput}subtitles=filename=global_subtitle.ass:fontsdir=.[v_out]`);
         mapCmd.push('-map', '[v_out]');
       } else {
-        mapCmd.push('-map', '0:v');
+        mapCmd.push('-map', videoInput);
       }
-      if (videoChain !== '[0:v]') filterComplex.push(videoChain);
 
-      // Audio mapping and filtering
+      // Audio Mix
       if (backgroundMusic) {
-        filterComplex.push(`[0:a]volume=1.0[a_narration];[1:a]volume=${backgroundMusicVolume}[a_music];[a_narration][a_music]amix=inputs=2:duration=first[a_out]`);
+        const musicInput = '[1:a]';
+        filterComplex.push(`${audioInput}volume=1.0[a_narration];${musicInput}volume=${backgroundMusicVolume}[a_music];[a_narration][a_music]amix=inputs=2:duration=first[a_out]`);
         mapCmd.push('-map', '[a_out]');
       } else {
-        mapCmd.push('-map', '0:a?');
+        mapCmd.push('-map', `${audioInput}?`);
       }
 
       if (filterComplex.length > 0) {

@@ -64,7 +64,7 @@ const Render = () => {
       };
 
       // Start the actual video rendering, passing null for global files and default volume
-      const videoUrl = await renderVideo(scenes, null, null, subtitleStyle, 0.5, 'fullhd');
+      const videoUrl = await renderVideo(scenes, null, null, subtitleStyle, 0.5, 'fullhd', null, 'top-right');
       
       if (videoUrl) {
         setVideoUrl(videoUrl);

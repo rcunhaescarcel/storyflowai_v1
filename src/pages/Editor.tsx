@@ -20,14 +20,20 @@ import {
   Globe,
   Palette,
   Volume2,
-  Film
+  Film,
+  Image as ImageIcon,
+  CornerUpLeft,
+  CornerUpRight,
+  CornerDownLeft,
+  CornerDownRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Scene, useFFmpeg, SubtitleStyle } from "@/hooks/useFFmpeg";
+import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
 import { ImageUploader } from "@/components/editor/ImageUploader";
 import { AudioUploader } from "@/components/editor/AudioUploader";
 import { EffectsPopover } from "@/components/editor/EffectsPopover";
 import { Slider } from "@/components/ui/slider";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type VideoQuality = 'hd' | 'fullhd';
 
@@ -39,6 +45,9 @@ const Editor = () => {
   const [backgroundMusic, setBackgroundMusic] = useState<File | null>(null);
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.5);
   const [videoQuality, setVideoQuality] = useState<VideoQuality>('fullhd');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoPosition, setLogoPosition] = useState<LogoPosition>('top-right');
   
   const [fontFamily, setFontFamily] = useState("Arial");
   const [fontSize, setFontSize] = useState(24);
@@ -121,6 +130,22 @@ const Editor = () => {
     }
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      toast({
+        title: "Logotipo Carregado",
+        description: "O logotipo será adicionado ao vídeo.",
+      });
+    }
+  };
+
   const handleRenderVideo = async () => {
     if (scenes.length === 0) {
       toast({ title: "Erro", description: "Adicione pelo menos uma cena para renderizar", variant: "destructive" });
@@ -135,7 +160,7 @@ const Editor = () => {
       setVideoUrl(null);
       clearDebugLogs();
       const subtitleStyle: SubtitleStyle = { fontFamily, fontSize, fontColor, shadowColor };
-      const result = await renderVideo(scenes, globalSrtFile, backgroundMusic, subtitleStyle, backgroundMusicVolume, videoQuality);
+      const result = await renderVideo(scenes, globalSrtFile, backgroundMusic, subtitleStyle, backgroundMusicVolume, videoQuality, logoFile, logoPosition);
       if (result) {
         setVideoUrl(result);
         toast({ title: "Sucesso!", description: "Vídeo renderizado com sucesso" });
@@ -287,6 +312,34 @@ const Editor = () => {
                             step={0.05}
                             className="mt-2"
                           />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <Label className="text-sm font-medium mb-2 flex items-center gap-2"><ImageIcon className="w-4 h-4" />Logotipo</Label>
+                    <Input type="file" accept="image/png, image/jpeg" onChange={handleLogoUpload} className="hidden" id="logo-upload" />
+                    <Button variant="outline" size="sm" onClick={() => document.getElementById('logo-upload')?.click()} className="w-full">Selecionar Logotipo</Button>
+                    {logoFile && (
+                      <div className="bg-muted/50 rounded-lg p-3 mt-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-foreground truncate">
+                            {logoPreview && <img src={logoPreview} alt="logo preview" className="w-8 h-8 object-contain rounded" />}
+                            <span className="truncate">{logoFile.name}</span>
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => { setLogoFile(null); setLogoPreview(null); }} className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="mt-4">
+                          <Label className="text-xs text-muted-foreground">Posição do Logotipo</Label>
+                          <ToggleGroup type="single" value={logoPosition} onValueChange={(value) => { if (value) setLogoPosition(value as LogoPosition); }} className="grid grid-cols-4 gap-2 mt-2">
+                            <ToggleGroupItem value="top-left" aria-label="Topo Esquerdo"><CornerUpLeft className="h-4 w-4" /></ToggleGroupItem>
+                            <ToggleGroupItem value="top-right" aria-label="Topo Direito"><CornerUpRight className="h-4 w-4" /></ToggleGroupItem>
+                            <ToggleGroupItem value="bottom-left" aria-label="Inferior Esquerdo"><CornerDownLeft className="h-4 w-4" /></ToggleGroupItem>
+                            <ToggleGroupItem value="bottom-right" aria-label="Inferior Direito"><CornerDownRight className="h-4 w-4" /></ToggleGroupItem>
+                          </ToggleGroup>
                         </div>
                       </div>
                     )}
