@@ -10,10 +10,21 @@ const Landing = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(error => {
-        console.error("Erro ao tentar reproduzir o vídeo automaticamente:", error);
-      });
+    const videoElement = videoRef.current;
+    if (videoElement) {
+      // Tentamos iniciar a reprodução.
+      const playPromise = videoElement.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // A reprodução automática foi impedida pelo navegador.
+          // Isso é comum e esperado em muitos navegadores modernos.
+          console.error("A reprodução automática do vídeo foi bloqueada pelo navegador:", error);
+          // Como fallback, garantimos que o vídeo esteja sem som e com playsinline,
+          // que são pré-requisitos para o autoplay funcionar.
+          videoElement.muted = true;
+          videoElement.playsInline = true;
+        });
+      }
     }
   }, []);
 
@@ -88,7 +99,6 @@ const Landing = () => {
                 <video
                   ref={videoRef}
                   src="https://longstories.ai/hero_video.mp4"
-                  autoPlay
                   loop
                   muted
                   playsInline
