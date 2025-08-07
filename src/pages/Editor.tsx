@@ -29,7 +29,8 @@ import {
   UserSquare,
   ArrowUp,
   ArrowDown,
-  Copy
+  Copy,
+  Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
@@ -41,6 +42,7 @@ import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { resizeImage, dataURLtoFile } from "@/lib/imageUtils";
 import { ViewImageModal } from "@/components/editor/ViewImageModal";
+import { StoryGeneratorModal } from "@/components/editor/StoryGeneratorModal";
 
 type VideoQuality = 'hd' | 'fullhd';
 
@@ -74,6 +76,7 @@ const Editor = () => {
   
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
 
   const addNewScene = () => {
     const newScene: Scene = {
@@ -247,6 +250,15 @@ const Editor = () => {
     });
   };
 
+  const handleStoryGenerated = (newScenes: Scene[]) => {
+    setScenes(newScenes);
+    addDebugLog(`[Editor] História gerada com ${newScenes.length} cenas.`);
+    toast({
+      title: "Cenas Criadas!",
+      description: `Sua história foi dividida em ${newScenes.length} cenas.`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
@@ -260,6 +272,10 @@ const Editor = () => {
             <h1 className="text-xl font-bold text-foreground">Editor de Vídeo</h1>
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => setIsStoryModalOpen(true)}>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Gerar História com IA
+            </Button>
             <Badge variant="secondary">
               {scenes.length} cena{scenes.length !== 1 ? 's' : ''}
             </Badge>
@@ -280,11 +296,17 @@ const Editor = () => {
                   <Video className="w-12 h-12 text-primary" />
                 </div>
                 <h2 className="text-2xl font-bold mb-4 text-foreground">Crie Sua Primeira Cena</h2>
-                <p className="text-muted-foreground mb-8 max-w-md mx-auto">Adicione imagens e narrações para começar a criar seu vídeo.</p>
-                <Button onClick={addNewScene}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Nova Cena
-                </Button>
+                <p className="text-muted-foreground mb-8 max-w-md mx-auto">Adicione cenas manualmente ou gere uma história completa com IA.</p>
+                <div className="flex items-center justify-center gap-4">
+                  <Button onClick={addNewScene}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Cena
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsStoryModalOpen(true)}>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Gerar com IA
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -486,6 +508,13 @@ const Editor = () => {
         isOpen={!!viewingImage}
         onClose={() => setViewingImage(null)}
         imageUrl={viewingImage}
+      />
+
+      <StoryGeneratorModal
+        isOpen={isStoryModalOpen}
+        onClose={() => setIsStoryModalOpen(false)}
+        onStoryGenerated={handleStoryGenerated}
+        addDebugLog={addDebugLog}
       />
     </div>
   );
