@@ -32,6 +32,7 @@ import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg
 import { ImageUploader } from "@/components/editor/ImageUploader";
 import { AudioUploader } from "@/components/editor/AudioUploader";
 import { EffectsPopover } from "@/components/editor/EffectsPopover";
+import { NarrationGenerator } from "@/components/editor/NarrationGenerator";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
@@ -72,7 +73,8 @@ const Editor = () => {
       zoomIntensity: 20,
       zoomDirection: "in",
       fadeInDuration: 0.5,
-      fadeOutDuration: 0.5
+      fadeOutDuration: 0.5,
+      narrationText: ""
     };
     setScenes([...scenes, newScene]);
   };
@@ -241,16 +243,23 @@ const Editor = () => {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                       <div className="md:col-span-3 space-y-4">
-                        <AudioUploader
-                          sceneId={scene.id}
-                          audio={scene.audio}
-                          onAudioUpload={(file) => handleNarrationUpload(scene.id, file)}
-                          onAudioRemove={() => updateScene(scene.id, { audio: undefined })}
+                        <NarrationGenerator
+                          narrationText={scene.narrationText}
+                          onTextChange={(text) => updateScene(scene.id, { narrationText: text })}
+                          onAudioGenerated={(file) => handleNarrationUpload(scene.id, file)}
                         />
-                        <EffectsPopover
-                          scene={scene}
-                          onUpdate={(updates) => updateScene(scene.id, updates)}
-                        />
+                        <div className="border-t pt-4 space-y-4">
+                          <AudioUploader
+                            sceneId={scene.id}
+                            audio={scene.audio}
+                            onAudioUpload={(file) => handleNarrationUpload(scene.id, file)}
+                            onAudioRemove={() => updateScene(scene.id, { audio: undefined })}
+                          />
+                          <EffectsPopover
+                            scene={scene}
+                            onUpdate={(updates) => updateScene(scene.id, updates)}
+                          />
+                        </div>
                       </div>
                       <div className="md:col-span-2">
                         <ImageUploader

@@ -50,6 +50,7 @@ export interface Scene {
   image?: File;
   imagePreview?: string;
   audio?: File; // Per-scene narration
+  narrationText?: string; // Text for generating narration
   effect: string;
   zoomEnabled: boolean;
   zoomIntensity: number;
