@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, X, Wand2 } from 'lucide-react';
+import { Upload, X, Wand2, Expand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ImageGenerationModal } from './ImageGenerationModal';
@@ -8,13 +8,14 @@ interface ImageUploaderProps {
   imagePreview?: string;
   onImageUpload: (file: File) => void;
   onImageRemove: () => void;
+  onViewImage: () => void;
   sceneId: string;
   characterImage?: File | null;
   characterImagePreview?: string | null;
   addDebugLog: (message: string) => void;
 }
 
-export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, sceneId, characterImage, characterImagePreview, addDebugLog }: ImageUploaderProps) => {
+export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, onViewImage, sceneId, characterImage, characterImagePreview, addDebugLog }: ImageUploaderProps) => {
   const inputId = `image-upload-${sceneId}`;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -59,6 +60,14 @@ export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, scen
           <>
             <img src={imagePreview} alt="Preview da cena" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={onViewImage}
+                title="Visualizar imagem"
+              >
+                <Expand className="w-4 h-4" />
+              </Button>
               <Button
                 variant="secondary"
                 size="sm"

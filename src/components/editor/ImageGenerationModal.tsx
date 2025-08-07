@@ -33,7 +33,6 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
     const apiToken = "76b4jfL5SsXI48nS";
 
     try {
-      // --- PASSO DE DIAGNÓSTICO ---
       addDebugLog('[IA] Verificando buckets existentes no Supabase...');
       const { data: buckets, error: listError } = await supabase.storage.listBuckets();
       if (listError) {
@@ -41,13 +40,7 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
       } else {
         const bucketNames = buckets.map(b => b.name).join(', ');
         addDebugLog(`[IA] Buckets encontrados: [${bucketNames || 'Nenhum'}]`);
-        if (!buckets.some(b => b.name === 'image-references')) {
-            addDebugLog("[IA] ⚠️ AVISO: O bucket 'image-references' não foi encontrado na lista de buckets visíveis.");
-        } else {
-            addDebugLog("[IA] ✅ SUCESSO: O bucket 'image-references' está visível para a aplicação.");
-        }
       }
-      // --- FIM DO PASSO DE DIAGNÓSTICO ---
 
       const encodedPrompt = encodeURIComponent(prompt);
       
@@ -64,7 +57,6 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
 
         if (uploadError) {
           addDebugLog(`[IA] ERRO no upload para o Supabase: ${uploadError.message}`);
-          toast.error("Falha no upload. Verifique se o bucket 'image-references' existe e é público.");
           throw new Error(`Falha ao fazer upload da imagem de referência: ${uploadError.message}`);
         }
         addDebugLog('[IA] Upload concluído com sucesso.');
@@ -83,12 +75,10 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
 
         const model = 'kontext';
         const encodedImageURL = encodeURIComponent(publicUrl);
-        const seed = Math.floor(Math.random() * 1000000);
         const width = 1280;
         const height = 720;
-        const referrer = encodeURIComponent("https://vidflow.com.br/");
         
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=${width}&height=${height}&seed=${seed}&model=${model}&image=${encodedImageURL}&enhance=true&referrer=${referrer}&token=${apiToken}`;
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&model=${model}&image=${encodedImageURL}&token=${apiToken}`;
         
       } else {
         const model = 'flux';

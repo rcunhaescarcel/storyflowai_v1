@@ -37,6 +37,7 @@ import { NarrationGenerator } from "@/components/editor/NarrationGenerator";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { resizeImage } from "@/lib/imageUtils";
+import { ViewImageModal } from "@/components/editor/ViewImageModal";
 
 type VideoQuality = 'hd' | 'fullhd';
 
@@ -69,6 +70,7 @@ const Editor = () => {
   } = useFFmpeg();
   
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
 
   const addNewScene = () => {
     const newScene: Scene = {
@@ -293,6 +295,7 @@ const Editor = () => {
                           imagePreview={scene.imagePreview}
                           onImageUpload={(file) => handleImageUpload(scene.id, file)}
                           onImageRemove={() => updateScene(scene.id, { image: undefined, imagePreview: undefined })}
+                          onViewImage={() => setViewingImage(scene.imagePreview || null)}
                           characterImage={characterImage}
                           characterImagePreview={characterImagePreview}
                           addDebugLog={addDebugLog}
@@ -435,6 +438,12 @@ const Editor = () => {
           </aside>
         </div>
       </main>
+
+      <ViewImageModal
+        isOpen={!!viewingImage}
+        onClose={() => setViewingImage(null)}
+        imageUrl={viewingImage}
+      />
     </div>
   );
 };
