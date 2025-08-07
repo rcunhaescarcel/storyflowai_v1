@@ -13,9 +13,10 @@ interface ImageGenerationModalProps {
   onImageGenerated: (file: File) => void;
   characterImage?: File | null;
   characterImagePreview?: string | null;
+  addDebugLog: (message: string) => void;
 }
 
-export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, characterImage, characterImagePreview }: ImageGenerationModalProps) => {
+export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, characterImage, characterImagePreview, addDebugLog }: ImageGenerationModalProps) => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [useCharacter, setUseCharacter] = useState(true);
@@ -48,15 +49,14 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}&token=${apiToken}`;
       }
 
-      // Log para depuração
-      console.log("Gerando imagem com a seguinte URL:", targetUrl);
-      toast.info("URL de geração registrada no console do navegador para depuração.");
+      // Log para depuração na UI
+      addDebugLog(`[IA] Gerando imagem com a URL: ${targetUrl}`);
 
       const response = await fetch(targetUrl);
 
       if (!response.ok) {
         const errorBody = await response.text();
-        console.error("API Error:", errorBody);
+        addDebugLog(`[IA] ERRO: ${errorBody}`);
         throw new Error(`A geração da imagem falhou com o status: ${response.status}`);
       }
 
@@ -70,6 +70,7 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
     } catch (error) {
       console.error("Image generation failed:", error);
       toast.error("Falha ao gerar a imagem. Verifique o console para mais detalhes.");
+      addDebugLog(`[IA] Falha na requisição: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

@@ -11,9 +11,10 @@ interface ImageUploaderProps {
   sceneId: string;
   characterImage?: File | null;
   characterImagePreview?: string | null;
+  addDebugLog: (message: string) => void;
 }
 
-export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, sceneId, characterImage, characterImagePreview }: ImageUploaderProps) => {
+export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, sceneId, characterImage, characterImagePreview, addDebugLog }: ImageUploaderProps) => {
   const inputId = `image-upload-${sceneId}`;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -84,6 +85,7 @@ export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, scen
         onImageGenerated={onImageUpload}
         characterImage={characterImage}
         characterImagePreview={characterImagePreview}
+        addDebugLog={addDebugLog}
       />
     </>
   );

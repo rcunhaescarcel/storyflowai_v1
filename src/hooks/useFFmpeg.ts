@@ -68,12 +68,12 @@ export const useFFmpeg = () => {
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [autoLoadAttempted, setAutoLoadAttempted] = useState(false);
 
-  const addDebugLog = (message: string) => {
+  const addDebugLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     const logMessage = `[${timestamp}] ${message}`;
     setDebugLogs(prev => [...prev, logMessage]);
     console.log(logMessage);
-  };
+  }, []);
 
   const loadFFmpeg = useCallback(async (silent = false) => {
     if (isLoaded) {
@@ -92,7 +92,7 @@ export const useFFmpeg = () => {
       addDebugLog(`❌ ERRO CRÍTICO no carregamento: ${error.message}`);
       return false;
     }
-  }, [ffmpeg, isLoaded]);
+  }, [ffmpeg, isLoaded, addDebugLog]);
 
   const renderVideo = useCallback(async (
     scenes: Scene[],
@@ -248,7 +248,7 @@ export const useFFmpeg = () => {
       setIsProcessing(false);
       setProgress(0);
     }
-  }, [ffmpeg, isLoaded, isFontLoaded, loadFFmpeg]);
+  }, [ffmpeg, isLoaded, isFontLoaded, loadFFmpeg, addDebugLog]);
 
   useEffect(() => {
     if (!autoLoadAttempted && !isLoaded) {
@@ -264,6 +264,7 @@ export const useFFmpeg = () => {
     isProcessing,
     progress,
     debugLogs,
-    clearDebugLogs: () => setDebugLogs([])
+    clearDebugLogs: () => setDebugLogs([]),
+    addDebugLog
   };
 };

@@ -64,7 +64,8 @@ const Editor = () => {
     isProcessing, 
     progress, 
     debugLogs, 
-    clearDebugLogs 
+    clearDebugLogs,
+    addDebugLog
   } = useFFmpeg();
   
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -294,6 +295,7 @@ const Editor = () => {
                           onImageRemove={() => updateScene(scene.id, { image: undefined, imagePreview: undefined })}
                           characterImage={characterImage}
                           characterImagePreview={characterImagePreview}
+                          addDebugLog={addDebugLog}
                         />
                       </div>
                     </div>
