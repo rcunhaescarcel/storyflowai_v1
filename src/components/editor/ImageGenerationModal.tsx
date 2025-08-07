@@ -66,8 +66,8 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
 
         const model = 'kontext';
         const encodedImageURL = encodeURIComponent(publicUrl);
-        const width = 1280;
-        const height = 720;
+        const width = 1024; // Reduzido de 1280
+        const height = 576; // Reduzido de 720
         
         targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&model=${model}&image=${encodedImageURL}&token=${apiToken}`;
         
