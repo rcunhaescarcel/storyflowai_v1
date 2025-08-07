@@ -26,10 +26,14 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
     setIsLoading(true);
     try {
       const encodedTextPrompt = encodeURIComponent(narrationText);
-      // URL corrigida com subdomínio 'audio' e caminho '/prompt/'
       const targetUrl = `https://audio.pollinations.ai/prompt/${encodedTextPrompt}?voice=${selectedVoice}&model=openai-audio&referrer=https://vidflow.com.br/`;
 
-      const response = await fetch(targetUrl);
+      // Tornando a chamada fetch mais explícita para lidar com políticas de referência e redirecionamentos
+      const response = await fetch(targetUrl, {
+        method: 'GET',
+        redirect: 'follow',
+        referrerPolicy: 'no-referrer-when-downgrade'
+      });
 
       if (!response.ok) {
         const errorBody = await response.text();
