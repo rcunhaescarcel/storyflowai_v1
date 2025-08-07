@@ -25,8 +25,13 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
     }
     setIsLoading(true);
     try {
-      const encodedPrompt = encodeURIComponent(narrationText);
-      const response = await fetch(`https://audio.pollinations.ai/prompt/${encodedPrompt}?voice=${selectedVoice}`);
+      const encodedTextPrompt = encodeURIComponent(narrationText);
+      const targetUrl = `https://audio.pollinations.ai/prompt/${encodedTextPrompt}?voice=${selectedVoice}`;
+      
+      // Usando um proxy CORS para contornar a falta do cabeçalho 'Access-Control-Allow-Origin' na API de áudio.
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+
+      const response = await fetch(proxyUrl);
 
       if (!response.ok) {
         throw new Error(`A geração de áudio falhou com o status: ${response.status}`);
