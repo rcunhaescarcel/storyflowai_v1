@@ -1,6 +1,7 @@
 import { Music, Upload, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useEffect, useState } from 'react';
 
 interface AudioUploaderProps {
   audio?: File;
@@ -11,6 +12,19 @@ interface AudioUploaderProps {
 
 export const AudioUploader = ({ audio, onAudioUpload, onAudioRemove, sceneId }: AudioUploaderProps) => {
   const inputId = `audio-upload-${sceneId}`;
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (audio) {
+      const url = URL.createObjectURL(audio);
+      setAudioUrl(url);
+
+      return () => {
+        URL.revokeObjectURL(url);
+        setAudioUrl(null);
+      };
+    }
+  }, [audio]);
 
   return (
     <div className="bg-muted/50 rounded-lg p-4 flex items-center justify-between border">
@@ -31,10 +45,13 @@ export const AudioUploader = ({ audio, onAudioUpload, onAudioRemove, sceneId }: 
           <p className="text-muted-foreground truncate">{audio ? audio.name : 'Áudio por cena (opcional)'}</p>
         </div>
       </div>
-      {audio ? (
-        <Button variant="ghost" size="icon" onClick={onAudioRemove} className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0">
-          <Trash2 className="w-4 h-4" />
-        </Button>
+      {audio && audioUrl ? (
+        <div className="flex items-center gap-2">
+          <audio src={audioUrl} controls className="h-8 w-48"></audio>
+          <Button variant="ghost" size="icon" onClick={onAudioRemove} className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0">
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       ) : (
         <Button variant="outline" size="sm" onClick={() => document.getElementById(inputId)?.click()} className="flex-shrink-0">
           <Upload className="w-4 h-4 mr-2" />
