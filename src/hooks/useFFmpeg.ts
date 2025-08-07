@@ -191,47 +191,45 @@ export const useFFmpeg = () => {
       if (backgroundMusic) finalCmd.push('-i', 'background_music.mp3');
       if (logoFile) finalCmd.push('-i', 'logo.png');
 
-      let filterComplex = [];
-      let mapCmd = [];
+      const needsFilterComplex = backgroundMusic || logoFile || globalSrtFile;
 
-      let videoInput = '[0:v]';
-      let audioInput = '[0:a]';
-
-      // Logo Overlay
-      if (logoFile) {
-        const logoInput = backgroundMusic ? '[2:v]' : '[1:v]';
-        const positionMap = {
-          'top-left': '15:15',
-          'top-right': 'main_w-overlay_w-15:15',
-          'bottom-left': '15:main_h-overlay_h-15',
-          'bottom-right': 'main_w-overlay_w-15:main_h-overlay_h-15',
-        };
-        filterComplex.push(`${videoInput}${logoInput}overlay=${positionMap[logoPosition]}[v_with_logo]`);
-        videoInput = '[v_with_logo]';
-      }
-
-      // Subtitles
-      if (globalSrtFile) {
-        filterComplex.push(`${videoInput}subtitles=filename=global_subtitle.ass:fontsdir=.[v_out]`);
-        mapCmd.push('-map', '[v_out]');
+      if (!needsFilterComplex) {
+        addDebugLog('ℹ️ Nenhum filtro global aplicado. Copiando vídeo concatenado.');
+        finalCmd.push('-c', 'copy', '-y', 'final_video.mp4');
       } else {
-        mapCmd.push('-map', videoInput);
-      }
+        let videoFilterChain = '[0:v]';
+        let audioFilterChain = '[0:a]';
+        let filterComplexParts = [];
 
-      // Audio Mix
-      if (backgroundMusic) {
-        const musicInput = '[1:a]';
-        filterComplex.push(`${audioInput}volume=1.0[a_narration];${musicInput}volume=${backgroundMusicVolume}[a_music];[a_narration][a_music]amix=inputs=2:duration=first[a_out]`);
-        mapCmd.push('-map', '[a_out]');
-      } else {
-        mapCmd.push('-map', `${audioInput}?`);
-      }
+        // Build video filter chain
+        if (logoFile) {
+          const logoInputIndex = backgroundMusic ? 2 : 1;
+          const positionMap = {
+            'top-left': '15:15',
+            'top-right': 'main_w-overlay_w-15:15',
+            'bottom-left': '15:main_h-overlay_h-15',
+            'bottom-right': 'main_w-overlay_w-15:main_h-overlay_h-15',
+          };
+          videoFilterChain += `[${logoInputIndex}:v]overlay=${positionMap[logoPosition]}`;
+        }
+        if (globalSrtFile) {
+          videoFilterChain += `${videoFilterChain.includes('overlay') ? ',' : ''}subtitles=filename=global_subtitle.ass:fontsdir=.`;
+        }
+        filterComplexParts.push(`${videoFilterChain}[v_out]`);
 
-      if (filterComplex.length > 0) {
-        finalCmd.push('-filter_complex', filterComplex.join(';'));
+        // Build audio filter chain
+        if (backgroundMusic) {
+          const musicInput = '[1:a]';
+          audioFilterChain = `[0:a]volume=1.0[a1];${musicInput}volume=${backgroundMusicVolume}[a2];[a1][a2]amix=inputs=2:duration=first[a_out]`;
+        } else {
+          audioFilterChain = '[0:a]acopy[a_out]';
+        }
+        filterComplexParts.push(audioFilterChain);
+        
+        finalCmd.push('-filter_complex', filterComplexParts.join(';'));
+        finalCmd.push('-map', '[v_out]', '-map', '[a_out]');
+        finalCmd.push('-c:v', 'libx264', '-c:a', 'aac', '-y', 'final_video.mp4');
       }
-      finalCmd.push(...mapCmd);
-      finalCmd.push('-c:v', 'libx264', '-c:a', 'aac', '-y', 'final_video.mp4');
 
       addDebugLog(`🔧 Comando FFmpeg final: ${finalCmd.join(' ')}`);
       await ffmpeg.exec(finalCmd);
