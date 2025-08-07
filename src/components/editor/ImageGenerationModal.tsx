@@ -32,20 +32,21 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
 
     try {
       const encodedPrompt = encodeURIComponent(prompt);
-      let model = 'flux'; // Modelo padrão para geração sem personagem
-
+      
       if (characterImage && useCharacter && characterImagePreview) {
-        // Usa o modelo 'kontext' para geração com personagem
-        model = 'kontext';
+        // Estrutura exata da URL que funciona para o modelo 'kontext'
+        const model = 'kontext';
         const encodedImageURL = encodeURIComponent(characterImagePreview);
         const seed = Math.floor(Math.random() * 1000000);
-        const width = 1024;
-        const height = 1024;
+        const width = 1280;
+        const height = 720;
+        const referrer = encodeURIComponent("https://vidflow.com.br/");
         
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&model=${model}&image=${encodedImageURL}&token=${apiToken}`;
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=${width}&height=${height}&seed=${seed}&model=${model}&image=${encodedImageURL}&enhance=true&referrer=${referrer}&token=${apiToken}`;
         
       } else {
         // Usa o modelo 'flux' para geração padrão
+        const model = 'flux';
         targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}&token=${apiToken}`;
       }
 
