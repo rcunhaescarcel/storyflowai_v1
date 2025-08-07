@@ -26,14 +26,10 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
     setIsLoading(true);
     try {
       const encodedTextPrompt = encodeURIComponent(narrationText);
-      // URL ajustada para seguir a documentação oficial (sem o parâmetro 'referrer')
       const targetUrl = `https://audio.pollinations.ai/prompt/${encodedTextPrompt}?voice=${selectedVoice}&model=openai-audio`;
 
-      const response = await fetch(targetUrl, {
-        method: 'GET',
-        redirect: 'follow',
-        referrerPolicy: 'no-referrer-when-downgrade'
-      });
+      // Simplificando a chamada fetch para ser idêntica à da geração de imagem
+      const response = await fetch(targetUrl);
 
       if (!response.ok) {
         const errorBody = await response.text();
