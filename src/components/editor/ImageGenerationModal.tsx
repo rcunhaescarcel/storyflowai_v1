@@ -50,10 +50,6 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}&token=${apiToken}`;
       }
 
-      // Log the final URL for debugging
-      console.log("URL de Geração de Imagem (para depuração):", targetUrl);
-      toast.info("A URL de geração foi registrada no console do navegador.");
-
       const response = await fetch(targetUrl);
 
       if (!response.ok) {
