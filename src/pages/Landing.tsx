@@ -3,19 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Play, Zap, Wand2, ShieldCheck, ArrowRight } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
-import { useEffect, useRef } from "react";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(error => {
-        console.warn("A reprodução automática do vídeo foi impedida pelo navegador:", error);
-      });
-    }
-  }, []);
 
   const features = [
     {
@@ -86,7 +76,6 @@ const Landing = () => {
                   </div>
                 </div>
                 <video
-                  ref={videoRef}
                   src="https://longstories.ai/hero_video.mp4"
                   autoPlay
                   loop
