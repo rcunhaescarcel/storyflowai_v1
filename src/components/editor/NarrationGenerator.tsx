@@ -26,14 +26,13 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
     setIsLoading(true);
     try {
       const encodedTextPrompt = encodeURIComponent(narrationText);
-      const targetUrl = `https://audio.pollinations.ai/prompt/${encodedTextPrompt}?voice=${selectedVoice}`;
-      
-      // Usando um proxy CORS para contornar a falta do cabeçalho 'Access-Control-Allow-Origin' na API de áudio.
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+      const targetUrl = `https://audio.pollinations.ai/prompt/${encodedTextPrompt}?voice=${selectedVoice}&model=openai-audio&referrer=https://vidflow.com.br/`;
 
-      const response = await fetch(proxyUrl);
+      const response = await fetch(targetUrl);
 
       if (!response.ok) {
+        const errorBody = await response.text();
+        console.error("API Error:", errorBody);
         throw new Error(`A geração de áudio falhou com o status: ${response.status}`);
       }
 
@@ -45,7 +44,7 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
       toast.success("Narração gerada com sucesso!");
     } catch (error) {
       console.error("Audio generation failed:", error);
-      toast.error("Falha ao gerar a narração. Tente novamente mais tarde.");
+      toast.error("Falha ao gerar a narração. Verifique o console para mais detalhes.");
     } finally {
       setIsLoading(false);
     }
