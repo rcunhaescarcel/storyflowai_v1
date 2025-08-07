@@ -1,0 +1,11 @@
+1
+00:00:00,000 --> 00:00:03,000
+Esta é uma legenda de teste simples.
+
+2
+00:00:03,000 --> 00:00:06,000
+Para verificar se o formato está correto.
+
+3
+00:00:06,000 --> 00:00:09,000
+E se as legendas aparecem no vídeo.
