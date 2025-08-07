@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Play, Zap, Wand2, ShieldCheck, ArrowRight } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+import heroDragon from "@/assets/hero-dragon.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ const Landing = () => {
           <div className="z-10">
             <div className="relative w-full max-w-lg">
               <div className="absolute -top-8 -left-8 w-72 h-72 bg-primary/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-              <div className="absolute -bottom-8 -right-8 w-72 h-72 bg-blue-200/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-200"></div>
+              <div className="absolute -bottom-8 -right-8 w-72 h-72 bg-primary/5 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-200"></div>
               <div className="relative shadow-2xl rounded-2xl overflow-hidden">
                 <div className="px-4 py-2 bg-muted/40 border-b">
                   <div className="flex gap-2">
@@ -76,8 +77,8 @@ const Landing = () => {
                   </div>
                 </div>
                 <img
-                  src="https://images.unsplash.com/photo-1620421680383-609475f3b833?q=80&w=2070&auto=format&fit=crop"
-                  alt="Visual do produto"
+                  src={heroDragon}
+                  alt="Dragão bebê em estilo Pixar, sentado em um penhasco"
                   className="w-full object-cover object-center"
                 />
               </div>

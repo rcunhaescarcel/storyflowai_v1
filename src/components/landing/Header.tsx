@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Video } from "lucide-react";
+import { Wand2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Header = () => {
@@ -10,7 +10,7 @@ const Header = () => {
       <div className="container flex h-14 max-w-screen-2xl items-center">
         <div className="mr-4 flex items-center">
           <a href="/" className="mr-6 flex items-center space-x-2">
-            <Video className="h-6 w-6 text-primary" />
+            <Wand2 className="h-6 w-6 text-primary" />
             <span className="font-bold">Viflow IA</span>
           </a>
         </div>
