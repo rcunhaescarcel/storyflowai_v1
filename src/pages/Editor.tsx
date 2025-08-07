@@ -299,6 +299,7 @@ const Editor = () => {
                           narrationText={scene.narrationText}
                           onTextChange={(text) => updateScene(scene.id, { narrationText: text })}
                           onAudioGenerated={(file) => handleNarrationUpload(scene.id, file)}
+                          addDebugLog={addDebugLog}
                         />
                         <div className="border-t pt-4 space-y-4">
                           <AudioUploader

@@ -10,11 +10,12 @@ interface NarrationGeneratorProps {
   narrationText: string | undefined;
   onTextChange: (text: string) => void;
   onAudioGenerated: (file: File) => void;
+  addDebugLog: (message: string) => void;
 }
 
 const openAIVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 
-export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerated }: NarrationGeneratorProps) => {
+export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerated, addDebugLog }: NarrationGeneratorProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('nova');
 
@@ -24,20 +25,22 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
       return;
     }
     setIsLoading(true);
+    addDebugLog(`[Narração IA] Iniciando geração para o texto: "${narrationText.slice(0, 50)}..."`);
     try {
-      // Codifica o texto da narração para ser usado na URL
       const encodedTextPrompt = encodeURIComponent(narrationText);
       const token = "76b4jfL5SsXI48nS";
       const referrer = "https://vidflow.com.br/";
       
-      // Constrói a URL final, substituindo a parte do texto dinamicamente
       const targetUrl = `https://text.pollinations.ai/${encodedTextPrompt}?model=openai-audio&voice=${selectedVoice}&referrer=${referrer}&token=${token}`;
+      
+      addDebugLog(`[Narração IA] URL da API: ${targetUrl.substring(0, 100)}...`);
 
       const response = await fetch(targetUrl);
 
       if (!response.ok) {
         const errorBody = await response.text();
         console.error("API Error:", errorBody);
+        addDebugLog(`[Narração IA] ❌ ERRO na API: ${errorBody}`);
         throw new Error(`A geração de áudio falhou com o status: ${response.status}`);
       }
 
@@ -46,10 +49,13 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
       const file = new File([blob], fileName, { type: 'audio/mpeg' });
 
       onAudioGenerated(file);
+      addDebugLog(`[Narração IA] ✅ Áudio gerado e carregado com sucesso!`);
       toast.success("Narração gerada com sucesso!");
     } catch (error) {
       console.error("Audio generation failed:", error);
-      toast.error("Falha ao gerar a narração. Verifique o console para mais detalhes.");
+      const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
+      addDebugLog(`[Narração IA] ❌ Falha na geração: ${errorMessage}`);
+      toast.error(`Falha ao gerar a narração: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
