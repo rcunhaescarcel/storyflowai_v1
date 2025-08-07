@@ -33,16 +33,14 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
       const encodedPrompt = encodeURIComponent(prompt);
 
       if (characterImage && useCharacter && characterImagePreview) {
-        // Endpoint para geração com imagem de referência
-        const encodedImageURL = encodeURIComponent(characterImagePreview); // Envia a imagem como data URL
+        const encodedImageURL = encodeURIComponent(characterImagePreview);
         const seed = Math.floor(Math.random() * 1000000);
         const width = 1024;
         const height = 1024;
         
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=${width}&height=${height}&seed=${seed}&image=${encodedImageURL}&enhance=true&referrer=https://vidflow.com.br/`;
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=${width}&height=${height}&seed=${seed}&model=sdxl-lightning&image=${encodedImageURL}&enhance=true&referrer=https://vidflow.com.br/`;
         
       } else {
-        // Endpoint padrão de texto-para-imagem
         targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
       }
 

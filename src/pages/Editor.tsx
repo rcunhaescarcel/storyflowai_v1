@@ -36,6 +36,7 @@ import { EffectsPopover } from "@/components/editor/EffectsPopover";
 import { NarrationGenerator } from "@/components/editor/NarrationGenerator";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { resizeImage } from "@/lib/imageUtils";
 
 type VideoQuality = 'hd' | 'fullhd';
 
@@ -151,19 +152,24 @@ const Editor = () => {
     }
   };
 
-  const handleCharacterImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCharacterImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      setCharacterImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCharacterImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      toast({
-        title: "Personagem de Referência Carregado",
-        description: "A imagem será usada como contexto para a IA.",
-      });
+      try {
+        const resizedImagePreview = await resizeImage(file, 1024, 1024);
+        setCharacterImage(file);
+        setCharacterImagePreview(resizedImagePreview);
+        toast({
+          title: "Personagem de Referência Carregado",
+          description: "A imagem foi otimizada e está pronta para ser usada.",
+        });
+      } catch (error) {
+        toast({
+          title: "Erro ao processar imagem",
+          description: "Não foi possível redimensionar a imagem.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
