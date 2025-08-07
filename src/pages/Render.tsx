@@ -55,8 +55,8 @@ const Render = () => {
       setStatus('processing');
       setCurrentStep('Iniciando renderização...');
       
-      // Start the actual video rendering
-      const videoUrl = await renderVideo(scenes);
+      // Start the actual video rendering, passing null for global files
+      const videoUrl = await renderVideo(scenes, null, null);
       
       if (videoUrl) {
         setVideoUrl(videoUrl);
@@ -303,16 +303,11 @@ const Render = () => {
                             🎵 {scene.audio.name}
                           </div>
                         )}
-                        {scene.srtFile && (
-                          <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
-                            📝 {scene.srtFile.name}
-                          </div>
-                        )}
                       </div>
                       
-                      {(scene.subtitle || scene.srtFile) && (
+                      {scene.subtitle && (
                         <p className="text-sm text-muted-foreground line-clamp-2">
-                          {scene.srtFile ? `"Arquivo SRT: ${scene.srtFile.name}"` : `"${scene.subtitle}"`}
+                          {`"${scene.subtitle}"`}
                         </p>
                       )}
                       
