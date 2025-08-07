@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Play, Zap, Wand2, ShieldCheck, ArrowRight } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
-import heroDragon from "@/assets/hero-dragon.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -77,8 +76,8 @@ const Landing = () => {
                   </div>
                 </div>
                 <img
-                  src={heroDragon}
-                  alt="Dragão bebê em estilo Pixar, sentado em um penhasco"
+                  src="https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1753310818875x988386395140663500/close-up-of-a-thoughtful-person-in-a-cozy-room-soft-golden-light-illuminating-brain-imagery-overlay.jpg"
+                  alt="Pessoa pensativa em uma sala aconchegante com sobreposição de imagens do cérebro"
                   className="w-full object-cover object-center"
                 />
               </div>
