@@ -28,7 +28,8 @@ import {
   CornerDownRight,
   UserSquare,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Copy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
@@ -227,6 +228,20 @@ const Editor = () => {
       link.click();
       document.body.removeChild(link);
     }
+  };
+
+  const copyLogsToClipboard = () => {
+    if (debugLogs.length === 0) {
+      toast({ title: "Nada para copiar", description: "Não há logs no console de debug." });
+      return;
+    }
+    const logText = debugLogs.join('\n');
+    navigator.clipboard.writeText(logText).then(() => {
+      toast({ title: "Copiado!", description: "Os logs de debug foram copiados para a área de transferência." });
+    }).catch(err => {
+      console.error('Failed to copy logs: ', err);
+      toast({ title: "Erro ao copiar", description: "Não foi possível copiar os logs.", variant: "destructive" });
+    });
   };
 
   return (
@@ -456,7 +471,7 @@ const Editor = () => {
                 <CardContent className="space-y-4">
                   {isProcessing && <div className="space-y-3"><div className="flex items-center justify-between text-sm"><span className="text-muted-foreground">Progresso</span><span className="text-foreground font-medium">{Math.round(progress)}%</span></div><Progress value={progress} className="h-2" /><div className="flex items-center gap-2 text-sm text-muted-foreground"><Clock className="w-4 h-4 animate-spin" />Processando...</div></div>}
                   {videoUrl && <div className="space-y-3"><div className="aspect-video bg-muted rounded-lg overflow-hidden"><video src={videoUrl} controls className="w-full h-full object-cover" /></div><Button onClick={downloadVideo} className="w-full bg-green-600 hover:bg-green-700 text-white"><Download className="w-4 h-4 mr-2" />Baixar Vídeo</Button></div>}
-                  {debugLogs.length > 0 && <div className="space-y-3"><div className="flex items-center justify-between"><Label className="text-sm font-medium">Logs de Debug</Label><Button variant="ghost" size="sm" onClick={clearDebugLogs}>Limpar</Button></div><ScrollArea className="h-40 w-full rounded-md border bg-muted/50 p-3"><div className="space-y-1">{debugLogs.map((log, index) => (<div key={index} className="text-xs font-mono text-muted-foreground">{log}</div>))}</div></ScrollArea></div>}
+                  {debugLogs.length > 0 && <div className="space-y-3"><div className="flex items-center justify-between"><Label className="text-sm font-medium">Logs de Debug</Label><div className="flex items-center gap-2"><Button variant="ghost" size="sm" onClick={copyLogsToClipboard}><Copy className="w-3 h-3 mr-1.5" />Copiar</Button><Button variant="ghost" size="sm" onClick={clearDebugLogs}>Limpar</Button></div></div><ScrollArea className="h-40 w-full rounded-md border bg-muted/50 p-3"><div className="space-y-1">{debugLogs.map((log, index) => (<div key={index} className="text-xs font-mono text-muted-foreground">{log}</div>))}</div></ScrollArea></div>}
                 </CardContent>
               </Card>
             </div>
