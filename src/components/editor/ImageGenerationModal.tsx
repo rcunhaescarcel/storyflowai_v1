@@ -70,11 +70,11 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         const width = 1024;
         const height = 576;
         
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&model=${model}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}`;
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&model=${model}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}&nologo=true`;
         
       } else {
         const model = 'flux';
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}&token=${apiToken}&referrer=${referrer}`;
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}&token=${apiToken}&referrer=${referrer}&nologo=true`;
       }
 
       addDebugLog(`[IA] Gerando imagem com a URL: ${targetUrl.substring(0, 200)}...`);
