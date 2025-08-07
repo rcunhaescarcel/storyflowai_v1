@@ -26,7 +26,9 @@ import {
   CornerUpRight,
   CornerDownLeft,
   CornerDownRight,
-  UserSquare
+  UserSquare,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
@@ -94,6 +96,20 @@ const Editor = () => {
 
   const deleteScene = (id: string) => {
     setScenes(scenes.filter(scene => scene.id !== id));
+  };
+
+  const moveSceneUp = (index: number) => {
+    if (index === 0) return;
+    const newScenes = [...scenes];
+    [newScenes[index - 1], newScenes[index]] = [newScenes[index], newScenes[index - 1]];
+    setScenes(newScenes);
+  };
+
+  const moveSceneDown = (index: number) => {
+    if (index === scenes.length - 1) return;
+    const newScenes = [...scenes];
+    [newScenes[index + 1], newScenes[index]] = [newScenes[index], newScenes[index + 1]];
+    setScenes(newScenes);
   };
 
   const handleImageUpload = (sceneId: string, file: File) => {
@@ -263,9 +279,17 @@ const Editor = () => {
                         <Badge variant="outline" className="px-2.5 py-1 text-sm">{index + 1}</Badge>
                         Cena
                       </CardTitle>
-                      <Button variant="ghost" size="icon" onClick={() => deleteScene(scene.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => moveSceneUp(index)} disabled={index === 0}>
+                          <ArrowUp className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => moveSceneDown(index)} disabled={index === scenes.length - 1}>
+                          <ArrowDown className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => deleteScene(scene.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
