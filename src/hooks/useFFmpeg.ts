@@ -96,7 +96,8 @@ export const useFFmpeg = () => {
     globalSrtFile: File | null,
     backgroundMusic: File | null,
     subtitleStyle: SubtitleStyle,
-    backgroundMusicVolume: number
+    backgroundMusicVolume: number,
+    quality: 'hd' | 'fullhd'
   ): Promise<string | null> => {
     addDebugLog(`🎬 Iniciando renderização de vídeo com ${scenes.length} cenas...`);
     if (!isLoaded) {
@@ -113,6 +114,9 @@ export const useFFmpeg = () => {
 
     setIsProcessing(true);
     setProgress(0);
+
+    const resolution = quality === 'fullhd' ? { width: 1920, height: 1080 } : { width: 1280, height: 720 };
+    addDebugLog(`📹 Qualidade selecionada: ${quality.toUpperCase()} (${resolution.width}x${resolution.height})`);
 
     try {
       // --- PASS 1: Create individual scene clips ---
@@ -140,7 +144,7 @@ export const useFFmpeg = () => {
         let cmd = ['-loop', '1', '-i', `image_${i}.jpg`];
         if (scene.audio) cmd.push('-i', `audio_${i}.mp3`);
         cmd.push('-t', sceneDuration.toString());
-        let videoFilter = `scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30`;
+        let videoFilter = `scale=${resolution.width}:${resolution.height}:force_original_aspect_ratio=increase,crop=${resolution.width}:${resolution.height},fps=30`;
         if (scene.zoomEnabled) {
           const zoomFactor = 1 + (scene.zoomIntensity / 100);
           const totalFrames = sceneDuration * 30;

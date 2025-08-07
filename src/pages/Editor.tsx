@@ -19,7 +19,8 @@ import {
   Download,
   Globe,
   Palette,
-  Volume2
+  Volume2,
+  Film
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Scene, useFFmpeg, SubtitleStyle } from "@/hooks/useFFmpeg";
@@ -28,6 +29,8 @@ import { AudioUploader } from "@/components/editor/AudioUploader";
 import { EffectsPopover } from "@/components/editor/EffectsPopover";
 import { Slider } from "@/components/ui/slider";
 
+type VideoQuality = 'hd' | 'fullhd';
+
 const Editor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -35,6 +38,7 @@ const Editor = () => {
   const [globalSrtFile, setGlobalSrtFile] = useState<File | null>(null);
   const [backgroundMusic, setBackgroundMusic] = useState<File | null>(null);
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.5);
+  const [videoQuality, setVideoQuality] = useState<VideoQuality>('fullhd');
   
   const [fontFamily, setFontFamily] = useState("Arial");
   const [fontSize, setFontSize] = useState(24);
@@ -131,7 +135,7 @@ const Editor = () => {
       setVideoUrl(null);
       clearDebugLogs();
       const subtitleStyle: SubtitleStyle = { fontFamily, fontSize, fontColor, shadowColor };
-      const result = await renderVideo(scenes, globalSrtFile, backgroundMusic, subtitleStyle, backgroundMusicVolume);
+      const result = await renderVideo(scenes, globalSrtFile, backgroundMusic, subtitleStyle, backgroundMusicVolume, videoQuality);
       if (result) {
         setVideoUrl(result);
         toast({ title: "Sucesso!", description: "Vídeo renderizado com sucesso" });
@@ -246,6 +250,19 @@ const Editor = () => {
                 <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Globe className="w-5 h-5" />Configurações Gerais</CardTitle></CardHeader>
                 <CardContent className="space-y-6">
                   <div>
+                    <Label className="text-sm font-medium mb-2 flex items-center gap-2"><Film className="w-4 h-4" />Qualidade do Vídeo</Label>
+                    <Select value={videoQuality} onValueChange={(value: VideoQuality) => setVideoQuality(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fullhd">Full HD (1080p)</SelectItem>
+                        <SelectItem value="hd">HD (720p)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="border-t pt-6">
                     <Label className="text-sm font-medium mb-2 flex items-center gap-2"><Music className="w-4 h-4" />Trilha Sonora (Fundo)</Label>
                     <Input type="file" accept="audio/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleBackgroundMusicUpload(file); }} className="hidden" id="bg-music-upload" />
                     <Button variant="outline" size="sm" onClick={() => document.getElementById('bg-music-upload')?.click()} className="w-full">Selecionar Música</Button>
