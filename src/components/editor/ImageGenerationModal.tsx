@@ -31,17 +31,21 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
 
     try {
       const encodedPrompt = encodeURIComponent(prompt);
+      let model = 'flux'; // Modelo padrão para geração sem personagem
 
       if (characterImage && useCharacter && characterImagePreview) {
+        // Usa o modelo 'kontext' para geração com personagem
+        model = 'kontext';
         const encodedImageURL = encodeURIComponent(characterImagePreview);
         const seed = Math.floor(Math.random() * 1000000);
         const width = 1024;
         const height = 1024;
         
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=${width}&height=${height}&seed=${seed}&model=sdxl-lightning&image=${encodedImageURL}&enhance=true&referrer=https://vidflow.com.br/`;
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=${width}&height=${height}&seed=${seed}&model=${model}&image=${encodedImageURL}&enhance=true&referrer=https://vidflow.com.br/`;
         
       } else {
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
+        // Usa o modelo 'flux' para geração padrão
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}`;
       }
 
       const response = await fetch(targetUrl);
