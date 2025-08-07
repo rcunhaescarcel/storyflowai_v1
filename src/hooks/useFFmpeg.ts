@@ -4,18 +4,10 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 // Helper function to get a compatible font name for FFmpeg
 const getCompatibleFont = (font: string): string => {
-  const fontMap: { [key: string]: string } = {
-    'Poppins': 'Arial',
-    'Roboto': 'Arial',
-    'Helvetica': 'Arial',
-    'Times New Roman': 'Times',
-    'Courier New': 'Courier',
-    'Verdana': 'Arial',
-    'Georgia': 'Georgia',
-    'Impact': 'Impact',
-    'Comic Sans MS': 'Arial'
-  };
-  return fontMap[font] || 'Arial';
+  // All fonts are mapped to Roboto, as it's the one we are loading dynamically.
+  // This ensures subtitles always render.
+  console.log(`Mapping font ${font} to Roboto`);
+  return 'Roboto';
 };
 
 // Função para criar legenda no formato ASS a partir de texto simples
@@ -134,6 +126,7 @@ export interface Scene {
 export const useFFmpeg = () => {
   const [ffmpeg] = useState(() => new FFmpeg());
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isFontLoaded, setIsFontLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
@@ -187,6 +180,16 @@ export const useFFmpeg = () => {
     setProgress(0);
 
     try {
+      // Load font if not already loaded
+      if (!isFontLoaded) {
+        addDebugLog('📥 Baixando arquivo de fonte (necessário apenas uma vez)...');
+        const fontUrl = 'https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto-Regular.ttf';
+        await ffmpeg.createDir('/fonts');
+        await ffmpeg.writeFile('/fonts/Roboto-Regular.ttf', await fetchFile(fontUrl));
+        addDebugLog('✅ Fonte carregada em /fonts/Roboto-Regular.ttf');
+        setIsFontLoaded(true);
+      }
+
       const sceneDuration = 5;
       
       for (let i = 0; i < scenes.length; i++) {
@@ -239,9 +242,8 @@ export const useFFmpeg = () => {
         if (scene.fadeOutDuration > 0) videoFilter += `,fade=t=out:st=${sceneDuration - scene.fadeOutDuration}:d=${scene.fadeOutDuration}`;
         
         if (scene.srtFile || scene.subtitle) {
-          const compatibleFont = getCompatibleFont(scene.fontFamily);
-          addDebugLog(`🔤 Aplicando legenda com fonte: ${compatibleFont}`);
-          videoFilter += `,ass=subtitle_${i}.ass`;
+          addDebugLog(`🔤 Aplicando legenda com fonte Roboto...`);
+          videoFilter += `,ass=filename=subtitle_${i}.ass:fontsdir=/fonts`;
         }
 
         cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-pix_fmt', 'yuv420p');
@@ -270,7 +272,7 @@ export const useFFmpeg = () => {
       setIsProcessing(false);
       setProgress(0);
     }
-  }, [ffmpeg, isLoaded, loadFFmpeg]);
+  }, [ffmpeg, isLoaded, isFontLoaded, loadFFmpeg]);
 
   useEffect(() => {
     if (!autoLoadAttempted && !isLoaded) {
