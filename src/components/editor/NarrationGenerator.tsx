@@ -16,7 +16,7 @@ const openAIVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 
 export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerated }: NarrationGeneratorProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState('alloy');
+  const [selectedVoice, setSelectedVoice] = useState('nova');
 
   const handleGenerateNarration = async () => {
     if (!narrationText || !narrationText.trim()) {
@@ -26,9 +26,10 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
     setIsLoading(true);
     try {
       const encodedTextPrompt = encodeURIComponent(narrationText);
-      const targetUrl = `https://audio.pollinations.ai/prompt/${encodedTextPrompt}?voice=${selectedVoice}&model=openai-audio`;
+      const token = "76b4jfL5SsXI48nS";
+      const referrer = "https://vidflow.com.br/";
+      const targetUrl = `https://text.pollinations.ai/${encodedTextPrompt}?model=openai-audio&voice=${selectedVoice}&referrer=${referrer}&token=${token}`;
 
-      // Simplificando a chamada fetch para ser idêntica à da geração de imagem
       const response = await fetch(targetUrl);
 
       if (!response.ok) {
