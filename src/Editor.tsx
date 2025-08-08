@@ -54,7 +54,7 @@ const Editor = () => {
   const { 
     renderVideo,
     concatenateAudio,
-    addDebugLog: ffmpegAddDebugLog,
+    cancelRender,
   } = useFFmpeg();
 
   const { 
@@ -197,7 +197,11 @@ const Editor = () => {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro desconhecido";
-      toast.error("Erro na Renderização", { description: message });
+      if (message.includes('cancelada')) {
+        toast.info("Renderização Cancelada", { description: "O processo foi interrompido." });
+      } else {
+        toast.error("Erro na Renderização", { description: message });
+      }
     }
   };
 
@@ -329,7 +333,7 @@ const Editor = () => {
             />
           </div>
         ) : showRenderProgress ? (
-          <RenderProgress stage={stage} progress={progress} />
+          <RenderProgress stage={stage} progress={progress} onCancel={cancelRender} />
         ) : (
           <div className="mt-8">
             <div className="flex items-center gap-4 mb-4">

@@ -1,12 +1,14 @@
-import { FileCog, Film, Combine, Sparkles } from "lucide-react";
+import { FileCog, Film, Combine, Sparkles, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export type RenderStage = 'idle' | 'scenes' | 'concat' | 'final';
 
 interface RenderProgressProps {
   stage: RenderStage;
   progress: number;
+  onCancel: () => void;
 }
 
 const getActiveStep = (stage: RenderStage) => {
@@ -34,7 +36,7 @@ const steps = [
     { icon: Sparkles, label: "Finalizando" }
 ];
 
-export const RenderProgress = ({ stage, progress }: RenderProgressProps) => {
+export const RenderProgress = ({ stage, progress, onCancel }: RenderProgressProps) => {
     const activeStep = getActiveStep(stage);
     const loadingMessage = getLoadingMessage(stage);
 
@@ -74,6 +76,13 @@ export const RenderProgress = ({ stage, progress }: RenderProgressProps) => {
                 <p className="text-lg font-medium text-primary h-6">{loadingMessage}</p>
                 <Progress value={progress} className="w-full h-2" />
                 <p className="text-sm text-muted-foreground">{Math.round(progress)}% concluído</p>
+            </div>
+
+            <div className="mt-12">
+              <Button variant="outline" onClick={onCancel}>
+                <XCircle className="w-4 h-4 mr-2" />
+                Cancelar Renderização
+              </Button>
             </div>
         </div>
     );

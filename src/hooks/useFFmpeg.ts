@@ -121,6 +121,18 @@ export const useFFmpeg = () => {
     }
   }, [ffmpeg, isLoaded, addDebugLog, updateProgress]);
 
+  const cancelRender = useCallback(async () => {
+    addDebugLog('🛑 Cancelando renderização...');
+    try {
+      await ffmpeg.terminate();
+      addDebugLog('✅ Processo FFmpeg terminado.');
+    } catch (e) {
+      addDebugLog(`⚠️ Erro ao tentar terminar o FFmpeg: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      endRender();
+    }
+  }, [ffmpeg, addDebugLog, endRender]);
+
   const concatenateAudio = useCallback(async (scenes: Scene[]): Promise<File | null> => {
     addDebugLog(`🎵 Iniciando concatenação de áudio para ${scenes.length} cenas...`);
     if (!isLoaded) {
@@ -336,8 +348,13 @@ export const useFFmpeg = () => {
 
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro desconhecido";
-      addDebugLog(`❌ ERRO na renderização: ${message}`);
-      throw error;
+      if (message.includes('exit')) {
+        addDebugLog(`🛑 Renderização cancelada pelo usuário.`);
+        throw new Error('Renderização cancelada pelo usuário.');
+      } else {
+        addDebugLog(`❌ ERRO na renderização: ${message}`);
+        throw error;
+      }
     } finally {
       renderStageRef.current.stage = 'idle';
       endRender();
@@ -357,5 +374,6 @@ export const useFFmpeg = () => {
     concatenateAudio,
     isLoaded,
     addDebugLog,
+    cancelRender,
   };
 };
