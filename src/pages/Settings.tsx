@@ -220,9 +220,9 @@ const Settings = () => {
                   Upgrade
                 </Button>
               </div>
-              <div className="bg-yellow-400/10 border border-yellow-500/20 rounded-lg p-6">
+              <div className="bg-yellow-400/10 dark:bg-yellow-400/5 border border-yellow-500/20 dark:border-yellow-500/30 rounded-lg p-6">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Coins className="w-5 h-5 text-yellow-600" />
+                  <Coins className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                   Seu Saldo de Coins
                 </h3>
                 <div className="flex items-baseline gap-2 mt-2">
