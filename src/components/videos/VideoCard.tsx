@@ -54,19 +54,20 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete }: VideoCardPr
           {project.scenes?.length || 0} cenas • {project.style || 'Animação 3D'}
         </p>
         <div className="flex items-center gap-2 pt-2">
-          <Button onClick={() => onEdit(project.id)} className="w-full bg-primary hover:bg-primary/90">
+          <Button onClick={() => onEdit(project.id)} className="flex-1 bg-primary hover:bg-primary/90">
             <Pencil className="w-4 h-4 mr-2" />
             Editar
           </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={() => onDownload(project.id)}
-            disabled={!project.final_video_url}
-            aria-label="Baixar vídeo"
-          >
-            <Download className="w-4 h-4" />
-          </Button>
+          {isRendered && (
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => onDownload(project.id)}
+              aria-label="Baixar vídeo"
+            >
+              <Download className="w-4 h-4" />
+            </Button>
+          )}
           <Button 
             variant="outline" 
             size="icon" 
