@@ -45,9 +45,12 @@ const Videos = () => {
   });
 
   const handleEdit = (id: string) => {
-    toast.info("Função de edição em breve!", {
-      description: `Você poderá editar o projeto ${id}.`,
-    });
+    const project = projects?.find(p => p.id === id);
+    if (project) {
+      navigate('/editor', { state: { project } });
+    } else {
+      toast.error("Projeto não encontrado para edição.");
+    }
   };
 
   const handleDownload = (id: string) => {

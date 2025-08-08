@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Download, Pencil, Trash2 } from "lucide-react";
+import { Download, Pencil, Trash2, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { VideoProject } from "../../types/video.ts";
 
@@ -13,6 +13,7 @@ interface VideoCardProps {
 }
 
 export const VideoCard = ({ project, onEdit, onDownload, onDelete }: VideoCardProps) => {
+  const isRendered = !!project.final_video_url;
   const thumbnailUrl = project.scenes?.[0]?.image_url || `https://placehold.co/1600x900/2a2a2a/ffffff?text=${encodeURI(project.title)}`;
   
   const formatDuration = (seconds: number | null | undefined) => {
@@ -26,11 +27,23 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete }: VideoCardPr
     <Card className="overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1">
       <div className="relative">
         <AspectRatio ratio={16 / 9}>
-          <img src={thumbnailUrl} alt={project.title} className="object-cover w-full h-full" />
+          <img src={thumbnailUrl} alt={project.title} className="object-cover w-full h-full bg-muted" />
         </AspectRatio>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        
+        {isRendered ? (
+          <a href={project.final_video_url!} target="_blank" rel="noopener noreferrer" aria-label="Play video">
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <Play className="w-8 h-8 text-white fill-white ml-1" />
+              </div>
+            </div>
+          </a>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
+        )}
+
         {project.video_duration && (
-          <Badge variant="secondary" className="absolute top-3 right-3 bg-black/50 text-white border-none">
+          <Badge variant="secondary" className="absolute bottom-3 right-3 bg-black/50 text-white border-none">
             {formatDuration(project.video_duration)}
           </Badge>
         )}

@@ -72,3 +72,13 @@ export const blobToDataURL = (blob: Blob): Promise<string> => {
     reader.readAsDataURL(blob);
   });
 };
+
+export const urlToFile = async (url: string, filename: string, mimeType?: string): Promise<File> => {
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    const type = mimeType || blob.type;
+    return new File([blob], filename, { type });
+};
