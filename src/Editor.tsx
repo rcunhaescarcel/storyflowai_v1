@@ -88,8 +88,8 @@ const Editor = () => {
   
       for (let i = 0; i < scenesToSave.length; i++) {
         const scene = scenesToSave[i];
-        if (!scene.image || !scene.audio) {
-          addDebugLog(`[DB] ⚠️ Arquivos da cena ${i + 1} não encontrados. Pulando upload para esta cena.`);
+        if (!scene.image) {
+          addDebugLog(`[DB] ⚠️ Imagem da cena ${i + 1} não encontrada. Pulando upload para esta cena.`);
           continue;
         }
   
@@ -98,13 +98,8 @@ const Editor = () => {
         if (imageUploadError) throw new Error(`Upload da imagem falhou: ${imageUploadError.message}`);
         const { data: { publicUrl: imageUrl } } = supabase.storage.from('image-references').getPublicUrl(imagePath);
   
-        const audioPath = `${projectFolder}/${scene.id}-audio.mp3`;
-        const { error: audioUploadError } = await supabase.storage.from('image-references').upload(audioPath, scene.audio);
-        if (audioUploadError) throw new Error(`Upload do áudio falhou: ${audioUploadError.message}`);
-        const { data: { publicUrl: audioUrl } } = supabase.storage.from('image-references').getPublicUrl(audioPath);
-  
         sceneDataForDb.push({
-          id: scene.id, image_url: imageUrl!, imagePreview: scene.imagePreview, audio_url: audioUrl!, narration_text: scene.narrationText,
+          id: scene.id, image_url: imageUrl!, imagePreview: scene.imagePreview, audio_data_url: scene.audioDataUrl, narration_text: scene.narrationText,
           duration: scene.duration, effect: scene.effect, zoomEnabled: scene.zoomEnabled,
           zoomIntensity: scene.zoomIntensity, zoomDirection: scene.zoomDirection,
           fadeInDuration: scene.fadeInDuration, fadeOutDuration: scene.fadeOutDuration,
@@ -192,11 +187,11 @@ const Editor = () => {
     }
   };
 
-  const handleNarrationUpload = async (sceneId: string, file: File) => {
+  const handleNarrationUpload = async (sceneId: string, file: File, dataUrl: string) => {
     if (file && file.type.startsWith('audio/')) {
       try {
         const duration = await getAudioDuration(file);
-        updateScene(sceneId, { audio: file, duration });
+        updateScene(sceneId, { audio: file, duration, audioDataUrl: dataUrl });
         toast.success("Narração carregada", {
           description: `Áudio de ${duration.toFixed(1)}s adicionado à cena.`,
         });

@@ -17,7 +17,7 @@ interface SceneCardProps {
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
   onImageUpload: (sceneId: string, file: File) => void;
-  onNarrationGenerated: (sceneId: string, file: File) => void;
+  onNarrationGenerated: (sceneId: string, file: File, dataUrl: string) => void;
   onViewImage: (imageUrl: string | null) => void;
   addDebugLog: (message: string) => void;
 }
@@ -81,11 +81,11 @@ export const SceneCard = ({
             <NarrationGenerator
               narrationText={scene.narrationText}
               onTextChange={(text) => onUpdate(scene.id, { narrationText: text })}
-              onAudioGenerated={(file) => onNarrationGenerated(scene.id, file)}
+              onAudioGenerated={(file, dataUrl) => onNarrationGenerated(scene.id, file, dataUrl)}
               addDebugLog={addDebugLog}
               audio={scene.audio}
               duration={scene.duration}
-              onAudioRemove={() => onUpdate(scene.id, { audio: undefined, duration: undefined })}
+              onAudioRemove={() => onUpdate(scene.id, { audio: undefined, duration: undefined, audioDataUrl: undefined })}
             />
           </div>
           <div className="md:col-span-2">

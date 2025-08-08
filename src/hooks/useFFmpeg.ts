@@ -49,9 +49,10 @@ export interface Scene {
   id: string;
   image?: File;
   imagePreview?: string;
-  audio?: File; // Per-scene narration
-  narrationText?: string; // Text for generating narration
-  duration?: number; // DURATION OF THE SCENE IN SECONDS
+  audio?: File;
+  audioDataUrl?: string;
+  narrationText?: string;
+  duration?: number;
   effect: string;
   zoomEnabled: boolean;
   zoomIntensity: number;

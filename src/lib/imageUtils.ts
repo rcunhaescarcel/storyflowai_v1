@@ -1,3 +1,10 @@
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
 export const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -33,7 +40,6 @@ export const resizeImage = (file: File, maxWidth: number, maxHeight: number): Pr
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Usando JPEG com qualidade 0.9 para um tamanho de arquivo menor
         resolve(canvas.toDataURL('image/jpeg', 0.9));
       };
       img.onerror = (err) => reject(err);
@@ -57,3 +63,12 @@ export const dataURLtoFile = (dataurl: string, filename: string): File => {
     }
     return new File([u8arr], filename, { type: mime });
 }
+
+export const blobToDataURL = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};

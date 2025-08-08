@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { blobToDataURL } from '@/lib/imageUtils';
 
 interface NarrationGeneratorProps {
   narrationText: string | undefined;
   onTextChange: (text: string) => void;
-  onAudioGenerated: (file: File) => void;
+  onAudioGenerated: (file: File, dataUrl: string) => void;
   addDebugLog: (message: string) => void;
   audio?: File;
   duration?: number;
@@ -62,8 +63,9 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
       const blob = await response.blob();
       const fileName = `narration_nova.mp3`;
       const file = new File([blob], fileName, { type: 'audio/mp3' });
+      const dataUrl = await blobToDataURL(blob);
 
-      onAudioGenerated(file);
+      onAudioGenerated(file, dataUrl);
       addDebugLog(`[Narração IA] ✅ Áudio gerado e carregado com sucesso!`);
       toast.success("Narração gerada com sucesso!");
     } catch (error) {
