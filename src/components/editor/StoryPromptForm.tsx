@@ -343,13 +343,11 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
           </div>
 
           <div className="flex items-center justify-between p-2 mt-2 border-t">
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-2">
               <Select value={selectedLanguage} onValueChange={setSelectedLanguage} disabled={isLoading || isSessionLoading}>
-                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0">
-                  <div className="flex items-center gap-2">
-                    <Languages className="w-4 h-4" />
-                    <SelectValue />
-                  </div>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
+                  <Languages className="w-4 h-4 flex-shrink-0" />
+                  <SelectValue placeholder="Idioma" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(languages).map(([key, label]) => (
@@ -359,11 +357,9 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
               </Select>
 
               <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isLoading || isSessionLoading}>
-                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0">
-                  <div className="flex items-center gap-2">
-                    <Palette className="w-4 h-4" />
-                    <SelectValue />
-                  </div>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
+                  <Palette className="w-4 h-4 flex-shrink-0" />
+                  <SelectValue placeholder="Estilo" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(storyStyles).map(([key, { label }]) => (
@@ -373,11 +369,9 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
               </Select>
 
               <Select value={duration} onValueChange={setDuration} disabled={isLoading || isSessionLoading}>
-                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    <SelectValue />
-                  </div>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
+                  <Clock className="w-4 h-4 flex-shrink-0" />
+                  <SelectValue placeholder="Duração" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="30">30s (~6 cenas)</SelectItem>
@@ -387,11 +381,9 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
               </Select>
 
               <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isLoading || isSessionLoading}>
-                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0">
-                  <div className="flex items-center gap-2">
-                    <Mic className="w-4 h-4" />
-                    <SelectValue />
-                  </div>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
+                  <Mic className="w-4 h-4 flex-shrink-0" />
+                  <SelectValue placeholder="Voz" />
                 </SelectTrigger>
                 <SelectContent>
                   {openAIVoices.map(voice => (
@@ -400,7 +392,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
                 </SelectContent>
               </Select>
               
-              <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setIsCharacterModalOpen(true)} disabled={isLoading || isSessionLoading}>
+              <Button variant="ghost" size="sm" className="h-9 px-3 text-muted-foreground" onClick={() => setIsCharacterModalOpen(true)} disabled={isLoading || isSessionLoading}>
                 <UserSquare className="w-4 h-4 mr-2" /> Personagem
               </Button>
             </div>
