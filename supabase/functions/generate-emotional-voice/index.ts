@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Temporariamente removido 'tone' e 'language'. Apenas texto e voz são necessários.
     const { text, voice } = await req.json();
     const openAIApiKey = Deno.env.get("ChatGPT_ vozes");
 
@@ -23,7 +22,6 @@ serve(async (req) => {
       throw new Error("Missing 'text' or 'voice' in request body.");
     }
 
-    // Gere o áudio sem o campo 'instructions' para depuração.
     const audioResponse = await fetch("https://api.openai.com/v1/audio/speech", {
       method: 'POST',
       headers: {
@@ -31,7 +29,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${openAIApiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini-tts",
+        model: "tts-1", // Corrigido para o modelo estável
         input: text,
         voice: voice,
       }),
