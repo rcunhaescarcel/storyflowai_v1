@@ -30,7 +30,8 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
       const referrer = "https://vidflow.com.br/";
-      const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?model=gpt-2&token=${apiToken}&referrer=${referrer}`;
+      // O modelo 'gpt-2' não foi encontrado. Removendo o parâmetro do modelo para usar o padrão da API.
+      const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?token=${apiToken}&referrer=${referrer}`;
 
       addDebugLog(`[História IA] URL da API: ${targetUrl.substring(0, 100)}...`);
 
