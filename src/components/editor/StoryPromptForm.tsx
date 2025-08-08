@@ -5,11 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Sparkles, Clock, Mic, UserSquare, Trash2, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
-import { Progress } from '@/components/ui/progress';
 import { useSession } from '@/contexts/SessionContext';
-import { storyStyles, openAIVoices, languages } from '@/lib/constants';
+import { storyStyles, openAIVoices } from '@/lib/constants';
 import { CharacterModal } from './CharacterModal';
 import { useStoryGenerator } from '@/hooks/useStoryGenerator';
+import { StoryGenerationStatus } from './StoryGenerationStatus';
 
 interface StoryPromptFormProps {
   onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
@@ -56,15 +56,19 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
     });
   };
 
-  if (isLoading || isSessionLoading) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+        <StoryGenerationStatus loadingMessage={loadingMessage} progress={progress} />
+      </div>
+    );
+  }
+
+  if (isSessionLoading) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 h-[calc(100vh-200px)]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <div className="w-full max-w-md text-center">
-          <p className="text-lg font-medium text-foreground">{isLoading ? loadingMessage : 'Carregando sessão...'}</p>
-          {isLoading && <Progress value={progress} className="w-full mt-4" />}
-          {isLoading && <p className="text-sm text-muted-foreground mt-2">{Math.round(progress)}% concluído</p>}
-        </div>
+        <p className="text-lg font-medium text-foreground">Carregando sessão...</p>
       </div>
     );
   }
