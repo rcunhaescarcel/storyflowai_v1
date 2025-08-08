@@ -89,7 +89,7 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
             <TabsTrigger value="upload"><UploadCloud className="w-4 h-4 mr-2" />Fazer Upload</TabsTrigger>
           </TabsList>
           <TabsContent value="gallery" className="mt-4">
-            <Carousel className="w-full max-w-sm mx-auto">
+            <Carousel className="w-full max-w-xs mx-auto">
               <CarouselContent>
                 {galleryCharacters.map((char, index) => (
                   <CarouselItem key={index}>
@@ -101,11 +101,11 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
                           selected.source === 'gallery' && selected.preview?.includes(char.name) ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
                         )}
                       >
-                        <CardContent className="flex aspect-[3/4] items-center justify-center p-0 relative">
+                        <CardContent className="flex h-80 items-center justify-center p-2 relative bg-muted/30">
                           <img
                             src={char.image}
                             alt={char.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                             crossOrigin="anonymous"
                           />
                           {selected.source === 'gallery' && selected.preview?.includes(char.name) && (
@@ -129,7 +129,7 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
               <Label
                 htmlFor="character-upload-modal"
                 className={cn(
-                    "w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden",
+                    "w-full h-80 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden",
                     selected.source === 'upload' ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
                 )}
               >

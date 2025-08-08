@@ -313,8 +313,8 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         <div className="w-full p-2 bg-background rounded-2xl shadow-lg border">
           <div className="flex items-start gap-4 p-2">
             {characterImagePreview && (
-              <div className="relative w-24 flex-shrink-0 group">
-                <img src={characterImagePreview} alt="Personagem" className="w-full rounded-lg object-cover aspect-square" />
+              <div className="relative w-20 h-28 flex-shrink-0 group bg-muted/50 rounded-lg">
+                <img src={characterImagePreview} alt="Personagem" className="w-full h-full rounded-lg object-contain" />
                 <Button
                   variant="destructive"
                   size="icon"
