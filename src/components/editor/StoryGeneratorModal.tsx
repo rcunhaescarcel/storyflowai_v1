@@ -117,7 +117,9 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
 
         const encodedImagePrompt = encodeURIComponent(sceneData.imagePrompt);
         const imageModel = 'flux';
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
+        const width = 1920;
+        const height = 1080;
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=${width}&height=${height}&model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
 
         const imageResponse = await fetch(imageUrl);
         if (!imageResponse.ok) {

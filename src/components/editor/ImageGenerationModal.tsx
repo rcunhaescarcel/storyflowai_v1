@@ -32,6 +32,8 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
     let targetUrl = '';
     const apiToken = "76b4jfL5SsXI48nS";
     const referrer = "https://vidflow.com.br/";
+    const width = 1920;
+    const height = 1080;
 
     try {
       const encodedPrompt = encodeURIComponent(prompt);
@@ -67,14 +69,12 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
 
         const model = 'kontext';
         const encodedImageURL = encodeURIComponent(publicUrl);
-        const width = 1024;
-        const height = 576;
         
         targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&model=${model}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}&nologo=true`;
         
       } else {
         const model = 'flux';
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=${model}&token=${apiToken}&referrer=${referrer}&nologo=true`;
+        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&model=${model}&token=${apiToken}&referrer=${referrer}&nologo=true`;
       }
 
       addDebugLog(`[IA] Gerando imagem com a URL: ${targetUrl.substring(0, 200)}...`);
