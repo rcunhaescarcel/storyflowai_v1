@@ -5,7 +5,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +31,9 @@ import {
 } from "lucide-react";
 import { LogoPosition, SubtitleStyle } from "@/hooks/useFFmpeg";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type ZoomEffect = "none" | "in" | "out" | "alternate";
 
 interface RenderModalProps {
   isOpen: boolean;
@@ -60,6 +62,11 @@ interface RenderModalProps {
 
   generateSubtitles: boolean;
   onGenerateSubtitlesChange: (generate: boolean) => void;
+
+  zoomEffect: ZoomEffect;
+  onZoomEffectChange: (effect: ZoomEffect) => void;
+  zoomIntensity: number;
+  onZoomIntensityChange: (intensity: number) => void;
 }
 
 export const RenderModal = (props: RenderModalProps) => {
@@ -69,7 +76,8 @@ export const RenderModal = (props: RenderModalProps) => {
     logoFile, logoPreview, logoPosition, onLogoUpload, onLogoRemove, onLogoPositionChange,
     subtitleStyle, onSubtitleStyleChange,
     addFade, onAddFadeChange,
-    generateSubtitles, onGenerateSubtitlesChange
+    generateSubtitles, onGenerateSubtitlesChange,
+    zoomEffect, onZoomEffectChange, zoomIntensity, onZoomIntensityChange
   } = props;
 
   const [subtitleColor, setSubtitleColor] = useState(subtitleStyle.fontColor || '#FFFFFF');
@@ -164,9 +172,35 @@ export const RenderModal = (props: RenderModalProps) => {
               <Sparkles className="w-4 h-4 text-muted-foreground" />
               Efeitos
             </CardTitle>
-            <div className="flex items-center gap-3">
-              <Switch id="fade-transition" checked={addFade} onCheckedChange={onAddFadeChange} />
-              <Label htmlFor="fade-transition">Transição Fade</Label>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="fade-transition">Transição Fade</Label>
+                <Switch id="fade-transition" checked={addFade} onCheckedChange={onAddFadeChange} />
+              </div>
+              <div className="space-y-2">
+                <Label>Efeito de Zoom</Label>
+                <Select value={zoomEffect} onValueChange={onZoomEffectChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um efeito" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    <SelectItem value="in">Zoom In</SelectItem>
+                    <SelectItem value="out">Zoom Out</SelectItem>
+                    <SelectItem value="alternate">Alternado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {zoomEffect !== 'none' && (
+                <div className="space-y-2">
+                  <Label>Intensidade do Zoom ({zoomIntensity}%)</Label>
+                  <Slider
+                    value={[zoomIntensity]}
+                    onValueChange={(value) => onZoomIntensityChange(value[0])}
+                    max={50} min={5} step={1}
+                  />
+                </div>
+              )}
             </div>
           </Card>
 

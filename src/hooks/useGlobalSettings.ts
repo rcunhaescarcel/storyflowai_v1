@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { SubtitleStyle, LogoPosition } from '@/hooks/useFFmpeg';
 
+type ZoomEffect = "none" | "in" | "out" | "alternate";
+
 export const useGlobalSettings = () => {
   const [backgroundMusic, setBackgroundMusic] = useState<File | null>(null);
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.5);
@@ -17,6 +19,8 @@ export const useGlobalSettings = () => {
   
   const [addFade, setAddFade] = useState(true);
   const [generateSubtitles, setGenerateSubtitles] = useState(true);
+  const [zoomEffect, setZoomEffect] = useState<ZoomEffect>('alternate');
+  const [zoomIntensity, setZoomIntensity] = useState(5);
 
   const handleBackgroundMusicUpload = useCallback((file: File) => {
     if (file && file.type.startsWith('audio/')) {
@@ -61,5 +65,9 @@ export const useGlobalSettings = () => {
     setAddFade,
     generateSubtitles,
     setGenerateSubtitles,
+    zoomEffect,
+    setZoomEffect,
+    zoomIntensity,
+    setZoomIntensity,
   };
 };

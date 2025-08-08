@@ -79,6 +79,8 @@ const Editor = () => {
     subtitleStyle, setSubtitleStyle,
     addFade, setAddFade,
     generateSubtitles, setGenerateSubtitles,
+    zoomEffect, setZoomEffect,
+    zoomIntensity, setZoomIntensity,
   } = useGlobalSettings();
 
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -155,14 +157,14 @@ const Editor = () => {
         backgroundMusic, 
         subtitleStyle, 
         backgroundMusicVolume, 
-        'fullhd', // Hardcoded quality as it's removed from UI
+        'fullhd',
         logoFile, 
         logoPosition,
-        'none', // Hardcoded zoom as it's removed from UI
-        5,      // Hardcoded zoom intensity
+        zoomEffect,
+        zoomIntensity,
         addFade,
-        0.5,    // Hardcoded fade duration
-        0.5     // Hardcoded fade duration
+        0.5,
+        0.5
       );
       if (result) {
         setLocalVideoUrl(result);
@@ -398,6 +400,10 @@ const Editor = () => {
         onAddFadeChange={setAddFade}
         generateSubtitles={generateSubtitles}
         onGenerateSubtitlesChange={setGenerateSubtitles}
+        zoomEffect={zoomEffect}
+        onZoomEffectChange={setZoomEffect}
+        zoomIntensity={zoomIntensity}
+        onZoomIntensityChange={setZoomIntensity}
       />
 
       <DownloadModal
