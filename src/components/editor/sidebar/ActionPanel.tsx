@@ -79,7 +79,7 @@ export const ActionPanel = ({
             </Button>
           </div>
         )}
-        <DebugConsole logs={debugLogs} onCopy={onCopyLogs} onClear={onClearLogs} />
+        <DebugConsole logs={debugLogs} onCopy={onCopyLogs} onClear={onClearLogs} defaultOpen={true} />
       </CardContent>
     </Card>
   );
