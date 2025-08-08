@@ -202,7 +202,7 @@ const Editor = () => {
             />
           </div>
         ) : (
-          <div className="grid lg:grid-cols-12 gap-8">
+          <div className="grid lg:grid-cols-12 gap-8 mt-8">
             <div className="lg:col-span-8">
               <div className="space-y-6">
                 {scenes.map((scene, index) => (
