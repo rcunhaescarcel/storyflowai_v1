@@ -23,6 +23,9 @@ const blobToDataURL = (blob: Blob): Promise<string> => {
   });
 };
 
+// Adicionando uma função de delay para evitar sobrecarregar a API
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
 export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebugLog }: StoryGeneratorModalProps) => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -95,7 +98,8 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
 
         const imageResponse = await fetch(imageUrl);
         if (!imageResponse.ok) {
-          throw new Error(`Falha ao gerar imagem para a cena ${i + 1}`);
+          const errorBody = await imageResponse.text();
+          throw new Error(`Falha ao gerar imagem para a cena ${i + 1} (Status: ${imageResponse.status}). Detalhes: ${errorBody}`);
         }
 
         const imageBlob = await imageResponse.blob();
@@ -115,7 +119,8 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
 
         const audioResponse = await fetch(audioUrl);
         if (!audioResponse.ok) {
-            throw new Error(`Falha ao gerar áudio para a cena ${i + 1}`);
+            const errorBody = await audioResponse.text();
+            throw new Error(`Falha ao gerar áudio para a cena ${i + 1} (Status: ${audioResponse.status}). Detalhes: ${errorBody}`);
         }
 
         const audioBlob = await audioResponse.blob();
@@ -137,6 +142,9 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
         });
         
         setProgress(baseProgress + progressPerScene);
+        
+        // Adicionando um pequeno delay para não sobrecarregar a API
+        await delay(500);
       }
 
       onStoryGenerated(newScenes);
