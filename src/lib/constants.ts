@@ -1,19 +1,23 @@
 export const storyStyles = {
   pixar: {
-    label: "Pixar 3D Cinemático",
+    label: "Pixar",
     promptSuffix: ", in the style of a cinematic 3D animation, detailed visuals, vibrant colors, rich facial expressions"
   },
   ghibli: {
-    label: "Ghibli / Animação 2D",
+    label: "Ghibli",
     promptSuffix: ", in the style of a poetic 2D animation, Ghibli-inspired, soft colors, painted texture, enchanting atmosphere"
   },
-  storybook: {
-    label: "Livro Infantil Ilustrado",
-    promptSuffix: ", in the style of a watercolor children's book illustration, organic lines, simple and warm composition"
-  },
   cartoon: {
-    label: "HQ/Cartoon Colorido",
-    promptSuffix: ", in the style of a colorful cartoon/comic book, bold lines, strong colors, exaggerated expressions"
+    label: "Cartoon",
+    promptSuffix: ", in the style of a colorful modern cartoon, bold lines, flat colors, expressive characters"
+  },
+  comicbook: {
+    label: "Quadrinhos",
+    promptSuffix: ", in the style of a graphic novel, detailed ink lines, dynamic shading, comic book panel art"
+  },
+  pixelart: {
+    label: "Pixel Art",
+    promptSuffix: ", in the style of detailed pixel art, 16-bit aesthetic, vibrant color palette, retro video game"
   }
 };
 
