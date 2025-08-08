@@ -7,49 +7,57 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // 1. Handle OPTIONS request
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response("ok", { headers: corsHeaders })
   }
 
   try {
+    // 2. Get request body
     const { text, voice } = await req.json();
-    const openAIApiKey = Deno.env.get("ChatGPT_ vozes");
-
-    if (!openAIApiKey) {
-      throw new Error("OpenAI API key not found in environment variables.");
-    }
     if (!text || !voice) {
-      throw new Error("Missing 'text' or 'voice' in request body.");
+      return new Response("Missing 'text' or 'voice' in request body.", { status: 400, headers: corsHeaders });
     }
 
-    const audioResponse = await fetch("https://api.openai.com/v1/audio/speech", {
+    // 3. Get API key
+    const openAIApiKey = Deno.env.get("ChatGPT_ vozes");
+    if (!openAIApiKey) {
+      console.error("CRITICAL: OpenAI API key secret 'ChatGPT_ vozes' not found.");
+      return new Response("Server configuration error: API key not found.", { status: 500, headers: corsHeaders });
+    }
+
+    // 4. Call OpenAI API
+    const openAIResponse = await fetch("https://api.openai.com/v1/audio/speech", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${openAIApiKey}`,
       },
       body: JSON.stringify({
-        model: "tts-1", // Corrigido para o modelo estável
+        model: "tts-1",
         input: text,
         voice: voice,
       }),
     });
 
-    if (!audioResponse.ok) {
-      const errorBody = await audioResponse.text();
-      console.error("Error generating audio:", errorBody);
-      throw new Error(`Failed to generate audio from OpenAI: ${errorBody}`);
+    // 5. Handle OpenAI response
+    if (!openAIResponse.ok) {
+      const errorBody = await openAIResponse.text();
+      console.error("OpenAI API Error:", errorBody);
+      // Forward the error from OpenAI to the client for better debugging
+      return new Response(`OpenAI API error: ${errorBody}`, { status: openAIResponse.status, headers: corsHeaders });
     }
 
-    const audioBlob = await audioResponse.blob();
-
+    // 6. Stream the audio back to the client
+    const audioBlob = await openAIResponse.blob();
     return new Response(audioBlob, {
       headers: { ...corsHeaders, 'Content-Type': 'audio/mpeg' },
       status: 200,
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Edge Function Error:", error);
+    return new Response(`Internal Server Error: ${error.message}`, {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
