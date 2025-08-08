@@ -116,7 +116,7 @@ const Videos = () => {
 
   return (
     <main className="container max-w-screen-xl mx-auto px-4 py-8">
-      <div className="text-center mb-12">
+      <div className="text-center mt-8 mb-12">
         <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
           Seus Vídeos Mágicos <Sparkles className="w-8 h-8 text-primary" />
         </h1>

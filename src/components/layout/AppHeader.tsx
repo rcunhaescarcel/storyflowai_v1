@@ -34,7 +34,7 @@ const AppHeader = () => {
           </NavLink>
           <NavLink to="/videos">
             {({ isActive }) => (
-              <Button variant={isActive ? "secondary" : "ghost"} size="sm" className="gap-2 rounded-full px-4">
+              <Button variant={isActive ? "default" : "ghost"} size="sm" className="gap-2 rounded-full px-4">
                 <Video className="w-4 h-4" />
                 Vídeos
               </Button>
@@ -42,7 +42,7 @@ const AppHeader = () => {
           </NavLink>
           <NavLink to="/settings">
             {({ isActive }) => (
-              <Button variant={isActive ? "secondary" : "ghost"} size="sm" className="gap-2 rounded-full px-4">
+              <Button variant={isActive ? "default" : "ghost"} size="sm" className="gap-2 rounded-full px-4">
                 <Settings className="w-4 h-4" />
                 Ajustes
               </Button>
