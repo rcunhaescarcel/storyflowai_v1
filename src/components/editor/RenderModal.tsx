@@ -74,7 +74,6 @@ interface RenderModalProps {
 
 const musicTracks = [
   { name: "Power of Prosperity", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857199070x718181362623514800/trilha_Power%20of%20Prosperity.mp3" },
-  { name: "Inspiring Journey", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857492379x101851021095338000/trilha_Inspiring%20Journey.mp3" },
   { name: "Playful Whimsy", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857558889x122515034895358370/trilha_Playful%20Whimsy.mp3" },
   { name: "Strength & Wellness", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857598050x707617959304145800/trilha_Strength%20%26%20Wellness.mp3" },
   { name: "Journey to Success", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857478510x227379739153824800/trilha_Journey%20to%20Success.mp3" },
@@ -99,47 +98,40 @@ export const RenderModal = (props: RenderModalProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playingTrackUrl, setPlayingTrackUrl] = useState<string | null>(null);
   const [selectingTrackUrl, setSelectingTrackUrl] = useState<string | null>(null);
+  const [isMusicPopoverOpen, setIsMusicPopoverOpen] = useState(false);
 
   const handlePlayToggle = (url: string) => {
-    if (playingTrackUrl === url) {
-      setPlayingTrackUrl(null);
-    } else {
-      setPlayingTrackUrl(url);
-    }
-  };
-
-  useEffect(() => {
-    const audioElement = audioRef.current;
-    if (audioElement) {
-      if (playingTrackUrl) {
-        audioElement.src = playingTrackUrl;
-        audioElement.play().catch(e => {
+    if (audioRef.current) {
+      if (playingTrackUrl === url) {
+        audioRef.current.pause();
+        setPlayingTrackUrl(null);
+      } else {
+        audioRef.current.src = url;
+        audioRef.current.play().catch(e => {
           console.error("Audio play failed:", e);
           toast.error("Falha ao tocar áudio", { description: "O navegador pode ter bloqueado a reprodução." });
-          setPlayingTrackUrl(null);
         });
-      } else {
-        audioElement.pause();
+        setPlayingTrackUrl(url);
       }
     }
-  }, [playingTrackUrl]);
+  };
 
   const handleSelectTrack = async (track: typeof musicTracks[0]) => {
     if (backgroundMusic?.name === `${track.name}.mp3`) {
       onBackgroundMusicRemove();
-      return;
+    } else {
+      setSelectingTrackUrl(track.url);
+      try {
+        const file = await urlToFile(track.url, `${track.name}.mp3`, 'audio/mp3');
+        onBackgroundMusicUpload(file);
+      } catch (error) {
+        toast.error("Falha ao carregar a trilha sonora.");
+        console.error(error);
+      } finally {
+        setSelectingTrackUrl(null);
+      }
     }
-
-    setSelectingTrackUrl(track.url);
-    try {
-      const file = await urlToFile(track.url, `${track.name}.mp3`, 'audio/mp3');
-      onBackgroundMusicUpload(file);
-    } catch (error) {
-      toast.error("Falha ao carregar a trilha sonora.");
-      console.error(error);
-    } finally {
-      setSelectingTrackUrl(null);
-    }
+    setIsMusicPopoverOpen(false);
   };
 
   useEffect(() => {
@@ -220,7 +212,7 @@ export const RenderModal = (props: RenderModalProps) => {
                 Trilha musical
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                <Popover>
+                <Popover open={isMusicPopoverOpen} onOpenChange={setIsMusicPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="secondary" className="w-full justify-start truncate">
                       <Music className="w-4 h-4 mr-2 flex-shrink-0" />
