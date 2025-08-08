@@ -192,7 +192,7 @@ const Editor = () => {
             setPersistedVideoUrl(finalUrl);
           }
         }
-      } else {
+      } else if (!isRendering) { // Only show error if not cancelled
         toast.error("Erro", { description: "Falha ao renderizar o vídeo" });
       }
     } catch (error) {

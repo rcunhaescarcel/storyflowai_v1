@@ -348,7 +348,7 @@ export const useFFmpeg = () => {
 
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro desconhecido";
-      if (message.includes('exit')) {
+      if (message.includes('exit') || message.includes('terminate')) {
         addDebugLog(`🛑 Renderização cancelada pelo usuário.`);
         throw new Error('Renderização cancelada pelo usuário.');
       } else {
