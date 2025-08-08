@@ -6,13 +6,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const languageMap: { [key: string]: string } = {
+  'pt-br': 'Português',
+  'es-es': 'Espanhol',
+  'en-us': 'Inglês'
+};
+
+const toneExamples: { [key: string]: string } = {
+  'pt-br': 'Um tom extravagante e gentil.',
+  'es-es': 'Un tono caprichoso y suave.',
+  'en-us': 'A whimsical and gentle tone.'
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { text, voice, tone: providedTone } = await req.json();
+    const { text, voice, tone: providedTone, language: languageKey = 'pt-br' } = await req.json();
     const openAIApiKey = Deno.env.get("ChatGPT_ vozes");
 
     if (!openAIApiKey) {
@@ -23,6 +35,8 @@ serve(async (req) => {
     }
 
     let finalTone = providedTone;
+    const languageName = languageMap[languageKey] || 'Português';
+    const exampleTone = toneExamples[languageKey] || toneExamples['pt-br'];
 
     // Se nenhum tom for fornecido, gere um
     if (!finalTone) {
@@ -36,7 +50,7 @@ serve(async (req) => {
           model: "gpt-4o-mini",
           messages: [{
             role: "user",
-            content: `Determine the best voice tone for the following text. Respond with only a short phrase in English (e.g., "A whimsical and gentle tone."). Text: "${text}"`
+            content: `Determine o melhor tom de voz para o seguinte texto. Responda com apenas uma frase curta no idioma ${languageName} (por exemplo, "${exampleTone}"). Texto: "${text}"`
           }],
           temperature: 0.5,
           max_tokens: 20,
