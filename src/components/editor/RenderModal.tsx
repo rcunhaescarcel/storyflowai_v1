@@ -89,45 +89,6 @@ export const RenderModal = (props: RenderModalProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 p-6">
           {/* Left Column */}
           <div className="space-y-6">
-            {/* Trilha Musical */}
-            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-              <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
-                <Music className="w-4 h-4" />
-                Trilha musical
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  type="file"
-                  accept="audio/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) onBackgroundMusicUpload(file);
-                  }}
-                  className="hidden"
-                  id="modal-bg-music-upload"
-                />
-                <Button variant="secondary" onClick={() => document.getElementById("modal-bg-music-upload")?.click()}>
-                  <Music className="w-4 h-4 mr-2" />
-                  {backgroundMusic ? "Trocar" : "Trilha"}
-                </Button>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="secondary" disabled={!backgroundMusic}>
-                      <Volume2 className="w-4 h-4 mr-2" />
-                      Volume
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2">
-                    <Slider
-                      value={[backgroundMusicVolume]}
-                      onValueChange={(value) => onBackgroundMusicVolumeChange(value[0])}
-                      max={1} min={0} step={0.05}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
             {/* Efeitos */}
             <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
               <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
@@ -177,20 +138,59 @@ export const RenderModal = (props: RenderModalProps) => {
 
           {/* Right Column */}
           <div className="space-y-6">
+            {/* Trilha Musical */}
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+              <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
+                <Music className="w-4 h-4" />
+                Trilha musical
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) onBackgroundMusicUpload(file);
+                  }}
+                  className="hidden"
+                  id="modal-bg-music-upload"
+                />
+                <Button variant="secondary" onClick={() => document.getElementById("modal-bg-music-upload")?.click()}>
+                  <Music className="w-4 h-4 mr-2" />
+                  {backgroundMusic ? "Trocar" : "Trilha"}
+                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="secondary" disabled={!backgroundMusic}>
+                      <Volume2 className="w-4 h-4 mr-2" />
+                      Volume
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2">
+                    <Slider
+                      value={[backgroundMusicVolume]}
+                      onValueChange={(value) => onBackgroundMusicVolumeChange(value[0])}
+                      max={1} min={0} step={0.05}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
             {/* Logo */}
-            <div className="space-y-4 p-4 bg-muted/50 rounded-lg flex flex-col h-full">
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
               <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <ImageIcon className="w-4 h-4" />
                 Logo
               </h3>
               <Input type="file" accept="image/*" onChange={onLogoUpload} className="hidden" id="modal-logo-upload" />
               <div
-                className="relative w-full h-32 mt-2 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:bg-accent flex-1"
+                className="relative w-full h-24 mt-2 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:bg-accent"
                 onClick={() => document.getElementById("modal-logo-upload")?.click()}
               >
                 {logoPreview ? (
                   <>
-                    <img src={logoPreview} alt="Logo Preview" className="max-h-24 object-contain p-2" />
+                    <img src={logoPreview} alt="Logo Preview" className="max-h-20 object-contain p-2" />
                     <Button
                       variant="destructive"
                       size="icon"
@@ -206,7 +206,7 @@ export const RenderModal = (props: RenderModalProps) => {
               </div>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="secondary" className="w-full mt-4" disabled={!logoFile}>
+                  <Button variant="secondary" className="w-full mt-2" disabled={!logoFile}>
                     <Move className="w-4 h-4 mr-2" /> Posição
                   </Button>
                 </PopoverTrigger>
