@@ -19,6 +19,8 @@ import { EditableProjectTitle } from "./components/editor/EditableProjectTitle";
 import { DownloadModal, DownloadSelection } from "./components/editor/DownloadModal";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { RenderProgress } from "./components/editor/RenderProgress";
+import { cn } from "./lib/utils";
 
 const generateSrtFromScenes = (scenes: Scene[]): string => {
   let srtContent = '';
@@ -300,7 +302,7 @@ const Editor = () => {
 
   return (
     <>
-      <main className="container max-w-screen-lg mx-auto px-4 py-8">
+      <main className="container max-w-screen-xl mx-auto px-4 py-8">
         {scenes.length === 0 ? (
           <div className="max-w-3xl mx-auto space-y-8">
             <StoryPromptForm 
@@ -308,6 +310,8 @@ const Editor = () => {
               addDebugLog={addDebugLog}
             />
           </div>
+        ) : isProcessing ? (
+          <RenderProgress progress={progress} statusText={debugLogs[debugLogs.length - 1] || 'Iniciando renderização...'} />
         ) : (
           <div className="mt-8">
             <div className="flex items-center gap-4 mb-8">
@@ -320,28 +324,35 @@ const Editor = () => {
               onDownloadClick={() => setIsDownloadModalOpen(true)}
               videoUrl={localVideoUrl || persistedVideoUrl}
             />
-            <div className="space-y-6">
-              {scenes.map((scene, index) => (
-                <SceneCard
-                  key={scene.id}
-                  scene={scene}
-                  index={index}
-                  totalScenes={scenes.length}
-                  onUpdate={updateScene}
-                  onDelete={deleteScene}
-                  onMoveUp={moveSceneUp}
-                  onMoveDown={moveSceneDown}
-                  onNarrationGenerated={handleNarrationUpload}
-                  onEditImage={setEditingImageScene}
-                  addDebugLog={addDebugLog}
-                />
-              ))}
-            </div>
-            <div className="text-center pt-8">
-              <Button onClick={addNewScene}>
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Nova Cena
-              </Button>
+            <div className={cn("grid gap-8", (localVideoUrl || persistedVideoUrl) && "md:grid-cols-2")}>
+              <div className="space-y-6">
+                {scenes.map((scene, index) => (
+                  <SceneCard
+                    key={scene.id}
+                    scene={scene}
+                    index={index}
+                    totalScenes={scenes.length}
+                    onUpdate={updateScene}
+                    onDelete={deleteScene}
+                    onMoveUp={moveSceneUp}
+                    onMoveDown={moveSceneDown}
+                    onNarrationGenerated={handleNarrationUpload}
+                    onEditImage={setEditingImageScene}
+                    addDebugLog={addDebugLog}
+                  />
+                ))}
+                <div className="text-center pt-2">
+                  <Button onClick={addNewScene}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Nova Cena
+                  </Button>
+                </div>
+              </div>
+              {(localVideoUrl || persistedVideoUrl) && (
+                <div className="sticky top-24 h-min">
+                  <video src={localVideoUrl || persistedVideoUrl} controls className="w-full rounded-lg shadow-lg aspect-video bg-black" />
+                </div>
+              )}
             </div>
           </div>
         )}

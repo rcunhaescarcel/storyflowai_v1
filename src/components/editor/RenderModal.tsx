@@ -190,14 +190,14 @@ export const RenderModal = (props: RenderModalProps) => {
             </div>
 
             {/* Logo */}
-            <div className="space-y-4 p-4 bg-gray-800/30 rounded-lg flex flex-col h-full">
+            <div className="space-y-4 p-4 bg-gray-800/30 rounded-lg flex flex-col">
               <h3 className="text-base font-semibold flex items-center gap-2 text-gray-300">
                 <ImageIcon className="w-4 h-4" />
                 Logo
               </h3>
               <Input type="file" accept="image/*" onChange={onLogoUpload} className="hidden" id="modal-logo-upload" />
               <div
-                className="relative w-full flex-1 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-700/50"
+                className="relative w-full h-32 mt-2 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-700/50"
                 onClick={() => document.getElementById("modal-logo-upload")?.click()}
               >
                 {logoPreview ? (
