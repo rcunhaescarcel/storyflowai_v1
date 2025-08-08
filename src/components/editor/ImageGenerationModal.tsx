@@ -70,6 +70,20 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
         const publicUrl = urlData.publicUrl;
         addDebugLog(`[IA] URL pública obtida: ${publicUrl}`);
 
+        // Verification Step
+        try {
+          addDebugLog(`[IA] Verificando acessibilidade da URL pública...`);
+          const verificationResponse = await fetch(publicUrl);
+          if (!verificationResponse.ok) {
+            addDebugLog(`[IA] ❌ ERRO: A URL pública do personagem não está acessível (Status: ${verificationResponse.status}). Verifique as políticas do bucket 'image-references' no Supabase para permitir leitura pública.`);
+            throw new Error('A URL da imagem de referência não está publicamente acessível.');
+          }
+          addDebugLog(`[IA] ✅ URL pública acessível.`);
+        } catch (e) {
+          addDebugLog(`[IA] ❌ ERRO ao verificar a URL pública: ${e.message}`);
+          throw new Error(`Falha ao verificar a URL da imagem de referência: ${e.message}`);
+        }
+
         const model = 'kontext';
         const encodedImageURL = encodeURIComponent(publicUrl);
         

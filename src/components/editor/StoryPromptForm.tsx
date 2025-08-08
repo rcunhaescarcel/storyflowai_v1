@@ -120,10 +120,26 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('image-references').upload(fileName, characterImage);
         if (uploadError) throw new Error(`Falha no upload do personagem: ${uploadError.message}`);
+        
         const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(fileName);
         if (!urlData?.publicUrl) throw new Error('Não foi possível obter a URL pública do personagem.');
+        
         characterPublicUrl = urlData.publicUrl;
         addDebugLog(`[História IA] ✅ Personagem carregado para: ${characterPublicUrl}`);
+
+        // Verification Step
+        try {
+          addDebugLog(`[História IA] Verificando acessibilidade da URL pública...`);
+          const verificationResponse = await fetch(characterPublicUrl);
+          if (!verificationResponse.ok) {
+            addDebugLog(`[História IA] ❌ ERRO: A URL pública do personagem não está acessível (Status: ${verificationResponse.status}). Verifique as políticas do bucket 'image-references' no Supabase para permitir leitura pública.`);
+            throw new Error('A URL da imagem de referência não está publicamente acessível.');
+          }
+          addDebugLog(`[História IA] ✅ URL pública acessível.`);
+        } catch (e) {
+          addDebugLog(`[História IA] ❌ ERRO ao verificar a URL pública: ${e.message}`);
+          throw new Error(`Falha ao verificar a URL da imagem de referência: ${e.message}`);
+        }
       }
 
       const lines = storyText.trim().split('\n').filter(p => p.includes('|||'));
