@@ -258,8 +258,6 @@ const Editor = () => {
     <div className="min-h-screen bg-muted/30">
       <EditorHeader
         sceneCount={scenes.length}
-        isProcessing={isProcessing}
-        onRender={handleRenderVideo}
       />
 
       <main className="container max-w-screen-xl mx-auto px-4 py-8">
@@ -334,7 +332,9 @@ const Editor = () => {
               debugLogs={debugLogs}
               onDownloadVideo={downloadVideo}
               onCopyLogs={copyLogsToClipboard}
-      onClearLogs={clearDebugLogs}
+              onClearLogs={clearDebugLogs}
+              onRender={handleRenderVideo}
+              sceneCount={scenes.length}
             />
           </div>
         )}

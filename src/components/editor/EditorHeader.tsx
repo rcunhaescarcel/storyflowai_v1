@@ -1,15 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Video } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 interface EditorHeaderProps {
   sceneCount: number;
-  isProcessing: boolean;
-  onRender: () => void;
 }
 
-export const EditorHeader = ({ sceneCount, isProcessing, onRender }: EditorHeaderProps) => {
+export const EditorHeader = ({ sceneCount }: EditorHeaderProps) => {
   const navigate = useNavigate();
 
   return (
@@ -28,19 +26,6 @@ export const EditorHeader = ({ sceneCount, isProcessing, onRender }: EditorHeade
               {sceneCount} cena{sceneCount !== 1 ? "s" : ""}
             </Badge>
           )}
-          <Button onClick={onRender} disabled={sceneCount === 0 || isProcessing}>
-            {isProcessing ? (
-              <>
-                <Clock className="w-4 h-4 mr-2 animate-spin" />
-                Renderizando...
-              </>
-            ) : (
-              <>
-                <Video className="w-4 h-4 mr-2" />
-                Renderizar Vídeo
-              </>
-            )}
-          </Button>
         </div>
       </div>
     </header>

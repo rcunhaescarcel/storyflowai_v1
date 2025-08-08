@@ -71,6 +71,8 @@ interface EditorSidebarProps {
   onDownloadVideo: () => void;
   onCopyLogs: () => void;
   onClearLogs: () => void;
+  onRender: () => void;
+  sceneCount: number;
 }
 
 export const EditorSidebar = ({
@@ -103,6 +105,8 @@ export const EditorSidebar = ({
   onDownloadVideo,
   onCopyLogs,
   onClearLogs,
+  onRender,
+  sceneCount,
 }: EditorSidebarProps) => {
   return (
     <aside className="lg:col-span-4 space-y-8">
@@ -418,6 +422,12 @@ export const EditorSidebar = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {!isProcessing && !videoUrl && (
+              <Button onClick={onRender} disabled={sceneCount === 0} className="w-full">
+                <Video className="w-4 h-4 mr-2" />
+                Renderizar Vídeo
+              </Button>
+            )}
             {isProcessing && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
@@ -440,6 +450,12 @@ export const EditorSidebar = ({
                   <Download className="w-4 h-4 mr-2" />
                   Baixar Vídeo
                 </Button>
+                {!isProcessing && (
+                  <Button onClick={onRender} variant="outline" className="w-full">
+                    <Video className="w-4 h-4 mr-2" />
+                    Renderizar Novamente
+                  </Button>
+                )}
               </div>
             )}
             {debugLogs.length > 0 && (
