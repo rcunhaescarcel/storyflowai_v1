@@ -79,14 +79,14 @@ export const RenderModal = (props: RenderModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-3xl p-0">
-        <DialogHeader className="px-6 pt-6">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="flex items-center gap-3 text-lg font-semibold">
             <Clapperboard className="w-5 h-5 text-primary" />
             Criar vídeo
           </DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 px-6 pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 px-6 pb-6 pt-2">
           {/* Left Column */}
           <div className="space-y-6">
             {/* Efeitos */}
@@ -137,7 +137,7 @@ export const RenderModal = (props: RenderModalProps) => {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6">
+          <div className="space-y-6 flex flex-col">
             {/* Trilha Musical */}
             <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
               <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
@@ -178,19 +178,19 @@ export const RenderModal = (props: RenderModalProps) => {
             </div>
 
             {/* Logo */}
-            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg flex-1 flex flex-col">
               <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <ImageIcon className="w-4 h-4" />
                 Logo
               </h3>
               <Input type="file" accept="image/*" onChange={onLogoUpload} className="hidden" id="modal-logo-upload" />
               <div
-                className="relative w-full h-40 mt-2 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:bg-accent"
+                className="relative w-full mt-2 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:bg-accent flex-1"
                 onClick={() => document.getElementById("modal-logo-upload")?.click()}
               >
                 {logoPreview ? (
                   <>
-                    <img src={logoPreview} alt="Logo Preview" className="max-h-36 object-contain p-2" />
+                    <img src={logoPreview} alt="Logo Preview" className="max-h-full object-contain p-2" />
                     <Button
                       variant="destructive"
                       size="icon"
@@ -206,7 +206,7 @@ export const RenderModal = (props: RenderModalProps) => {
               </div>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="secondary" className="w-full mt-2" disabled={!logoFile}>
+                  <Button variant="secondary" className="w-full mt-4" disabled={!logoFile}>
                     <Move className="w-4 h-4 mr-2" /> Posição
                   </Button>
                 </PopoverTrigger>
