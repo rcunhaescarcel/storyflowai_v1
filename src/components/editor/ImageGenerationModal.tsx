@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, UserSquare, Trash2, ImagePlus } from 'lucide-react';
+import { Loader2, Sparkles, UserSquare, Trash2, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -141,7 +141,7 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
       <DialogContent className="sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wand2 className="w-5 h-5 text-primary" />
+            <Sparkles className="w-5 h-5 text-primary" />
             {scene.image ? 'Editar Imagem da Cena' : 'Gerar Imagem para a Cena'}
           </DialogTitle>
           <DialogDescription>
@@ -221,7 +221,7 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
                 </>
               ) : (
                 <>
-                  <Wand2 className="mr-2 h-4 w-4" />
+                  <Sparkles className="mr-2 h-4 w-4" />
                   {scene.image ? "Gerar Nova Imagem" : "Gerar Imagem"}
                 </>
               )}

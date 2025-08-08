@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Play, Zap, Wand2, ShieldCheck, ArrowRight } from "lucide-react";
+import { Play, Zap, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 
@@ -9,7 +9,7 @@ const Landing = () => {
 
   const features = [
     {
-      icon: <Wand2 className="w-8 h-8 text-primary" />,
+      icon: <Sparkles className="w-8 h-8 text-primary" />,
       title: "Animações Mágicas com IA",
       description: "Nossa IA analisa suas imagens e cria movimentos de câmera e efeitos que dão vida à sua história."
     },

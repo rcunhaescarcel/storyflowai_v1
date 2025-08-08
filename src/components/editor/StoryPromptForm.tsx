@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Wand2, Clock, Mic, UserSquare, Trash2, Palette } from 'lucide-react';
+import { Loader2, Sparkles, Clock, Mic, UserSquare, Trash2, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
@@ -303,7 +303,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   return (
     <>
       <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center h-full py-10">
-        <Wand2 className="w-12 h-12 text-primary mb-4" />
+        <Sparkles className="w-12 h-12 mb-4" stroke="url(#icon-gradient)" />
         <h1 className="text-3xl font-bold text-center mb-2">Digite seu tema e deixe a mágica acontecer</h1>
         <p className="text-muted-foreground mb-8 text-center">A IA irá criar um roteiro, gerar imagens e narrações para montar seu vídeo.</p>
         
@@ -384,7 +384,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
               </Button>
             </div>
             <Button onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading || isSessionLoading}>
-              <Wand2 className="w-4 h-4 mr-2" />
+              <Sparkles className="w-4 h-4 mr-2" />
               Criar História
             </Button>
           </div>

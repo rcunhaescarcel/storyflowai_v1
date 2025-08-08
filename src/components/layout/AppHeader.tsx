@@ -1,6 +1,6 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wand2, Video, Settings, Coins } from "lucide-react";
+import { Sparkles, Video, Settings, Coins } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
 
 interface AppHeaderProps {
@@ -29,7 +29,7 @@ const AppHeader = ({ onBuyCoinsClick }: AppHeaderProps) => {
             className="gap-2 rounded-full px-4"
             onClick={handleCreateClick}
           >
-            <Wand2 className="w-4 h-4" />
+            <Sparkles className="w-4 h-4" />
             Criar
           </Button>
           <NavLink to="/videos">

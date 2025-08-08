@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Trash2, Wand2, ImagePlus } from "lucide-react";
+import { ArrowDown, ArrowUp, Trash2, Sparkles, ImagePlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,7 +96,7 @@ export const SceneCard = ({
                   <img src={scene.imagePreview} alt="Preview da cena" className="w-full h-full object-cover" crossOrigin="anonymous" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <p className="text-white font-semibold flex items-center gap-2">
-                      <Wand2 className="w-5 h-5" />
+                      <Sparkles className="w-5 h-5" />
                       Editar Imagem
                     </p>
                   </div>

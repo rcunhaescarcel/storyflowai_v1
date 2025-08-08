@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/contexts/SessionContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Wand2 } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 const Login = () => {
   const { session } = useSession();
@@ -20,7 +20,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Wand2 className="h-10 w-10 mx-auto mb-4" stroke="url(#icon-gradient)" />
+          <Sparkles className="h-10 w-10 mx-auto mb-4" stroke="url(#icon-gradient)" />
           <h1 className="text-3xl font-bold">Bem-vindo de volta!</h1>
           <p className="text-muted-foreground">Faça login para continuar criando vídeos mágicos.</p>
         </div>
