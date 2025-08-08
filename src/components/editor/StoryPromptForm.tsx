@@ -304,7 +304,12 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
     <>
       <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center h-full py-10">
         <Sparkles className="w-12 h-12 mb-4" stroke="url(#icon-gradient)" />
-        <h1 className="text-3xl font-bold text-center mb-2">Digite seu tema e deixe a mágica acontecer</h1>
+        <h1 className="text-3xl font-bold text-center mb-2">
+          <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+            Digite seu tema
+          </span>
+          <span className="text-foreground"> e deixe a mágica acontecer</span>
+        </h1>
         <p className="text-muted-foreground mb-8 text-center">A IA irá criar um roteiro, gerar imagens e narrações para montar seu vídeo.</p>
         
         <div className="w-full p-2 bg-background rounded-2xl shadow-lg border">

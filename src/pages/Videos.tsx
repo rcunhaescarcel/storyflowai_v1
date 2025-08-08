@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VideoProject } from "../types/video.ts";
 import { VideoCard } from "../components/videos/VideoCard.tsx";
 import { VideoCardSkeleton } from "../components/videos/VideoCardSkeleton.tsx";
-import { Sparkles, Video as VideoIcon, Loader2 } from "lucide-react";
+import { Sparkles, Video as VideoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -149,7 +149,11 @@ const Videos = () => {
     <main className="container max-w-screen-xl mx-auto px-4 py-8">
       <div className="text-center mt-8 mb-12">
         <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
-          Seus Vídeos Mágicos <Sparkles className="w-8 h-8 text-primary" />
+          <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+            Seus Vídeos
+          </span>
+          <span className="text-foreground">Mágicos</span>
+          <Sparkles className="w-8 h-8" stroke="url(#icon-gradient)" />
         </h1>
         <p className="text-muted-foreground mt-2 max-w-xl mx-auto">
           Gerencie e edite seus vídeos criados com IA. Aqui você pode revisitar, baixar ou remover seus projetos.

@@ -143,7 +143,11 @@ const Settings = () => {
   return (
     <main className="container max-w-screen-lg mx-auto px-4 py-8">
       <div className="text-center mt-8 mb-12">
-        <h1 className="text-4xl font-bold">Configurações</h1>
+        <h1 className="text-4xl font-bold">
+          <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+            Configurações
+          </span>
+        </h1>
         <p className="text-muted-foreground mt-2">
           Personalize sua experiência no Viflow IA.
         </p>
