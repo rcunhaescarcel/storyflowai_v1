@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
@@ -8,11 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useSession } from '@/contexts/SessionContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Crown, KeyRound, Palette, Save, User } from 'lucide-react';
+import { Crown, KeyRound, Palette, Save, User, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
   const { session } = useSession();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [isSaving, setIsSaving] = useState(false);
@@ -45,6 +47,16 @@ const Settings = () => {
       toast.success("E-mail de redefinição de senha enviado!", {
         description: "Verifique sua caixa de entrada para continuar.",
       });
+    }
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Erro ao sair", { description: error.message });
+    } else {
+      toast.success("Você saiu com sucesso!");
+      navigate('/login');
     }
   };
 
@@ -154,6 +166,12 @@ const Settings = () => {
               </p>
             </div>
           </CardContent>
+          <CardFooter className="border-t bg-muted/30 px-6 py-4">
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair da Conta
+            </Button>
+          </CardFooter>
         </Card>
 
         {/* Plano e Faturamento */}
