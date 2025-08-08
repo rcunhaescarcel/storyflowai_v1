@@ -101,17 +101,28 @@ export const RenderModal = (props: RenderModalProps) => {
   const [selectingTrackUrl, setSelectingTrackUrl] = useState<string | null>(null);
 
   const handlePlayToggle = (url: string) => {
-    if (audioRef.current) {
-      if (playingTrackUrl === url) {
-        audioRef.current.pause();
-        setPlayingTrackUrl(null);
-      } else {
-        audioRef.current.src = url;
-        audioRef.current.play().catch(e => console.error("Audio play failed:", e));
-        setPlayingTrackUrl(url);
-      }
+    if (playingTrackUrl === url) {
+      setPlayingTrackUrl(null);
+    } else {
+      setPlayingTrackUrl(url);
     }
   };
+
+  useEffect(() => {
+    const audioElement = audioRef.current;
+    if (audioElement) {
+      if (playingTrackUrl) {
+        audioElement.src = playingTrackUrl;
+        audioElement.play().catch(e => {
+          console.error("Audio play failed:", e);
+          toast.error("Falha ao tocar áudio", { description: "O navegador pode ter bloqueado a reprodução." });
+          setPlayingTrackUrl(null);
+        });
+      } else {
+        audioElement.pause();
+      }
+    }
+  }, [playingTrackUrl]);
 
   const handleSelectTrack = async (track: typeof musicTracks[0]) => {
     if (backgroundMusic?.name === `${track.name}.mp3`) {
@@ -345,7 +356,7 @@ export const RenderModal = (props: RenderModalProps) => {
             {isProcessing ? 'Criando...' : 'Criar vídeo'}
           </Button>
         </DialogFooter>
-        <audio ref={audioRef} />
+        <audio ref={audioRef} onEnded={() => setPlayingTrackUrl(null)} crossOrigin="anonymous" />
       </DialogContent>
     </Dialog>
   );
