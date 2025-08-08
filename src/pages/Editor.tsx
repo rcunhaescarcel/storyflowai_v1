@@ -4,7 +4,6 @@ import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg
 import { resizeImage, dataURLtoFile } from "@/lib/imageUtils";
 import { ViewImageModal } from "@/components/editor/ViewImageModal";
 import { StoryPromptForm } from "@/components/editor/StoryPromptForm";
-import { EditorHeader } from "@/components/editor/EditorHeader";
 import { SceneCard } from "@/components/editor/SceneCard";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
 import { Button } from "@/components/ui/button";
@@ -260,11 +259,7 @@ const Editor = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <EditorHeader
-        sceneCount={scenes.length}
-      />
-
+    <>
       <main className="container max-w-screen-xl mx-auto px-4 py-8">
         {scenes.length === 0 ? (
           <div className="max-w-3xl mx-auto space-y-8">
@@ -357,7 +352,7 @@ const Editor = () => {
         onClose={() => setViewingImage(null)}
         imageUrl={viewingImage}
       />
-    </div>
+    </>
   );
 };
 

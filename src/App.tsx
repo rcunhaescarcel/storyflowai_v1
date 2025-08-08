@@ -7,6 +7,9 @@ import Landing from "./pages/Landing";
 import Editor from "./pages/Editor";
 import Render from "./pages/Render";
 import NotFound from "./pages/NotFound";
+import AppLayout from "@/components/layout/AppLayout";
+import Videos from "./pages/Videos";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -20,8 +23,15 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/editor" element={<Editor />} />
             <Route path="/render" element={<Render />} />
+            
+            {/* App Routes with Layout */}
+            <Route element={<AppLayout />}>
+              <Route path="/editor" element={<Editor />} />
+              <Route path="/videos" element={<Videos />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
