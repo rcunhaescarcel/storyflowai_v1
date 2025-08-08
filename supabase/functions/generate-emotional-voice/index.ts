@@ -7,26 +7,21 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // 1. Handle OPTIONS request
   if (req.method === 'OPTIONS') {
     return new Response("ok", { headers: corsHeaders })
   }
 
   try {
-    // 2. Get request body
     const { text, voice } = await req.json();
     if (!text || !voice) {
-      return new Response("Missing 'text' or 'voice' in request body.", { status: 400, headers: corsHeaders });
+      throw new Error("Missing 'text' or 'voice' in request body.");
     }
 
-    // 3. Get API key
     const openAIApiKey = Deno.env.get("ChatGPT_ vozes");
     if (!openAIApiKey) {
-      console.error("CRITICAL: OpenAI API key secret 'ChatGPT_ vozes' not found.");
-      return new Response("Server configuration error: API key not found.", { status: 500, headers: corsHeaders });
+      throw new Error("Server configuration error: OpenAI API key not found.");
     }
 
-    // 4. Call OpenAI API
     const openAIResponse = await fetch("https://api.openai.com/v1/audio/speech", {
       method: 'POST',
       headers: {
@@ -40,15 +35,13 @@ serve(async (req) => {
       }),
     });
 
-    // 5. Handle OpenAI response
     if (!openAIResponse.ok) {
       const errorBody = await openAIResponse.text();
       console.error("OpenAI API Error:", errorBody);
-      // Forward the error from OpenAI to the client for better debugging
-      return new Response(`OpenAI API error: ${errorBody}`, { status: openAIResponse.status, headers: corsHeaders });
+      // Padroniza o erro para ser sempre um JSON
+      throw new Error(`OpenAI API error: ${errorBody}`);
     }
 
-    // 6. Stream the audio back to the client
     const audioBlob = await openAIResponse.blob();
     return new Response(audioBlob, {
       headers: { ...corsHeaders, 'Content-Type': 'audio/mpeg' },
@@ -56,8 +49,8 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error("Edge Function Error:", error);
-    return new Response(`Internal Server Error: ${error.message}`, {
+    console.error("Edge Function Error:", error.message);
+    return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

@@ -198,7 +198,13 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
           },
         });
 
-        if (audioError) throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${audioError.message}`);
+        if (audioError) {
+          let detailedMessage = audioError.message;
+          if ((audioError as any).context && (audioError as any).context.error) {
+            detailedMessage = (audioError as any).context.error;
+          }
+          throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${detailedMessage}`);
+        }
 
         const audioFile = new File([audioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
         const audioDuration = await getAudioDuration(audioFile);

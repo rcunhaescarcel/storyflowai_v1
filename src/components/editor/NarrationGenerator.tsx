@@ -52,7 +52,11 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
       });
 
       if (audioError) {
-        throw new Error(`A geração de áudio falhou: ${audioError.message}`);
+        let detailedMessage = audioError.message;
+        if ((audioError as any).context && (audioError as any).context.error) {
+          detailedMessage = (audioError as any).context.error;
+        }
+        throw new Error(`A geração de áudio falhou: ${detailedMessage}`);
       }
 
       const fileName = `narration_${selectedVoice}.mp3`;
