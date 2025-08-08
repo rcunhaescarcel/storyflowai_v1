@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Scene, useFFmpeg } from "@/hooks/useFFmpeg";
 import { ImageGenerationModal } from "@/components/editor/ImageGenerationModal";
@@ -15,6 +16,7 @@ import { useProjectPersistence } from "./hooks/useProjectPersistence";
 import { VideoProject } from "./types/video";
 
 const Editor = () => {
+  const location = useLocation();
   const { 
     renderVideo, 
     isProcessing, 
@@ -64,6 +66,27 @@ const Editor = () => {
   
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
+
+  useEffect(() => {
+    // Se não houver um projeto no estado da localização, resete o editor.
+    // Isso garante que clicar em "Criar" limpe um projeto que estava sendo editado.
+    if (!location.state?.project) {
+      setScenes([]);
+      setCurrentProjectId(null);
+      setProjectTitle('');
+      setGlobalSrtFile(null);
+      setBackgroundMusic(null);
+      setLogoFile(null);
+      setLogoPreview(null);
+      setCharacterImage(null);
+      setCharacterImagePreview(null);
+      setVideoUrl(null);
+      clearDebugLogs();
+      addDebugLog("[Editor] Estado do editor resetado para o modo de criação.");
+    }
+  // A dependência é location.state, então isso roda sempre que o estado de navegação muda.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   const handleRenderVideo = async () => {
     if (scenes.length === 0) {
