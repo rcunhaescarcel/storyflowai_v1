@@ -8,16 +8,45 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useSession } from '@/contexts/SessionContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Crown, KeyRound, Palette, Save, User, LogOut } from 'lucide-react';
+import { Crown, KeyRound, Palette, Save, User, LogOut, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { startOfMonth, endOfMonth } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const fetchMonthlyVideoCount = async (userId: string): Promise<number> => {
+  const now = new Date();
+  const startDate = startOfMonth(now).toISOString();
+  const endDate = endOfMonth(now).toISOString();
+
+  const { count, error } = await supabase
+    .from('video_projects')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .gte('created_at', startDate)
+    .lte('created_at', endDate);
+
+  if (error) {
+    console.error("Error fetching monthly video count:", error);
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
+};
 
 const Settings = () => {
-  const { session } = useSession();
+  const { session, profile } = useSession();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [isSaving, setIsSaving] = useState(false);
+
+  const { data: monthlyVideoCount, isLoading: isLoadingCount } = useQuery({
+    queryKey: ['monthlyVideoCount', session?.user?.id],
+    queryFn: () => fetchMonthlyVideoCount(session!.user.id),
+    enabled: !!session?.user?.id,
+  });
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -62,12 +91,17 @@ const Settings = () => {
 
   const handleSave = () => {
     setIsSaving(true);
-    // Simulação de salvamento, pois não há backend para persistir ainda.
     setTimeout(() => {
       toast.success("Configurações salvas com sucesso!");
       setIsSaving(false);
     }, 1000);
   };
+
+  const freePlanLimit = 3;
+  const videosCreated = monthlyVideoCount ?? 0;
+  const progressValue = (videosCreated / freePlanLimit) * 100;
+  const coinsPerVideo = 3;
+  const estimatedVideosWithCoins = Math.floor((profile?.coins ?? 0) / coinsPerVideo);
 
   return (
     <main className="container max-w-screen-lg mx-auto px-4 py-8">
@@ -79,6 +113,53 @@ const Settings = () => {
       </div>
 
       <div className="space-y-8">
+        {/* Plano e Faturamento */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <Crown className="w-6 h-6 text-primary" />
+              Plano e Faturamento
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
+              <h3 className="text-lg font-semibold">Plano Gratuito</h3>
+              <p className="text-muted-foreground text-sm mt-1">{freePlanLimit} vídeos por mês • Qualidade HD</p>
+              <div className="mt-4 space-y-2">
+                {isLoadingCount ? (
+                  <>
+                    <Skeleton className="h-2 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </>
+                ) : (
+                  <>
+                    <Progress value={progressValue} className="h-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Você já criou {videosCreated} de {freePlanLimit} vídeos este mês.
+                    </p>
+                  </>
+                )}
+              </div>
+              <Button className="mt-6" onClick={() => toast.info("Funcionalidade em breve!", { description: "A opção de upgrade estará disponível em breve." })}>
+                Upgrade
+              </Button>
+            </div>
+            <div className="bg-yellow-400/10 border border-yellow-500/20 rounded-lg p-6">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Coins className="w-5 h-5 text-yellow-600" />
+                Seu Saldo de Coins
+              </h3>
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-4xl font-bold">{profile?.coins ?? 0}</span>
+                <span className="text-muted-foreground">coins</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Com seu saldo atual, você pode criar aproximadamente mais {estimatedVideosWithCoins} vídeos.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Preferências Padrão */}
         <Card>
           <CardHeader>
@@ -172,29 +253,6 @@ const Settings = () => {
               Sair da Conta
             </Button>
           </CardFooter>
-        </Card>
-
-        {/* Plano e Faturamento */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <Crown className="w-6 h-6 text-primary" />
-              Plano e Faturamento
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
-              <h3 className="text-lg font-semibold">Plano Gratuito</h3>
-              <p className="text-muted-foreground text-sm mt-1">3 vídeos por mês • Qualidade HD</p>
-              <div className="mt-4 space-y-2">
-                <Progress value={(1 / 3) * 100} className="h-2" />
-                <p className="text-sm text-muted-foreground">Você já criou 1 de 3 vídeos este mês.</p>
-              </div>
-              <Button className="mt-6" onClick={() => toast.info("Funcionalidade em breve!", { description: "A opção de upgrade estará disponível em breve." })}>
-                Upgrade
-              </Button>
-            </div>
-          </CardContent>
         </Card>
 
         <div className="flex justify-end">
