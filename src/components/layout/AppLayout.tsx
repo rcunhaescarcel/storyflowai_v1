@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import AppHeader from "./AppHeader";
 import { useState } from "react";
-import { BuyCoinsModal } from "@/components/BuyCoinsModal";
+import { BuyCoinsModal } from "@/components/billing/BuyCoinsModal";
 
 const AppLayout = () => {
   const [isBuyCoinsModalOpen, setIsBuyCoinsModalOpen] = useState(false);
