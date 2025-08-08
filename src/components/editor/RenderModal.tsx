@@ -99,7 +99,7 @@ export const RenderModal = (props: RenderModalProps) => {
         setPlayingTrackUrl(null);
       } else {
         audioRef.current.src = url;
-        audioRef.current.play();
+        audioRef.current.play().catch(e => console.error("Audio play failed:", e));
         setPlayingTrackUrl(url);
       }
     }
@@ -200,54 +200,73 @@ export const RenderModal = (props: RenderModalProps) => {
                 <Music className="w-4 h-4" />
                 Trilha musical
               </h3>
-              <div className="space-y-2">
-                {musicTracks.map((track) => {
-                  const isSelected = backgroundMusic?.name === `${track.name}.mp3`;
-                  const isSelecting = selectingTrackUrl === track.url;
-                  const isPlaying = playingTrackUrl === track.url;
+              <div className="grid grid-cols-2 gap-4">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="secondary" className="w-full justify-start truncate">
+                      <Music className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">
+                        {backgroundMusic ? backgroundMusic.name.replace('.mp3', '').replace(/_/g, ' ') : "Escolher Trilha"}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-2">
+                    <div className="space-y-1">
+                      {musicTracks.map((track) => {
+                        const isSelected = backgroundMusic?.name === `${track.name}.mp3`;
+                        const isSelecting = selectingTrackUrl === track.url;
+                        const isPlaying = playingTrackUrl === track.url;
 
-                  return (
-                    <div key={track.url} className="flex items-center justify-between gap-2 p-2 rounded-md bg-background/50">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <Button size="icon" variant="ghost" className="w-8 h-8 flex-shrink-0" onClick={() => handlePlayToggle(track.url)}>
-                          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        </Button>
-                        <span className="text-sm font-medium truncate" title={track.name}>{track.name}</span>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant={isSelected ? "secondary" : "outline"}
-                        onClick={() => handleSelectTrack(track)}
-                        disabled={isSelecting}
-                        className="w-20 flex-shrink-0"
-                      >
-                        {isSelecting ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : isSelected ? (
-                          <CheckCircle className="w-4 h-4" />
-                        ) : (
-                          "Usar"
-                        )}
-                      </Button>
+                        return (
+                          <div key={track.url} className="flex items-center justify-between gap-2 p-1 rounded-md hover:bg-muted">
+                            <div className="flex items-center gap-2 overflow-hidden">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="w-8 h-8 flex-shrink-0"
+                                onClick={(e) => { e.stopPropagation(); handlePlayToggle(track.url); }}
+                              >
+                                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                              </Button>
+                              <span className="text-sm font-medium truncate" title={track.name}>{track.name}</span>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant={isSelected ? "secondary" : "outline"}
+                              onClick={() => handleSelectTrack(track)}
+                              disabled={isSelecting}
+                              className="w-20 flex-shrink-0"
+                            >
+                              {isSelecting ? <Loader2 className="w-4 h-4 animate-spin" /> : isSelected ? <CheckCircle className="w-4 h-4" /> : "Usar"}
+                            </Button>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="secondary" disabled={!backgroundMusic}>
+                      <Volume2 className="w-4 h-4 mr-2" />
+                      Volume
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2">
+                    <Slider
+                      value={[backgroundMusicVolume]}
+                      onValueChange={(value) => onBackgroundMusicVolumeChange(value[0])}
+                      max={1} min={0} step={0.05}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="secondary" disabled={!backgroundMusic} className="w-full mt-2">
-                    <Volume2 className="w-4 h-4 mr-2" />
-                    Volume
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-2">
-                  <Slider
-                    value={[backgroundMusicVolume]}
-                    onValueChange={(value) => onBackgroundMusicVolumeChange(value[0])}
-                    max={1} min={0} step={0.05}
-                  />
-                </PopoverContent>
-              </Popover>
+              {backgroundMusic && (
+                <Button variant="outline" size="sm" className="w-full" onClick={onBackgroundMusicRemove}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Remover Trilha Sonora
+                </Button>
+              )}
             </div>
 
             {/* Logo */}
