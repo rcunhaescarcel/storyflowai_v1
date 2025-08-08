@@ -355,7 +355,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
                 </SelectTrigger>
                 <SelectContent>
                   {openAIVoices.map(voice => (
-                    <SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>
+                    <SelectItem key={voice.value} value={voice.value}>{voice.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

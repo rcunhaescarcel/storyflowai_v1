@@ -21,7 +21,14 @@ export const storyStyles = {
   }
 };
 
-export const openAIVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+export const openAIVoices = [
+  { value: 'alloy', label: 'Kael' },
+  { value: 'echo', label: 'Orin' },
+  { value: 'fable', label: 'Lyra' },
+  { value: 'onyx', label: 'Draven' },
+  { value: 'nova', label: 'Sora' },
+  { value: 'shimmer', label: 'Elara' },
+];
 
 export const languages = {
   'pt-br': 'Português',
