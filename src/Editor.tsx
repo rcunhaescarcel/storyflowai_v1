@@ -11,7 +11,8 @@ import { DebugConsole } from "@/components/editor/DebugConsole";
 import { useScenes } from "./hooks/useScenes";
 import { useGlobalSettings } from "./hooks/useGlobalSettings";
 import { useProjectLoader } from "./hooks/useProjectLoader";
-import { useProjectSaver } from "./hooks/useProjectSaver";
+import { useProjectPersistence } from "./hooks/useProjectPersistence";
+import { VideoProject } from "./types/video";
 
 const Editor = () => {
   const { 
@@ -47,8 +48,19 @@ const Editor = () => {
     subtitleStyle, setSubtitleStyle
   } = useGlobalSettings();
 
-  const { isProjectLoading } = useProjectLoader(setScenes, addDebugLog);
-  const { saveProject } = useProjectSaver(addDebugLog);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [projectTitle, setProjectTitle] = useState<string>('');
+
+  const { isProjectLoading } = useProjectLoader({
+    onLoad: (project: VideoProject, loadedScenes: Scene[]) => {
+      setScenes(loadedScenes);
+      setCurrentProjectId(project.id);
+      setProjectTitle(project.title);
+    },
+    addDebugLog
+  });
+
+  const { saveProject, updateProject, isSaving } = useProjectPersistence(addDebugLog);
   
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
@@ -87,6 +99,14 @@ const Editor = () => {
     }
   };
 
+  const handleSaveProject = () => {
+    if (!currentProjectId) {
+      toast.error("ID do projeto não encontrado para salvar.");
+      return;
+    }
+    updateProject(currentProjectId, scenes, projectTitle);
+  };
+
   const downloadVideo = () => {
     if (videoUrl) {
       const link = document.createElement('a');
@@ -112,7 +132,7 @@ const Editor = () => {
     });
   };
 
-  const handleStoryGenerated = useCallback((newScenes: Scene[], characterFile?: File, characterPreview?: string, projectPrompt?: string) => {
+  const handleStoryGenerated = useCallback(async (newScenes: Scene[], characterFile?: File, characterPreview?: string, projectPrompt?: string) => {
     setScenes(newScenes);
     if (characterFile && characterPreview) {
       setCharacterImage(characterFile);
@@ -124,7 +144,11 @@ const Editor = () => {
     });
   
     if (projectPrompt) {
-      saveProject(newScenes, projectPrompt);
+      const newProject = await saveProject(newScenes, projectPrompt);
+      if (newProject) {
+        setCurrentProjectId(newProject.id);
+        setProjectTitle(newProject.title);
+      }
     }
   }, [setScenes, setCharacterImage, setCharacterImagePreview, addDebugLog, saveProject]);
 
@@ -183,6 +207,8 @@ const Editor = () => {
             </div>
 
             <EditorSidebar
+              projectTitle={projectTitle}
+              onProjectTitleChange={setProjectTitle}
               videoQuality={videoQuality}
               onVideoQualityChange={setVideoQuality}
               characterImage={characterImage}
@@ -212,6 +238,7 @@ const Editor = () => {
               onSrtRemove={() => setGlobalSrtFile(null)}
               onSubtitleStyleChange={(update) => setSubtitleStyle(prev => ({ ...prev, ...update }))}
               isProcessing={isProcessing}
+              isSaving={isSaving}
               progress={progress}
               videoUrl={videoUrl}
               debugLogs={debugLogs}
@@ -219,7 +246,9 @@ const Editor = () => {
               onCopyLogs={copyLogsToClipboard}
               onClearLogs={clearDebugLogs}
               onRender={handleRenderVideo}
+              onSaveProject={handleSaveProject}
               sceneCount={scenes.length}
+              isEditing={!!currentProjectId}
             />
           </div>
         )}

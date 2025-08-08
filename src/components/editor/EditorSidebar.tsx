@@ -30,6 +30,7 @@ import {
   Image as ImageIcon,
   Music,
   Palette,
+  Save,
   Trash2,
   UserSquare,
   Video,
@@ -41,6 +42,8 @@ import { DebugConsole } from "./DebugConsole";
 type VideoQuality = "hd" | "fullhd";
 
 interface EditorSidebarProps {
+  projectTitle: string;
+  onProjectTitleChange: (title: string) => void;
   videoQuality: VideoQuality;
   onVideoQualityChange: (quality: VideoQuality) => void;
   characterImage: File | null;
@@ -64,6 +67,7 @@ interface EditorSidebarProps {
   onSrtRemove: () => void;
   onSubtitleStyleChange: (style: Partial<SubtitleStyle>) => void;
   isProcessing: boolean;
+  isSaving: boolean;
   progress: number;
   videoUrl: string | null;
   debugLogs: string[];
@@ -71,10 +75,14 @@ interface EditorSidebarProps {
   onCopyLogs: () => void;
   onClearLogs: () => void;
   onRender: () => void;
+  onSaveProject: () => void;
   sceneCount: number;
+  isEditing: boolean;
 }
 
 export const EditorSidebar = ({
+  projectTitle,
+  onProjectTitleChange,
   videoQuality,
   onVideoQualityChange,
   characterImage,
@@ -98,6 +106,7 @@ export const EditorSidebar = ({
   onSrtRemove,
   onSubtitleStyleChange,
   isProcessing,
+  isSaving,
   progress,
   videoUrl,
   debugLogs,
@@ -105,7 +114,9 @@ export const EditorSidebar = ({
   onCopyLogs,
   onClearLogs,
   onRender,
+  onSaveProject,
   sceneCount,
+  isEditing,
 }: EditorSidebarProps) => {
   return (
     <aside className="lg:col-span-4 space-y-8">
@@ -118,6 +129,18 @@ export const EditorSidebar = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {isEditing && (
+              <div>
+                <Label className="text-sm font-medium mb-2 flex items-center gap-2">
+                  Título do Projeto
+                </Label>
+                <Input
+                  value={projectTitle}
+                  onChange={(e) => onProjectTitleChange(e.target.value)}
+                  placeholder="Dê um nome ao seu vídeo"
+                />
+              </div>
+            )}
             <div>
               <Label className="text-sm font-medium mb-2 flex items-center gap-2">
                 <Film className="w-4 h-4" />
@@ -417,16 +440,23 @@ export const EditorSidebar = ({
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Video className="w-5 h-5" />
-              Renderização
+              Ações
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!isProcessing && !videoUrl && (
-              <Button onClick={onRender} disabled={sceneCount === 0} className="w-full">
+            <div className="flex flex-col gap-3">
+              {isEditing && (
+                <Button onClick={onSaveProject} disabled={isSaving || isProcessing} className="w-full">
+                  <Save className="w-4 h-4 mr-2" />
+                  {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+              )}
+              <Button onClick={onRender} disabled={sceneCount === 0 || isProcessing || isSaving} className="w-full">
                 <Video className="w-4 h-4 mr-2" />
-                Renderizar Vídeo
+                {isProcessing ? 'Renderizando...' : 'Renderizar Vídeo'}
               </Button>
-            )}
+            </div>
+            
             {isProcessing && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
@@ -449,12 +479,6 @@ export const EditorSidebar = ({
                   <Download className="w-4 h-4 mr-2" />
                   Baixar Vídeo
                 </Button>
-                {!isProcessing && (
-                  <Button onClick={onRender} variant="outline" className="w-full">
-                    <Video className="w-4 h-4 mr-2" />
-                    Renderizar Novamente
-                  </Button>
-                )}
               </div>
             )}
             <DebugConsole logs={debugLogs} onCopy={onCopyLogs} onClear={onClearLogs} />

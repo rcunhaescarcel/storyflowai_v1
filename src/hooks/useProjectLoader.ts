@@ -22,10 +22,12 @@ const getAudioDuration = (file: File): Promise<number> => {
   });
 };
 
-export const useProjectLoader = (
-  setScenes: (scenes: Scene[]) => void,
-  addDebugLog: (message: string) => void
-) => {
+interface UseProjectLoaderProps {
+  onLoad: (project: VideoProject, scenes: Scene[]) => void;
+  addDebugLog: (message: string) => void;
+}
+
+export const useProjectLoader = ({ onLoad, addDebugLog }: UseProjectLoaderProps) => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(!!location.state?.project);
 
@@ -74,6 +76,7 @@ export const useProjectLoader = (
               id: sceneData.id,
               image: imageFile,
               imagePreview: sceneData.image_url,
+              imagePrompt: sceneData.narration_text, // Fallback, should be stored separately
               audio: audioFile,
               audioDataUrl: sceneData.audio_data_url,
               duration: audioDuration || sceneData.duration,
@@ -84,12 +87,11 @@ export const useProjectLoader = (
               zoomDirection: sceneData.zoomDirection,
               fadeInDuration: sceneData.fadeInDuration,
               fadeOutDuration: sceneData.fadeOutDuration,
-              imagePrompt: "", // Will be populated if we save prompts in DB
             };
           })
         );
 
-        setScenes(newScenes);
+        onLoad(project, newScenes);
         toast.success("Projeto carregado com sucesso!", { id: loadingToast });
         addDebugLog(`[Editor] ✅ Projeto "${project.title}" carregado com ${newScenes.length} cenas.`);
       } catch (error) {
@@ -107,7 +109,8 @@ export const useProjectLoader = (
     } else {
       setIsLoading(false);
     }
-  }, [location.state, setScenes, addDebugLog]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, addDebugLog]);
 
   return { isProjectLoading: isLoading };
 };
