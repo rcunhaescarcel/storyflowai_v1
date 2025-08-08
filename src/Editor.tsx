@@ -16,6 +16,7 @@ import { VideoProject } from "./types/video";
 import { ProjectActions } from "./components/editor/ProjectActions";
 import { RenderModal } from "./components/editor/RenderModal";
 import { EditableProjectTitle } from "./components/editor/EditableProjectTitle";
+import { DownloadModal } from "./components/editor/DownloadModal";
 
 const Editor = () => {
   const location = useLocation();
@@ -78,6 +79,7 @@ const Editor = () => {
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
   const [isRenderModalOpen, setIsRenderModalOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
 
   useEffect(() => {
     if (!location.state?.project) {
@@ -141,18 +143,6 @@ const Editor = () => {
       }
     } catch (error) {
       toast.error("Erro na Renderização", { description: `${error}` });
-    }
-  };
-
-  const downloadVideo = () => {
-    const urlToDownload = localVideoUrl || persistedVideoUrl;
-    if (urlToDownload) {
-      const link = document.createElement('a');
-      link.href = urlToDownload;
-      link.download = 'viflow-video.mp4';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     }
   };
 
@@ -227,7 +217,7 @@ const Editor = () => {
             <ProjectActions 
               scenes={scenes}
               onRenderClick={() => setIsRenderModalOpen(true)}
-              onDownloadClick={downloadVideo}
+              onDownloadClick={() => setIsDownloadModalOpen(true)}
               videoUrl={localVideoUrl || persistedVideoUrl}
             />
             <div className="space-y-6">
@@ -317,6 +307,14 @@ const Editor = () => {
         onZoomIntensityChange={setZoomIntensity}
         addFade={addFade}
         onAddFadeChange={setAddFade}
+      />
+
+      <DownloadModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+        scenes={scenes}
+        videoUrl={localVideoUrl || persistedVideoUrl}
+        projectTitle={projectTitle}
       />
     </>
   );

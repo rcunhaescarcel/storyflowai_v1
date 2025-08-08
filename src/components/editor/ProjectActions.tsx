@@ -77,6 +77,7 @@ export const ProjectActions = ({ scenes, onRenderClick, onDownloadClick, videoUr
   };
 
   const progressPercentage = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
+  const canDownload = videoUrl || scenes.some(s => s.image || s.audio);
 
   return (
     <Card className="p-4 mb-8">
@@ -91,7 +92,7 @@ export const ProjectActions = ({ scenes, onRenderClick, onDownloadClick, videoUr
           <Video className="w-4 h-4 mr-2" />
           Criar Vídeo
         </Button>
-        <Button variant="outline" size="icon" onClick={onDownloadClick} disabled={!videoUrl}>
+        <Button variant="outline" size="icon" onClick={onDownloadClick} disabled={!canDownload}>
           <Download className="w-4 h-4" />
         </Button>
         <Button variant="outline" size="icon" onClick={handleCopyScript}>
