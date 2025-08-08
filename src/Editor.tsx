@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
 import { resizeImage, dataURLtoFile } from "@/lib/imageUtils";
 import { ViewImageModal } from "@/components/editor/ViewImageModal";
@@ -33,7 +33,6 @@ const getAudioDuration = (file: File): Promise<number> => {
 };
 
 const Editor = () => {
-  const { toast } = useToast();
   const [scenes, setScenes] = useState<Scene[]>([]);
   const [globalSrtFile, setGlobalSrtFile] = useState<File | null>(null);
   const [backgroundMusic, setBackgroundMusic] = useState<File | null>(null);
@@ -120,16 +119,13 @@ const Editor = () => {
       try {
         const duration = await getAudioDuration(file);
         updateScene(sceneId, { audio: file, duration });
-        toast({
-          title: "Narração carregada",
+        toast.success("Narração carregada", {
           description: `Áudio de ${duration.toFixed(1)}s adicionado à cena.`,
         });
       } catch (error) {
         console.error("Error getting audio duration:", error);
-        toast({
-          title: "Erro ao carregar áudio",
+        toast.error("Erro ao carregar áudio", {
           description: "Não foi possível obter a duração do áudio.",
-          variant: "destructive"
         });
       }
     }
@@ -138,8 +134,7 @@ const Editor = () => {
   const handleSrtUpload = (file: File) => {
     if (file && (file.name.endsWith('.srt') || file.type === 'text/plain')) {
       setGlobalSrtFile(file);
-      toast({
-        title: "Legenda Global Carregada",
+      toast.success("Legenda Global Carregada", {
         description: "Arquivo SRT será aplicado a todo o vídeo.",
       });
     }
@@ -148,8 +143,7 @@ const Editor = () => {
   const handleBackgroundMusicUpload = (file: File) => {
     if (file && file.type.startsWith('audio/')) {
       setBackgroundMusic(file);
-      toast({
-        title: "Trilha Sonora Carregada",
+      toast.success("Trilha Sonora Carregada", {
         description: "A música de fundo será aplicada a todo o vídeo.",
       });
     }
@@ -164,8 +158,7 @@ const Editor = () => {
         setLogoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-      toast({
-        title: "Logotipo Carregado",
+      toast.success("Logotipo Carregado", {
         description: "O logotipo será adicionado ao vídeo.",
       });
     }
@@ -181,15 +174,12 @@ const Editor = () => {
         setCharacterImage(resizedFile);
         setCharacterImagePreview(resizedImagePreview);
         
-        toast({
-          title: "Personagem de Referência Carregado",
+        toast.success("Personagem de Referência Carregado", {
           description: "A imagem foi otimizada e está pronta para ser usada.",
         });
       } catch (error) {
-        toast({
-          title: "Erro ao processar imagem",
+        toast.error("Erro ao processar imagem", {
           description: "Não foi possível redimensionar a imagem.",
-          variant: "destructive",
         });
       }
     }
@@ -197,11 +187,11 @@ const Editor = () => {
 
   const handleRenderVideo = async () => {
     if (scenes.length === 0) {
-      toast({ title: "Erro", description: "Adicione pelo menos uma cena para renderizar", variant: "destructive" });
+      toast.error("Erro", { description: "Adicione pelo menos uma cena para renderizar" });
       return;
     }
     if (scenes.some(scene => !scene.image)) {
-      toast({ title: "Aviso", description: "Todas as cenas precisam de uma imagem para renderizar.", variant: "destructive" });
+      toast.warning("Aviso", { description: "Todas as cenas precisam de uma imagem para renderizar." });
       return;
     }
 
@@ -211,12 +201,12 @@ const Editor = () => {
       const result = await renderVideo(scenes, globalSrtFile, backgroundMusic, subtitleStyle, backgroundMusicVolume, videoQuality, logoFile, logoPosition);
       if (result) {
         setVideoUrl(result);
-        toast({ title: "Sucesso!", description: "Vídeo renderizado com sucesso" });
+        toast.success("Sucesso!", { description: "Vídeo renderizado com sucesso" });
       } else {
-        toast({ title: "Erro", description: "Falha ao renderizar o vídeo", variant: "destructive" });
+        toast.error("Erro", { description: "Falha ao renderizar o vídeo" });
       }
     } catch (error) {
-      toast({ title: "Erro na Renderização", description: `${error}`, variant: "destructive" });
+      toast.error("Erro na Renderização", { description: `${error}` });
     }
   };
 
@@ -233,15 +223,15 @@ const Editor = () => {
 
   const copyLogsToClipboard = () => {
     if (debugLogs.length === 0) {
-      toast({ title: "Nada para copiar", description: "Não há logs no console de debug." });
+      toast.info("Nada para copiar", { description: "Não há logs no console de debug." });
       return;
     }
     const logText = debugLogs.join('\n');
     navigator.clipboard.writeText(logText).then(() => {
-      toast({ title: "Copiado!", description: "Os logs de debug foram copiados para a área de transferência." });
+      toast.success("Copiado!", { description: "Os logs de debug foram copiados para a área de transferência." });
     }).catch(err => {
       console.error('Failed to copy logs: ', err);
-      toast({ title: "Erro ao copiar", description: "Não foi possível copiar os logs.", variant: "destructive" });
+      toast.error("Erro ao copiar", { description: "Não foi possível copiar os logs." });
     });
   };
 
@@ -252,8 +242,7 @@ const Editor = () => {
       setCharacterImagePreview(characterPreview);
     }
     addDebugLog(`[Editor] História gerada com ${newScenes.length} cenas.`);
-    toast({
-      title: "Cenas Criadas!",
+    toast.success("Cenas Criadas!", {
       description: `Sua história foi dividida em ${newScenes.length} cenas.`,
     });
   };

@@ -12,13 +12,12 @@ import {
   Play,
   AlertCircle 
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useFFmpeg, Scene, SubtitleStyle } from "@/hooks/useFFmpeg";
 
 const Render = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { loadFFmpeg, renderVideo, isLoaded, isProcessing, progress: ffmpegProgress, debugLogs, clearDebugLogs } = useFFmpeg();
   
   const [status, setStatus] = useState<'idle' | 'loading' | 'processing' | 'completed' | 'error'>('idle');
@@ -71,8 +70,7 @@ const Render = () => {
         setStatus('completed');
         setCurrentStep('Renderização concluída!');
         
-        toast({
-          title: "Renderização Concluída!",
+        toast.success("Renderização Concluída!", {
           description: "Seu vídeo foi processado com sucesso usando FFmpeg WebAssembly",
         });
       } else {
@@ -83,10 +81,8 @@ const Render = () => {
       console.error('Rendering error:', error);
       setStatus('error');
       setCurrentStep('Erro na renderização');
-      toast({
-        title: "Erro na Renderização",
+      toast.error("Erro na Renderização", {
         description: error instanceof Error ? error.message : "Ocorreu um erro durante o processamento",
-        variant: "destructive"
       });
     }
   };
@@ -100,8 +96,7 @@ const Render = () => {
       link.click();
       document.body.removeChild(link);
       
-      toast({
-        title: "Download Iniciado",
+      toast.info("Download Iniciado", {
         description: "O download do seu vídeo foi iniciado",
       });
     }

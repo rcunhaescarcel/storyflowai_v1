@@ -12,7 +12,7 @@ const AppHeader = () => {
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      toast.error("Erro ao sair:", error.message);
+      toast.error("Erro ao sair", { description: error.message });
     } else {
       toast.success("Você saiu com sucesso!");
       navigate('/login');
