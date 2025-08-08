@@ -13,8 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, UploadCloud, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import { resizeImage, dataURLtoFile, urlToFile } from "@/lib/imageUtils";
+import { resizeImage, dataURLtoFile, urlToResizedFile } from "@/lib/imageUtils";
 import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface CharacterModalProps {
   isOpen: boolean;
@@ -24,9 +26,6 @@ interface CharacterModalProps {
 
 const galleryCharacters = [
   { name: "Ana, a Aventureira", image: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1753231548724x195143348561129150/ana.png" },
-  { name: "Robô Amigável", image: "https://placehold.co/300x300/a9d5e5/333?text=Rob%C3%B4" },
-  { name: "Mago Sábio", image: "https://placehold.co/300x300/c8a2c8/333?text=Mago" },
-  { name: "Criatura da Floresta", image: "https://placehold.co/300x300/b8d8b8/333?text=Criatura" },
 ];
 
 export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalProps) => {
@@ -52,11 +51,10 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
   const handleGallerySelect = async (character: typeof galleryCharacters[0]) => {
     setIsLoading(true);
     try {
-      const file = await urlToFile(character.image, `${character.name}.png`);
-      const resizedPreview = await resizeImage(file, 512, 512);
-      const resizedFile = dataURLtoFile(resizedPreview, file.name);
-      setSelected({ file: resizedFile, preview: resizedPreview });
+      const { file, preview } = await urlToResizedFile(character.image, `${character.name}.png`, 512, 768);
+      setSelected({ file, preview });
     } catch (error) {
+      console.error("Error processing gallery image:", error);
       toast.error("Falha ao carregar personagem da galeria.");
     } finally {
       setIsLoading(false);
@@ -74,7 +72,7 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Escolher Personagem de Referência</DialogTitle>
           <DialogDescription>
@@ -87,26 +85,41 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
             <TabsTrigger value="upload">Fazer Upload</TabsTrigger>
           </TabsList>
           <TabsContent value="gallery">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 max-h-80 overflow-y-auto">
-              {galleryCharacters.map((char) => (
-                <div
-                  key={char.name}
-                  className={cn(
-                    "relative rounded-lg overflow-hidden cursor-pointer border-2 transition-all",
-                    selected.preview === char.image ? "border-primary" : "border-transparent"
-                  )}
-                  onClick={() => handleGallerySelect(char)}
-                >
-                  <img src={char.image} alt={char.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
-                  <p className="absolute bottom-2 left-2 text-white text-sm font-bold">{char.name}</p>
-                  {selected.preview === char.image && (
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="p-4">
+              <Carousel className="w-full max-w-xs mx-auto">
+                <CarouselContent>
+                  {galleryCharacters.map((char) => (
+                    <CarouselItem key={char.name}>
+                      <div className="p-1">
+                        <Card
+                          onClick={() => handleGallerySelect(char)}
+                          className={cn(
+                            "cursor-pointer transition-all",
+                            selected.preview === char.image ? "border-primary ring-2 ring-primary" : ""
+                          )}
+                        >
+                          <CardContent className="flex h-[400px] items-center justify-center p-2 relative">
+                            <img
+                              src={char.image}
+                              alt={char.name}
+                              className="w-full h-full object-contain"
+                              crossOrigin="anonymous"
+                            />
+                            {selected.preview === char.image && (
+                              <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                <CheckCircle className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                        <p className="text-center font-medium mt-2">{char.name}</p>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
             </div>
           </TabsContent>
           <TabsContent value="upload">
@@ -118,7 +131,7 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
                 {isLoading ? (
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 ) : selected.preview ? (
-                  <img src={selected.preview} alt="Preview" className="max-h-full rounded-md" />
+                  <img src={selected.preview} alt="Preview" className="max-h-full rounded-md" crossOrigin="anonymous" />
                 ) : (
                   <>
                     <UploadCloud className="w-8 h-8 text-muted-foreground" />

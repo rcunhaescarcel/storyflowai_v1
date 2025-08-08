@@ -82,3 +82,39 @@ export const urlToFile = async (url: string, filename: string, mimeType?: string
     const type = mimeType || blob.type;
     return new File([blob], filename, { type });
 };
+
+export const urlToResizedFile = (url: string, filename: string, maxWidth: number, maxHeight: number): Promise<{ file: File, preview: string }> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous'; // Important for cross-origin images
+    img.src = url;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        return reject(new Error("Falha ao obter o contexto do canvas."));
+      }
+
+      let { width, height } = img;
+
+      if (width > maxWidth || height > maxHeight) {
+        if (width > height) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        } else {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      const file = dataURLtoFile(dataUrl, filename);
+      resolve({ file, preview: dataUrl });
+    };
+    img.onerror = (err) => reject(err);
+  });
+};
