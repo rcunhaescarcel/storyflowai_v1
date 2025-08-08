@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -16,6 +17,8 @@ interface VideoCardProps {
 }
 
 export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing, isCurrentlyRendering }: VideoCardProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const isRendered = !!project.final_video_url;
   const thumbnailUrl = project.thumbnail_url || `https://placehold.co/1600x900/2a2a2a/ffffff?text=${encodeURI(project.title)}`;
   
@@ -26,11 +29,30 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing, is
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isRendered) {
+      setIsPlaying(true);
+    }
+  };
+
   return (
     <Card className={cn("overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1", isCurrentlyRendering && "ring-2 ring-primary")}>
       <div className="relative">
-        <AspectRatio ratio={16 / 9}>
-          <img src={thumbnailUrl} alt={project.title} className="object-cover w-full h-full bg-muted" crossOrigin="anonymous" />
+        <AspectRatio ratio={16 / 9} className="bg-muted">
+          {isPlaying && isRendered ? (
+            <video
+              ref={videoRef}
+              src={project.final_video_url!}
+              controls
+              autoPlay
+              className="w-full h-full object-contain bg-black"
+              onEnded={() => setIsPlaying(false)}
+            />
+          ) : (
+            <img src={thumbnailUrl} alt={project.title} className="object-cover w-full h-full" crossOrigin="anonymous" />
+          )}
         </AspectRatio>
         
         {isCurrentlyRendering ? (
@@ -38,19 +60,21 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing, is
             <Loader2 className="w-8 h-8 text-white animate-spin" />
             <p className="text-white font-semibold mt-2">Renderizando...</p>
           </div>
-        ) : isRendered ? (
-          <a href={project.final_video_url!} target="_blank" rel="noopener noreferrer" aria-label="Play video">
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                <Play className="w-8 h-8 text-white fill-white ml-1" />
-              </div>
+        ) : isRendered && !isPlaying ? (
+          <div 
+            onClick={handlePlayClick} 
+            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 cursor-pointer"
+            aria-label="Play video"
+          >
+            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+              <Play className="w-8 h-8 text-white fill-white ml-1" />
             </div>
-          </a>
-        ) : (
+          </div>
+        ) : !isRendered ? (
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
-        )}
+        ) : null}
 
-        {project.video_duration && !isCurrentlyRendering && (
+        {project.video_duration && !isCurrentlyRendering && !isPlaying && (
           <Badge variant="secondary" className="absolute bottom-3 right-3 bg-black/50 text-white border-none">
             {formatDuration(project.video_duration)}
           </Badge>
