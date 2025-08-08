@@ -20,6 +20,32 @@ import { DownloadModal, DownloadSelection } from "./components/editor/DownloadMo
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
+const generateSrtFromScenes = (scenes: Scene[]): string => {
+  let srtContent = '';
+  let currentTime = 0;
+  scenes.forEach((scene, index) => {
+    if (scene.narrationText && scene.duration) {
+      const startTime = currentTime;
+      const endTime = currentTime + scene.duration;
+      
+      const formatTime = (seconds: number) => {
+        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+        const ms = ((seconds % 1) * 1000).toFixed(0).toString().padStart(3, '0');
+        return `${h}:${m}:${s},${ms}`;
+      };
+
+      srtContent += `${index + 1}\n`;
+      srtContent += `${formatTime(startTime)} --> ${formatTime(endTime)}\n`;
+      srtContent += `${scene.narrationText.trim()}\n\n`;
+
+      currentTime = endTime;
+    }
+  });
+  return srtContent;
+};
+
 const Editor = () => {
   const location = useLocation();
   const { 
@@ -46,18 +72,13 @@ const Editor = () => {
   } = useScenes();
 
   const {
-    globalSrtFile, handleSrtUpload, setGlobalSrtFile,
     backgroundMusic, handleBackgroundMusicUpload, setBackgroundMusic,
     backgroundMusicVolume, setBackgroundMusicVolume,
-    videoQuality, setVideoQuality,
     logoFile, logoPreview, handleLogoUpload, setLogoFile, setLogoPreview,
     logoPosition, setLogoPosition,
     subtitleStyle, setSubtitleStyle,
-    zoomEffect, setZoomEffect,
-    zoomIntensity, setZoomIntensity,
     addFade, setAddFade,
-    fadeInDuration, setFadeInDuration,
-    fadeOutDuration, setFadeOutDuration,
+    generateSubtitles, setGenerateSubtitles,
   } = useGlobalSettings();
 
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -90,7 +111,6 @@ const Editor = () => {
       setScenes([]);
       setCurrentProjectId(null);
       setProjectTitle('');
-      setGlobalSrtFile(null);
       setBackgroundMusic(null);
       setLogoFile(null);
       setLogoPreview(null);
@@ -101,7 +121,7 @@ const Editor = () => {
       clearDebugLogs();
       addDebugLog("[Editor] Estado do editor resetado para o modo de criação.");
     }
-  }, [location.state, setScenes, setGlobalSrtFile, setBackgroundMusic, setLogoFile, setLogoPreview, setCharacterImage, setCharacterImagePreview, clearDebugLogs, addDebugLog]);
+  }, [location.state, setScenes, setBackgroundMusic, setLogoFile, setLogoPreview, setCharacterImage, setCharacterImagePreview, clearDebugLogs, addDebugLog]);
 
   const handleRenderVideo = async () => {
     if (scenes.length === 0) {
@@ -115,23 +135,34 @@ const Editor = () => {
 
     setIsRenderModalOpen(false);
 
+    let srtFileToRender: File | null = null;
+    if (generateSubtitles) {
+      const srtContent = generateSrtFromScenes(scenes);
+      if (srtContent) {
+        srtFileToRender = new File([srtContent], "generated.srt", { type: "text/plain" });
+        addDebugLog("[Legendas] Arquivo SRT gerado a partir das narrações.");
+      } else {
+        addDebugLog("[Legendas] Nenhuma narração encontrada para gerar legendas.");
+      }
+    }
+
     try {
       setLocalVideoUrl(null);
       clearDebugLogs();
       const result = await renderVideo(
         scenes, 
-        globalSrtFile, 
+        srtFileToRender, 
         backgroundMusic, 
         subtitleStyle, 
         backgroundMusicVolume, 
-        videoQuality, 
+        'fullhd', // Hardcoded quality as it's removed from UI
         logoFile, 
         logoPosition,
-        zoomEffect,
-        zoomIntensity,
+        'none', // Hardcoded zoom as it's removed from UI
+        5,      // Hardcoded zoom intensity
         addFade,
-        fadeInDuration,
-        fadeOutDuration
+        0.5,    // Hardcoded fade duration
+        0.5     // Hardcoded fade duration
       );
       if (result) {
         setLocalVideoUrl(result);
@@ -347,8 +378,6 @@ const Editor = () => {
         onClose={() => setIsRenderModalOpen(false)}
         onRender={handleRenderVideo}
         isProcessing={isProcessing}
-        videoQuality={videoQuality}
-        onVideoQualityChange={setVideoQuality}
         backgroundMusic={backgroundMusic}
         backgroundMusicVolume={backgroundMusicVolume}
         onBackgroundMusicUpload={handleBackgroundMusicUpload}
@@ -363,17 +392,12 @@ const Editor = () => {
           setLogoPreview(null);
         }}
         onLogoPositionChange={setLogoPosition}
-        globalSrtFile={globalSrtFile}
         subtitleStyle={subtitleStyle}
-        onSrtUpload={handleSrtUpload}
-        onSrtRemove={() => setGlobalSrtFile(null)}
         onSubtitleStyleChange={(update) => setSubtitleStyle(prev => ({ ...prev, ...update }))}
-        zoomEffect={zoomEffect}
-        onZoomEffectChange={setZoomEffect}
-        zoomIntensity={zoomIntensity}
-        onZoomIntensityChange={setZoomIntensity}
         addFade={addFade}
         onAddFadeChange={setAddFade}
+        generateSubtitles={generateSubtitles}
+        onGenerateSubtitlesChange={setGenerateSubtitles}
       />
 
       <DownloadModal
