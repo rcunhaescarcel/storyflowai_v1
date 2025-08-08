@@ -23,7 +23,8 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
     setIsLoading(true);
     addDebugLog(`[Narração IA] Iniciando geração para o texto: "${narrationText.slice(0, 50)}..."`);
     try {
-      const encodedTextPrompt = encodeURIComponent(narrationText);
+      const audioPrompt = `speak PT-BR: ${narrationText}`;
+      const encodedTextPrompt = encodeURIComponent(audioPrompt);
       const token = "76b4jfL5SsXI48nS";
       const referrer = "https://vidflow.com.br/";
       
