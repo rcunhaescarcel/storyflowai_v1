@@ -36,7 +36,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
 import { ImageUploader } from "@/components/editor/ImageUploader";
 import { AudioUploader } from "@/components/editor/AudioUploader";
-import { EffectsPopover } from "@/components/editor/EffectsPopover";
 import { NarrationGenerator } from "@/components/editor/NarrationGenerator";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -371,17 +370,13 @@ const Editor = () => {
                           onAudioGenerated={(file) => handleNarrationUpload(scene.id, file)}
                           addDebugLog={addDebugLog}
                         />
-                        <div className="border-t pt-4 space-y-4">
+                        <div className="border-t pt-4">
                           <AudioUploader
                             sceneId={scene.id}
                             audio={scene.audio}
                             duration={scene.duration}
                             onAudioUpload={(file) => handleNarrationUpload(scene.id, file)}
                             onAudioRemove={() => updateScene(scene.id, { audio: undefined, duration: undefined })}
-                          />
-                          <EffectsPopover
-                            scene={scene}
-                            onUpdate={(updates) => updateScene(scene.id, updates)}
                           />
                         </div>
                       </div>

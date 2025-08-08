@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Sparkles, Camera } from 'lucide-react';
+import { Loader2, Sparkles, Camera, Film } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
 
 interface StoryGeneratorModalProps {
   isOpen: boolean;
@@ -51,6 +53,9 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
   const [duration, setDuration] = useState('60');
   const [selectedVoice, setSelectedVoice] = useState('nova');
   const [zoomEffect, setZoomEffect] = useState<'none' | 'in' | 'out' | 'alternate'>('alternate');
+  const [addFade, setAddFade] = useState(true);
+  const [fadeInDuration, setFadeInDuration] = useState(0.5);
+  const [fadeOutDuration, setFadeOutDuration] = useState(0.5);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gerando...');
   const [progress, setProgress] = useState(0);
@@ -188,8 +193,8 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
           zoomEnabled: zoomEnabled,
           zoomIntensity: 20,
           zoomDirection: zoomDirection,
-          fadeInDuration: 0.5,
-          fadeOutDuration: 0.5,
+          fadeInDuration: addFade ? fadeInDuration : 0,
+          fadeOutDuration: addFade ? fadeOutDuration : 0,
         });
         
         setProgress(baseProgress + progressPerScene);
@@ -232,7 +237,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
         </DialogHeader>
         <div className="py-4">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center gap-4 h-[380px]">
+            <div className="flex flex-col items-center justify-center gap-4 h-[460px]">
               <Loader2 className="w-12 h-12 text-primary animate-spin" />
               <div className="w-full text-center">
                 <p className="text-sm font-medium text-foreground">{loadingMessage}</p>
@@ -302,6 +307,45 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
                     <SelectItem value="none">Nenhum</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="fade-switch" className="flex items-center gap-2 text-sm font-medium">
+                    <Film className="w-4 h-4" />
+                    Transições de Fade
+                  </Label>
+                  <Switch
+                    id="fade-switch"
+                    checked={addFade}
+                    onCheckedChange={setAddFade}
+                  />
+                </div>
+                {addFade && (
+                  <div className="mt-4 space-y-4 pl-4 border-l-2 ml-2">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Duração Fade In ({fadeInDuration.toFixed(1)}s)</Label>
+                      <Slider
+                        value={[fadeInDuration]}
+                        onValueChange={(value) => setFadeInDuration(value[0])}
+                        max={3}
+                        min={0}
+                        step={0.1}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Duração Fade Out ({fadeOutDuration.toFixed(1)}s)</Label>
+                      <Slider
+                        value={[fadeOutDuration]}
+                        onValueChange={(value) => setFadeOutDuration(value[0])}
+                        max={3}
+                        min={0}
+                        step={0.1}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
