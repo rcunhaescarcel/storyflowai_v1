@@ -109,7 +109,7 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
         />
-        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={togglePlay}>
+        <Button size="icon" className="h-8 w-8 flex-shrink-0 bg-gradient-primary text-primary-foreground" onClick={togglePlay}>
           {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
         </Button>
         <div className="w-full">
