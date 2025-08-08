@@ -21,6 +21,11 @@ export const useGlobalSettings = () => {
     fontColor: "#ffffff",
     shadowColor: "#000000",
   });
+  const [zoomEffect, setZoomEffect] = useState<'none' | 'in' | 'out' | 'alternate'>('alternate');
+  const [zoomIntensity, setZoomIntensity] = useState(20);
+  const [addFade, setAddFade] = useState(true);
+  const [fadeInDuration, setFadeInDuration] = useState(0.5);
+  const [fadeOutDuration, setFadeOutDuration] = useState(0.5);
 
   const handleSrtUpload = useCallback((file: File) => {
     if (file && (file.name.endsWith('.srt') || file.type === 'text/plain')) {
@@ -101,5 +106,15 @@ export const useGlobalSettings = () => {
     setCharacterImagePreview,
     subtitleStyle,
     setSubtitleStyle,
+    zoomEffect,
+    setZoomEffect,
+    zoomIntensity,
+    setZoomIntensity,
+    addFade,
+    setAddFade,
+    fadeInDuration,
+    setFadeInDuration,
+    fadeOutDuration,
+    setFadeOutDuration,
   };
 };

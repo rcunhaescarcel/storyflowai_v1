@@ -47,7 +47,12 @@ const Editor = () => {
     logoFile, logoPreview, handleLogoUpload, setLogoFile, setLogoPreview,
     logoPosition, setLogoPosition,
     characterImage, characterImagePreview, handleCharacterImageUpload, setCharacterImage, setCharacterImagePreview,
-    subtitleStyle, setSubtitleStyle
+    subtitleStyle, setSubtitleStyle,
+    zoomEffect, setZoomEffect,
+    zoomIntensity, setZoomIntensity,
+    addFade, setAddFade,
+    fadeInDuration, setFadeInDuration,
+    fadeOutDuration, setFadeOutDuration,
   } = useGlobalSettings();
 
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -109,7 +114,12 @@ const Editor = () => {
         backgroundMusicVolume, 
         videoQuality, 
         logoFile, 
-        logoPosition
+        logoPosition,
+        zoomEffect,
+        zoomIntensity,
+        addFade,
+        fadeInDuration,
+        fadeOutDuration
       );
       if (result) {
         setVideoUrl(result);
@@ -272,6 +282,16 @@ const Editor = () => {
               onSaveProject={handleSaveProject}
               sceneCount={scenes.length}
               isEditing={!!currentProjectId}
+              zoomEffect={zoomEffect}
+              onZoomEffectChange={setZoomEffect}
+              zoomIntensity={zoomIntensity}
+              onZoomIntensityChange={setZoomIntensity}
+              addFade={addFade}
+              onAddFadeChange={setAddFade}
+              fadeInDuration={fadeInDuration}
+              onFadeInDurationChange={setFadeInDuration}
+              fadeOutDuration={fadeOutDuration}
+              onFadeOutDurationChange={setFadeOutDuration}
             />
           </div>
         )}

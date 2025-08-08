@@ -42,12 +42,6 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
         audio_data_url: scene.audioDataUrl,
         narration_text: scene.narrationText,
         duration: scene.duration,
-        effect: scene.effect,
-        zoomEnabled: scene.zoomEnabled,
-        zoomIntensity: scene.zoomIntensity,
-        zoomDirection: scene.zoomDirection,
-        fadeInDuration: scene.fadeInDuration,
-        fadeOutDuration: scene.fadeOutDuration,
       });
     }
     return sceneDataForDb;

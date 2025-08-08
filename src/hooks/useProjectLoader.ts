@@ -81,12 +81,6 @@ export const useProjectLoader = ({ onLoad, addDebugLog }: UseProjectLoaderProps)
               audioDataUrl: sceneData.audio_data_url,
               duration: audioDuration || sceneData.duration,
               narrationText: sceneData.narration_text,
-              effect: sceneData.effect,
-              zoomEnabled: sceneData.zoomEnabled,
-              zoomIntensity: sceneData.zoomIntensity,
-              zoomDirection: sceneData.zoomDirection,
-              fadeInDuration: sceneData.fadeInDuration,
-              fadeOutDuration: sceneData.fadeOutDuration,
             };
           })
         );

@@ -4,9 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import { Loader2, ArrowUp, Wand2, Clock, Mic, Camera, Film, UserSquare, Trash2, Palette } from 'lucide-react';
+import { Loader2, ArrowUp, Wand2, Clock, Mic, UserSquare, Trash2, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
@@ -89,10 +87,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   const [duration, setDuration] = useState('30');
   const [selectedVoice, setSelectedVoice] = useState('nova');
   const [selectedStyle, setSelectedStyle] = useState('pixar');
-  const [zoomEffect, setZoomEffect] = useState<'none' | 'in' | 'out' | 'alternate'>('alternate');
-  const [addFade, setAddFade] = useState(true);
-  const [fadeInDuration, setFadeInDuration] = useState(0.5);
-  const [fadeOutDuration, setFadeOutDuration] = useState(0.5);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gerando...');
   const [progress, setProgress] = useState(0);
@@ -266,13 +260,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         const audioDuration = await getAudioDuration(audioFile);
         const audioDataUrl = await blobToDataURL(audioBlob);
 
-        let zoomEnabled = false;
-        let zoomDirection: 'in' | 'out' = 'in';
-        if (zoomEffect !== 'none') {
-          zoomEnabled = true;
-          zoomDirection = zoomEffect === 'alternate' ? (i % 2 === 0 ? 'in' : 'out') : zoomEffect;
-        }
-
         newScenes.push({
           id: crypto.randomUUID(),
           narrationText: sceneData.narration,
@@ -282,12 +269,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
           audio: audioFile,
           audioDataUrl: audioDataUrl,
           duration: audioDuration,
-          effect: "fade",
-          zoomEnabled,
-          zoomIntensity: 20,
-          zoomDirection,
-          fadeInDuration: addFade ? fadeInDuration : 0,
-          fadeOutDuration: addFade ? fadeOutDuration : 0,
         });
         
         setProgress(baseProgress + progressPerScene);
@@ -392,14 +373,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64"><div className="space-y-2"><Label>Voz da Narração</Label><Select value={selectedVoice} onValueChange={setSelectedVoice}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{openAIVoices.map(voice => (<SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>))}</SelectContent></Select></div></PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                  <Camera className="w-4 h-4 mr-2" /> Efeitos
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80"><div className="space-y-4"><div><Label>Efeito de Zoom</Label><Select value={zoomEffect} onValueChange={(value: any) => setZoomEffect(value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="alternate">Intercalar</SelectItem><SelectItem value="in">Zoom In</SelectItem><SelectItem value="out">Zoom Out</SelectItem><SelectItem value="none">Nenhum</SelectItem></SelectContent></Select></div><div><div className="flex items-center justify-between"><Label htmlFor="fade-switch-popover" className="flex items-center gap-2"><Film className="w-4 h-4" />Transições de Fade</Label><Switch id="fade-switch-popover" checked={addFade} onCheckedChange={setAddFade} /></div>{addFade && (<div className="mt-4 space-y-4 pl-4 border-l-2 ml-2"><div><Label className="text-xs text-muted-foreground">Fade In ({fadeInDuration.toFixed(1)}s)</Label><Slider value={[fadeInDuration]} onValueChange={(v) => setFadeInDuration(v[0])} max={3} step={0.1} /></div><div><Label className="text-xs text-muted-foreground">Fade Out ({fadeOutDuration.toFixed(1)}s)</Label><Slider value={[fadeOutDuration]} onValueChange={(v) => setFadeOutDuration(v[0])} max={3} step={0.1} /></div></div>)}</div></div></PopoverContent>
             </Popover>
             <Popover>
               <PopoverTrigger asChild>

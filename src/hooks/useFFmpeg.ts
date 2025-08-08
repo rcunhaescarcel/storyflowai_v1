@@ -54,12 +54,6 @@ export interface Scene {
   audioDataUrl?: string;
   narrationText?: string;
   duration?: number;
-  effect: string;
-  zoomEnabled: boolean;
-  zoomIntensity: number;
-  zoomDirection: 'in' | 'out';
-  fadeInDuration: number;
-  fadeOutDuration: number;
 }
 
 export const useFFmpeg = () => {
@@ -134,7 +128,12 @@ export const useFFmpeg = () => {
     backgroundMusicVolume: number,
     quality: 'hd' | 'fullhd',
     logoFile: File | null,
-    logoPosition: LogoPosition
+    logoPosition: LogoPosition,
+    zoomEffect: 'none' | 'in' | 'out' | 'alternate',
+    zoomIntensity: number,
+    addFade: boolean,
+    fadeInDuration: number,
+    fadeOutDuration: number
   ): Promise<string | null> => {
     addDebugLog(`🎬 Iniciando renderização de vídeo com ${scenes.length} cenas...`);
     if (!isLoaded) {
@@ -185,16 +184,22 @@ export const useFFmpeg = () => {
         let cmd = ['-loop', '1', '-i', `image_${i}.jpg`];
         if (scene.audio) cmd.push('-i', `audio_${i}.mp3`);
         cmd.push('-t', sceneDuration.toString());
+        
         let videoFilter = `scale=${resolution.width}:${resolution.height}:force_original_aspect_ratio=increase,crop=${resolution.width}:${resolution.height},fps=30`;
-        if (scene.zoomEnabled) {
-          const zoomFactor = 1 + (scene.zoomIntensity / 100);
+        
+        if (zoomEffect !== 'none') {
+          const zoomDirection = zoomEffect === 'alternate' ? (i % 2 === 0 ? 'in' : 'out') : zoomEffect;
+          const zoomFactor = 1 + (zoomIntensity / 100);
           const totalFrames = sceneDuration * 30;
-          videoFilter += `,zoompan=z=${scene.zoomDirection === 'in' ? `1+${(zoomFactor - 1) / totalFrames}*on` : `${zoomFactor}-${(zoomFactor - 1) / totalFrames}*on`}:d=${totalFrames}:x=iw/2-(iw/zoom/2):y=ih/2-(ih/zoom/2)`;
+          videoFilter += `,zoompan=z=${zoomDirection === 'in' ? `1+${(zoomFactor - 1) / totalFrames}*on` : `${zoomFactor}-${(zoomFactor - 1) / totalFrames}*on`}:d=${totalFrames}:x=iw/2-(iw/zoom/2):y=ih/2-(ih/zoom/2)`;
         }
-        if (scene.fadeInDuration > 0) videoFilter += `,fade=t=in:st=0:d=${scene.fadeInDuration}`;
-        if (scene.fadeOutDuration > 0) {
-          const fadeOutStartTime = Math.max(0, sceneDuration - scene.fadeOutDuration);
-          videoFilter += `,fade=t=out:st=${fadeOutStartTime}:d=${scene.fadeOutDuration}`;
+        
+        if (addFade) {
+          if (fadeInDuration > 0) videoFilter += `,fade=t=in:st=0:d=${fadeInDuration}`;
+          if (fadeOutDuration > 0) {
+            const fadeOutStartTime = Math.max(0, sceneDuration - fadeOutDuration);
+            videoFilter += `,fade=t=out:st=${fadeOutStartTime}:d=${fadeOutDuration}`;
+          }
         }
         
         cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-pix_fmt', 'yuv420p');

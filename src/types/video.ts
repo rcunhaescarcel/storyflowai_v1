@@ -5,12 +5,6 @@ export interface SceneData {
   audio_data_url?: string;
   narration_text?: string;
   duration?: number;
-  effect: string;
-  zoomEnabled: boolean;
-  zoomIntensity: number;
-  zoomDirection: 'in' | 'out';
-  fadeInDuration: number;
-  fadeOutDuration: number;
 }
 
 export interface VideoProject {

@@ -63,7 +63,7 @@ const Render = () => {
       };
 
       // Start the actual video rendering, passing null for global files and default volume
-      const videoUrl = await renderVideo(scenes, null, null, subtitleStyle, 0.5, 'fullhd', null, 'top-right');
+      const videoUrl = await renderVideo(scenes, null, null, subtitleStyle, 0.5, 'fullhd', null, 'top-right', 'alternate', 20, true, 0.5, 0.5);
       
       if (videoUrl) {
         setVideoUrl(videoUrl);
@@ -304,20 +304,6 @@ const Render = () => {
                         {scene.audio && (
                           <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
                             🎵 {scene.audio.name}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                        <div>Efeito: {scene.effect}</div>
-                        {scene.zoomEnabled && (
-                          <div className="flex items-center gap-1">
-                            🔍 Zoom {scene.zoomDirection === 'in' ? 'In' : 'Out'} ({scene.zoomIntensity}%)
-                          </div>
-                        )}
-                        {(scene.fadeInDuration > 0 || scene.fadeOutDuration > 0) && (
-                          <div className="flex items-center gap-1">
-                            🎭 Fade: In {scene.fadeInDuration}s | Out {scene.fadeOutDuration}s
                           </div>
                         )}
                       </div>

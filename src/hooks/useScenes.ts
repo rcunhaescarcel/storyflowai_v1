@@ -25,12 +25,6 @@ export const useScenes = (initialScenes: Scene[] = []) => {
   const addNewScene = useCallback(() => {
     const newScene: Scene = {
       id: crypto.randomUUID(),
-      effect: "fade",
-      zoomEnabled: false,
-      zoomIntensity: 20,
-      zoomDirection: "in",
-      fadeInDuration: 0.5,
-      fadeOutDuration: 0.5,
       narrationText: ""
     };
     setScenes(prev => [...prev, newScene]);
