@@ -79,9 +79,13 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
 
       const newScenes: Scene[] = [];
       const totalScenes = scenesData.length;
+      const progressPerScene = 95 / totalScenes;
 
       for (let i = 0; i < totalScenes; i++) {
         const sceneData = scenesData[i];
+        const baseProgress = 5 + (i * progressPerScene);
+
+        // --- Image Generation ---
         setLoadingMessage(`Gerando imagem da cena ${i + 1}/${totalScenes}...`);
         addDebugLog(`[Imagem IA] Gerando para o prompt: "${sceneData.imagePrompt}"`);
 
@@ -94,16 +98,36 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
           throw new Error(`Falha ao gerar imagem para a cena ${i + 1}`);
         }
 
-        const blob = await imageResponse.blob();
-        const fileName = `scene_${i + 1}.png`;
-        const imageFile = new File([blob], fileName, { type: 'image/png' });
-        const imagePreview = await blobToDataURL(blob);
+        const imageBlob = await imageResponse.blob();
+        const imageFileName = `scene_${i + 1}.png`;
+        const imageFile = new File([imageBlob], imageFileName, { type: 'image/png' });
+        const imagePreview = await blobToDataURL(imageBlob);
+        
+        setProgress(baseProgress + progressPerScene / 2);
+
+        // --- Audio Generation ---
+        setLoadingMessage(`Gerando narração da cena ${i + 1}/${totalScenes}...`);
+        addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
+
+        const audioPrompt = `speak PT-BR: ${sceneData.narration}`;
+        const encodedAudioPrompt = encodeURIComponent(audioPrompt);
+        const audioUrl = `https://text.pollinations.ai/${encodedAudioPrompt}?model=openai-audio&voice=alloy&referrer=${referrer}&token=${apiToken}`;
+
+        const audioResponse = await fetch(audioUrl);
+        if (!audioResponse.ok) {
+            throw new Error(`Falha ao gerar áudio para a cena ${i + 1}`);
+        }
+
+        const audioBlob = await audioResponse.blob();
+        const audioFileName = `narration_${i + 1}.mp3`;
+        const audioFile = new File([audioBlob], audioFileName, { type: 'audio/mpeg' });
 
         newScenes.push({
           id: crypto.randomUUID(),
           narrationText: sceneData.narration,
           image: imageFile,
           imagePreview: imagePreview,
+          audio: audioFile,
           effect: "fade",
           zoomEnabled: false,
           zoomIntensity: 20,
@@ -112,17 +136,17 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
           fadeOutDuration: 0.5,
         });
         
-        setProgress(5 + ((i + 1) / totalScenes) * 95);
+        setProgress(baseProgress + progressPerScene);
       }
 
       onStoryGenerated(newScenes);
-      toast.success("História e imagens geradas com sucesso!");
+      toast.success("História, imagens e narrações geradas com sucesso!");
       onClose();
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
       addDebugLog(`[História IA] ❌ Falha na geração: ${errorMessage}`);
-      toast.error(`Falha ao gerar a história ou imagens: ${errorMessage}`);
+      toast.error(`Falha ao gerar a história, imagens ou áudios: ${errorMessage}`);
     } finally {
       setIsLoading(false);
       setProgress(0);
@@ -144,7 +168,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
             Gerar História com IA
           </DialogTitle>
           <DialogDescription>
-            Descreva o tema da sua história. A IA irá criar o roteiro e as imagens para cada cena.
+            Descreva o tema da sua história. A IA irá criar o roteiro, as imagens e as narrações para cada cena.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
@@ -180,7 +204,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
                 Gerando...
               </>
             ) : (
-              "Gerar História e Imagens"
+              "Gerar História Completa"
             )}
           </Button>
         </DialogFooter>
