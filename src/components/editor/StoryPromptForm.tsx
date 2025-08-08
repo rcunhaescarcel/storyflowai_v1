@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,7 +13,6 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { resizeImage, dataURLtoFile } from '@/lib/imageUtils';
 import { Input } from '@/components/ui/input';
-import { SceneData } from '@/types/video';
 import { useSession } from '@/contexts/SessionContext';
 
 const blobToDataURL = (blob: Blob): Promise<string> => {
@@ -47,7 +45,7 @@ const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 const openAIVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 
 interface StoryPromptFormProps {
-  onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string) => void;
+  onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string, prompt?: string) => void;
   addDebugLog: (message: string) => void;
 }
 
@@ -65,7 +63,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   const [progress, setProgress] = useState(0);
   const [characterImage, setCharacterImage] = useState<File | null>(null);
   const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
-  const queryClient = useQueryClient();
 
   const handleCharacterImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -121,7 +118,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       const storyText = await response.text();
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
       addDebugLog(`[História IA] Raw story text: ${storyText}`);
-      setProgress(5);
+      setProgress(10);
 
       let characterPublicUrl: string | null = null;
       if (characterImage) {
@@ -150,6 +147,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
           throw new Error(`Falha ao verificar a URL da imagem de referência: ${e.message}`);
         }
       }
+      setProgress(15);
 
       const lines = storyText.trim().split('\n').filter(p => p.includes('|||'));
       if (lines.length === 0) {
@@ -168,7 +166,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
       for (let i = 0; i < totalScenes; i++) {
         const sceneData = scenesData[i];
-        const baseProgress = 5 + (i * progressPerScene);
+        const baseProgress = 15 + (i * progressPerScene);
 
         setLoadingMessage(`Gerando imagem da cena ${i + 1}/${totalScenes}...`);
         addDebugLog(`[Imagem IA] Gerando para o prompt: "${sceneData.imagePrompt}"`);
@@ -230,61 +228,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         await delay(500);
       }
 
-      setLoadingMessage('Salvando projeto...');
-      setProgress(90);
-      addDebugLog('[DB] Iniciando salvamento do projeto...');
-
-      const projectTitle = prompt.slice(0, 80) || 'Novo Projeto de Vídeo';
-      const totalDuration = newScenes.reduce((acc, scene) => acc + (scene.duration || 0), 0);
-      const sceneDataForDb: SceneData[] = [];
-      const projectFolder = `projects/${session.user.id}/${crypto.randomUUID()}`;
-
-      for (let i = 0; i < newScenes.length; i++) {
-        const scene = newScenes[i];
-        if (!scene.image || !scene.audio) throw new Error(`Arquivos da cena ${i + 1} não foram encontrados.`);
-
-        const imagePath = `${projectFolder}/${scene.id}-image.png`;
-        const { error: imageUploadError } = await supabase.storage.from('image-references').upload(imagePath, scene.image);
-        if (imageUploadError) throw new Error(`Upload da imagem falhou: ${imageUploadError.message}`);
-        const { data: { publicUrl: imageUrl } } = supabase.storage.from('image-references').getPublicUrl(imagePath);
-
-        const audioPath = `${projectFolder}/${scene.id}-audio.mp3`;
-        const { error: audioUploadError } = await supabase.storage.from('image-references').upload(audioPath, scene.audio);
-        if (audioUploadError) throw new Error(`Upload do áudio falhou: ${audioUploadError.message}`);
-        const { data: { publicUrl: audioUrl } } = supabase.storage.from('image-references').getPublicUrl(audioPath);
-
-        sceneDataForDb.push({
-          id: scene.id, image_url: imageUrl!, audio_url: audioUrl!, narration_text: scene.narrationText,
-          duration: scene.duration, effect: scene.effect, zoomEnabled: scene.zoomEnabled,
-          zoomIntensity: scene.zoomIntensity, zoomDirection: scene.zoomDirection,
-          fadeInDuration: scene.fadeInDuration, fadeOutDuration: scene.fadeOutDuration,
-        });
-        setProgress(90 + (10 * (i + 1) / totalScenes));
-      }
-
-      const projectToInsert = {
-        user_id: session.user.id,
-        title: projectTitle,
-        description: prompt,
-        input_type: 'story_prompt',
-        input_content: prompt,
-        scenes: sceneDataForDb,
-        video_duration: totalDuration,
-        status: 'draft',
-      };
-
-      addDebugLog('[DB] Inserindo registro do projeto no banco de dados...');
-      const { error: insertError } = await supabase.from('video_projects').insert(projectToInsert);
-      if (insertError) {
-        addDebugLog(`[DB] ❌ ERRO ao inserir no banco de dados: ${insertError.message}`);
-        throw new Error(`Falha ao salvar o projeto: ${insertError.message}`);
-      }
-
-      addDebugLog('[DB] ✅ Projeto salvo com sucesso!');
-      await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
-
-      onStoryGenerated(newScenes, characterImage, characterImagePreview);
-      toast.success("História gerada e salva com sucesso!");
+      onStoryGenerated(newScenes, characterImage, characterImagePreview, prompt);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";

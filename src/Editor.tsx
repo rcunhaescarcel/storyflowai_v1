@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
 import { resizeImage, dataURLtoFile } from "@/lib/imageUtils";
@@ -9,6 +10,9 @@ import { EditorSidebar } from "@/components/editor/EditorSidebar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { DebugConsole } from "@/components/editor/DebugConsole";
+import { useSession } from "./contexts/SessionContext";
+import { supabase } from "./integrations/supabase/client";
+import { SceneData } from "./types/video";
 
 type VideoQuality = 'hd' | 'fullhd';
 
@@ -62,6 +66,80 @@ const Editor = () => {
   
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { session } = useSession();
+  const queryClient = useQueryClient();
+
+  const saveProject = async (scenesToSave: Scene[], projectPrompt: string) => {
+    if (!session) {
+      toast.error("Sessão não encontrada. Não foi possível salvar o projeto.");
+      return;
+    }
+  
+    const savingToast = toast.loading("Salvando seu projeto em segundo plano...");
+    setIsSaving(true);
+    addDebugLog('[DB] Iniciando salvamento do projeto...');
+  
+    try {
+      const projectTitle = projectPrompt.slice(0, 80) || 'Novo Projeto de Vídeo';
+      const totalDuration = scenesToSave.reduce((acc, scene) => acc + (scene.duration || 0), 0);
+      const sceneDataForDb: SceneData[] = [];
+      const projectFolder = `projects/${session.user.id}/${crypto.randomUUID()}`;
+  
+      for (let i = 0; i < scenesToSave.length; i++) {
+        const scene = scenesToSave[i];
+        if (!scene.image || !scene.audio) {
+          addDebugLog(`[DB] ⚠️ Arquivos da cena ${i + 1} não encontrados. Pulando upload para esta cena.`);
+          continue;
+        }
+  
+        const imagePath = `${projectFolder}/${scene.id}-image.png`;
+        const { error: imageUploadError } = await supabase.storage.from('image-references').upload(imagePath, scene.image);
+        if (imageUploadError) throw new Error(`Upload da imagem falhou: ${imageUploadError.message}`);
+        const { data: { publicUrl: imageUrl } } = supabase.storage.from('image-references').getPublicUrl(imagePath);
+  
+        const audioPath = `${projectFolder}/${scene.id}-audio.mp3`;
+        const { error: audioUploadError } = await supabase.storage.from('image-references').upload(audioPath, scene.audio);
+        if (audioUploadError) throw new Error(`Upload do áudio falhou: ${audioUploadError.message}`);
+        const { data: { publicUrl: audioUrl } } = supabase.storage.from('image-references').getPublicUrl(audioPath);
+  
+        sceneDataForDb.push({
+          id: scene.id, image_url: imageUrl!, imagePreview: scene.imagePreview, audio_url: audioUrl!, narration_text: scene.narrationText,
+          duration: scene.duration, effect: scene.effect, zoomEnabled: scene.zoomEnabled,
+          zoomIntensity: scene.zoomIntensity, zoomDirection: scene.zoomDirection,
+          fadeInDuration: scene.fadeInDuration, fadeOutDuration: scene.fadeOutDuration,
+        });
+      }
+  
+      const projectToInsert = {
+        user_id: session.user.id,
+        title: projectTitle,
+        description: projectPrompt,
+        input_type: 'story_prompt',
+        input_content: projectPrompt,
+        scenes: sceneDataForDb,
+        video_duration: totalDuration,
+        status: 'draft',
+      };
+  
+      addDebugLog('[DB] Inserindo registro do projeto no banco de dados...');
+      const { error: insertError } = await supabase.from('video_projects').insert(projectToInsert);
+      if (insertError) {
+        throw new Error(`Falha ao salvar o projeto: ${insertError.message}`);
+      }
+  
+      await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
+      addDebugLog('[DB] ✅ Projeto salvo com sucesso!');
+      toast.success("Projeto salvo!", { id: savingToast, description: "Seu novo vídeo já está na galeria." });
+  
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
+      addDebugLog(`[DB] ❌ Falha no salvamento: ${errorMessage}`);
+      toast.error("Falha ao salvar o projeto", { id: savingToast, description: errorMessage });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const addNewScene = () => {
     const newScene: Scene = {
@@ -235,7 +313,7 @@ const Editor = () => {
     });
   };
 
-  const handleStoryGenerated = (newScenes: Scene[], characterFile?: File, characterPreview?: string) => {
+  const handleStoryGenerated = (newScenes: Scene[], characterFile?: File, characterPreview?: string, projectPrompt?: string) => {
     setScenes(newScenes);
     if (characterFile && characterPreview) {
       setCharacterImage(characterFile);
@@ -245,6 +323,10 @@ const Editor = () => {
     toast.success("Cenas Criadas!", {
       description: `Sua história foi dividida em ${newScenes.length} cenas.`,
     });
+  
+    if (projectPrompt) {
+      saveProject(newScenes, projectPrompt);
+    }
   };
 
   return (
