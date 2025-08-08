@@ -57,7 +57,7 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing, is
         )}
       </div>
       <CardContent className="p-3 space-y-2 bg-background">
-        <h3 className="font-bold text-base truncate">{project.title}</h3>
+        <h3 className="font-semibold text-base truncate">{project.title}</h3>
         <p className="text-sm text-muted-foreground">
           {project.scene_count || 0} cenas • {project.style || 'Animação 3D'}
         </p>

@@ -9,7 +9,7 @@ import { blobToDataURL } from '@/lib/imageUtils';
 import { Profile } from '@/contexts/SessionContext';
 
 interface UseStoryGeneratorProps {
-  onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
+  onStoryGenerated: (scenes: Scene[], title: string, characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
   addDebugLog: (message: string) => void;
 }
 
@@ -72,7 +72,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       const languageKey = profile.default_language || 'pt-br';
       const languageName = languages[languageKey as keyof typeof languages];
       
-      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]`;
+      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um único objeto JSON válido com EXATAMENTE duas chaves: "title" e "scenes". A chave "title" deve conter um título criativo para a história em ${languageName}. A chave "scenes" deve ser um array de objetos, onde cada objeto representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: {"title": "As Aventuras do Robô Perdido", "scenes": [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]}`;
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
@@ -92,22 +92,25 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
       setProgress(10);
 
-      let scenesData: { narration: string; image_prompt: string; }[];
+      let storyData: { title: string; scenes: { narration: string; image_prompt: string; }[] };
       try {
-        const jsonStart = storyText.indexOf('[');
-        const jsonEnd = storyText.lastIndexOf(']');
+        const jsonStart = storyText.indexOf('{');
+        const jsonEnd = storyText.lastIndexOf('}');
         if (jsonStart === -1 || jsonEnd === -1) {
-          throw new Error("Nenhum array JSON encontrado na resposta da IA.");
+          throw new Error("Nenhum objeto JSON encontrado na resposta da IA.");
         }
         const jsonString = storyText.substring(jsonStart, jsonEnd + 1);
-        scenesData = JSON.parse(jsonString);
+        storyData = JSON.parse(jsonString);
       } catch (e) {
         addDebugLog(`[História IA] ❌ ERRO: Falha ao parsear o JSON do roteiro. Resposta recebida: ${storyText}`);
         throw new Error("A IA retornou um formato de roteiro inválido. Por favor, tente novamente.");
       }
 
-      if (!Array.isArray(scenesData) || scenesData.length === 0) {
-        throw new Error("A IA não retornou um roteiro com cenas válidas.");
+      const scenesData = storyData.scenes;
+      const storyTitle = storyData.title;
+
+      if (!storyTitle || !Array.isArray(scenesData) || scenesData.length === 0) {
+        throw new Error("A IA não retornou um título ou roteiro com cenas válidas.");
       }
 
       let characterPublicUrl: string | null = null;
@@ -227,7 +230,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       }
 
       setProgress(100);
-      onStoryGenerated(newScenes, characterImage, characterImagePreview, prompt, styleInfo.label);
+      onStoryGenerated(newScenes, storyTitle, characterImage, characterImagePreview, prompt, styleInfo.label);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";

@@ -12,7 +12,7 @@ import { useStoryGenerator } from '@/hooks/useStoryGenerator';
 import { StoryGenerationStatus } from './StoryGenerationStatus';
 
 interface StoryPromptFormProps {
-  onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
+  onStoryGenerated: (scenes: Scene[], title: string, characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
   addDebugLog: (message: string) => void;
 }
 

@@ -38,7 +38,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
     return sceneDataForDb;
   };
 
-  const saveProject = async (scenesToSave: Scene[], projectPrompt: string, projectStyle?: string): Promise<VideoProject | null> => {
+  const saveProject = async (scenesToSave: Scene[], projectTitle: string, projectDescription: string, projectStyle?: string): Promise<VideoProject | null> => {
     if (!session) {
       toast.error("Sessão não encontrada. Não foi possível salvar o projeto.");
       return null;
@@ -48,7 +48,6 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
     addDebugLog('[DB] Iniciando salvamento de novo projeto...');
 
     try {
-      const projectTitle = projectPrompt.slice(0, 80) || 'Novo Projeto de Vídeo';
       const totalDuration = scenesToSave.reduce((acc, scene) => acc + (scene.duration || 0), 0);
       const projectId = crypto.randomUUID();
       const projectFolder = `projects/${session.user.id}/${projectId}`;
@@ -60,9 +59,9 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
         id: projectId,
         user_id: session.user.id,
         title: projectTitle,
-        description: projectPrompt,
+        description: projectDescription,
         input_type: 'story_prompt',
-        input_content: projectPrompt,
+        input_content: projectDescription,
         scenes: sceneDataForDb,
         video_duration: totalDuration,
         status: 'draft',
