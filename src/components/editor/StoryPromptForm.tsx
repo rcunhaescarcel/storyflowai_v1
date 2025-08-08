@@ -86,10 +86,10 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
     try {
       const numParagraphs = parseInt(duration) / 5;
-      let storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido, onde cada objeto representa uma cena e tem as chaves "narration" (em português) e "image_prompt" (em inglês, estilo animação 3D). Exemplo: [{"narration": "...", "image_prompt": "..."}, {"narration": "...", "image_prompt": "..."}]`;
+      let storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, no estilo de animação 3D. Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A 3D animation of a magical castle."}]`;
       
       if (characterImage) {
-        storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}" com um personagem principal. O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido, onde cada objeto representa uma cena e tem as chaves "narration" (em português) e "image_prompt" (em inglês, com "o personagem", estilo animação 3D). Exemplo: [{"narration": "...", "image_prompt": "o personagem ..."}, {"narration": "...", "image_prompt": "o personagem ..."}]`;
+        storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}" com um personagem principal. O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, incluindo "o personagem", no estilo de animação 3D. Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "O personagem caminhava pela floresta.", "image_prompt": "o personagem walking through a magical forest, 3D animation style."}]`;
       }
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
