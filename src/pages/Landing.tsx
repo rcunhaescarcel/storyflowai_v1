@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Play, ArrowRight, UploadCloud, Palette, FileText, Video, Quote } from "lucide-react";
+import { Play, ArrowRight, UploadCloud, Palette, FileText, Video } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import { StyleCard } from "@/components/landing/StyleCard";
@@ -36,22 +36,18 @@ const Landing = () => {
 
   const styles = [
     {
-      image: "https://placehold.co/600x400/a78bfa/ffffff?text=Pixar+3D",
       title: "Pixar 3D Cinemático",
       description: "Realismo mágico e detalhes dignos de cinema."
     },
     {
-      image: "https://placehold.co/600x400/f9a8d4/ffffff?text=Ghibli+2D",
       title: "Ghibli 2D Poético",
       description: "Cores suaves e atmosfera encantada."
     },
     {
-      image: "https://placehold.co/600x400/fde047/ffffff?text=Livro+Infantil",
       title: "Livro Infantil Ilustrado",
       description: "Aquarela calorosa e traço orgânico."
     },
     {
-      image: "https://placehold.co/600x400/93c5fd/ffffff?text=HQ/Cartoon",
       title: "HQ/Cartoon Colorido",
       description: "Energia, humor e ação vibrante."
     }
@@ -138,122 +134,136 @@ const Landing = () => {
 
         {/* How It Works Section */}
         <section id="how-it-works" className="container text-center py-24 sm:py-32">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            Sua história pronta em{" "}
-            <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
-              4 passos
-            </span>
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mt-16">
-            {howItWorksSteps.map((step, index) => (
-              <div key={step.title} className="flex flex-col items-center gap-4">
-                <div className="flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full text-3xl font-bold mb-4">
-                  {step.icon}
+          <div className="max-w-screen-lg mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold">
+              Sua história pronta em{" "}
+              <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+                4 passos
+              </span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mt-16">
+              {howItWorksSteps.map((step) => (
+                <div key={step.title} className="flex flex-col items-center gap-4">
+                  <div className="flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full text-3xl font-bold mb-4">
+                    {step.icon}
+                  </div>
+                  <h3 className="text-2xl font-bold">{step.title}</h3>
+                  <p className="text-muted-foreground">{step.description}</p>
                 </div>
-                <h3 className="text-2xl font-bold">{step.title}</h3>
-                <p className="text-muted-foreground">{step.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 
         {/* Styles Section */}
         <section id="styles" className="container py-24 sm:py-32">
-          <h2 className="text-3xl md:text-4xl font-bold text-center">
-            Quatro estilos para dar{" "}
-            <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
-              vida ao seu mundo
-            </span>
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
-            {styles.map(style => <StyleCard key={style.title} {...style} />)}
+          <div className="max-w-screen-xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center">
+              Quatro estilos para dar{" "}
+              <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+                vida ao seu mundo
+              </span>
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
+              {styles.map(style => <StyleCard key={style.title} {...style} />)}
+            </div>
           </div>
         </section>
 
         {/* Examples Section */}
         <section id="examples" className="container py-24 sm:py-32">
-          <h2 className="text-3xl md:text-4xl font-bold text-center">
-            Veja o que já foi criado no{" "}
-            <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
-              StoryFlow
-            </span>
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="relative rounded-lg overflow-hidden group cursor-pointer aspect-video">
-                <img src={`https://placehold.co/1600x900/334155/ffffff?text=Exemplo+${index + 1}`} alt={`Exemplo ${index + 1}`} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="w-12 h-12 text-white fill-white" />
+          <div className="max-w-screen-xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center">
+              Veja o que já foi criado no{" "}
+              <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+                StoryFlow
+              </span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="relative rounded-lg overflow-hidden group cursor-pointer aspect-video bg-muted/50">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Video className="w-12 h-12 text-muted-foreground/50" />
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play className="w-12 h-12 text-white fill-white" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 
         {/* Pricing Section */}
         <section id="pricing" className="container py-24 sm:py-32">
-          <h2 className="text-3xl md:text-4xl font-bold text-center">
-            Escolha o plano que{" "}
-            <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
-              combina com você
-            </span>
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16 max-w-5xl mx-auto">
-            <PricingCard 
-              planName="Free"
-              price="R$ 0"
-              description="Para começar a criar"
-              features={["10 créditos/mês", "Vídeos até 30 segundos", "2 estilos lúdicos disponíveis", "1 personagem da biblioteca", "Renderização direta (sem edição)"]}
-              ctaText="Criar Conta Grátis"
-            />
-            <PricingCard 
-              planName="Pro"
-              price="R$ 49,90"
-              description="Para criadores dedicados"
-              features={["100 créditos/mês", "Vídeos até 2 minutos", "Todos os 4 estilos lúdicos", "Upload de personagem próprio", "Edição de cenas antes da renderização", "Logo personalizado"]}
-              ctaText="Assinar Pro"
-              isPopular
-            />
-            <PricingCard 
-              planName="Premium"
-              price="R$ 99,90"
-              description="Para poder ilimitado"
-              features={["300 créditos/mês", "Vídeos até 5 minutos", "Biblioteca ilimitada de personagens", "Efeitos avançados: zoom dinâmico", "Exportação 4K", "Suporte prioritário via chat"]}
-              ctaText="Assinar Premium"
-            />
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center">
+              Escolha o plano que{" "}
+              <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+                combina com você
+              </span>
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
+              <PricingCard 
+                planName="Free"
+                price="R$ 0"
+                description="Para começar a criar"
+                features={["10 créditos/mês", "Vídeos até 30 segundos", "2 estilos lúdicos disponíveis", "1 personagem da biblioteca", "Renderização direta (sem edição)"]}
+                ctaText="Criar Conta Grátis"
+              />
+              <PricingCard 
+                planName="Pro"
+                price="R$ 49,90"
+                description="Para criadores dedicados"
+                features={["100 créditos/mês", "Vídeos até 2 minutos", "Todos os 4 estilos lúdicos", "Upload de personagem próprio", "Edição de cenas antes da renderização", "Logo personalizado"]}
+                ctaText="Assinar Pro"
+                isPopular
+              />
+              <PricingCard 
+                planName="Premium"
+                price="R$ 99,90"
+                description="Para poder ilimitado"
+                features={["300 créditos/mês", "Vídeos até 5 minutos", "Biblioteca ilimitada de personagens", "Efeitos avançados: zoom dinâmico", "Exportação 4K", "Suporte prioritário via chat"]}
+                ctaText="Assinar Premium"
+              />
+            </div>
           </div>
         </section>
 
         {/* Social Proof Section */}
         <section id="social-proof" className="bg-muted/50">
           <div className="container py-24 sm:py-32">
-            <h2 className="text-3xl md:text-4xl font-bold text-center">
-              Criadores do mundo todo já estão encantando com o{" "}
-              <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
-                StoryFlow
-              </span>
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8 mt-16">
-              {testimonials.map(testimonial => <TestimonialCard key={testimonial.author} {...testimonial} />)}
+            <div className="max-w-screen-xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold text-center">
+                Criadores do mundo todo já estão encantando com o{" "}
+                <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+                  StoryFlow
+                </span>
+              </h2>
+              <div className="grid md:grid-cols-3 gap-8 mt-16">
+                {testimonials.map(testimonial => <TestimonialCard key={testimonial.author} {...testimonial} />)}
+              </div>
             </div>
           </div>
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="container py-24 sm:py-32 max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Perguntas Frequentes
-          </h2>
-          <Accordion type="single" collapsible className="w-full">
-            {faqItems.map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-lg">{item.question}</AccordionTrigger>
-                <AccordionContent className="text-base text-muted-foreground">
-                  {item.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+        <section id="faq" className="container py-24 sm:py-32">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+              Perguntas Frequentes
+            </h2>
+            <Accordion type="single" collapsible className="w-full">
+              {faqItems.map((item, index) => (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionTrigger className="text-lg">{item.question}</AccordionTrigger>
+                  <AccordionContent className="text-base text-muted-foreground">
+                    {item.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
         </section>
       </main>
       <Footer />
