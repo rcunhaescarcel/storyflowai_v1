@@ -230,6 +230,8 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         
         setProgress(baseProgress + progressPerScene / 2);
 
+        await delay(200); // Pausa para estabilidade
+
         setLoadingMessage(`Gerando narração da cena ${i + 1}/${totalScenes}...`);
         addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
 
