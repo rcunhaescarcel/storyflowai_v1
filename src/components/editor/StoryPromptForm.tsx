@@ -111,7 +111,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       addDebugLog(`[História IA] Raw story text: ${storyText}`);
       setProgress(10);
 
-      let scenesData: { narration: string; imagePrompt: string; }[];
+      let scenesData: { narration: string; image_prompt: string; }[];
       try {
         const jsonStart = storyText.indexOf('[');
         const jsonEnd = storyText.lastIndexOf(']');
@@ -167,9 +167,9 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         const baseProgress = 15 + (i * progressPerScene);
 
         setLoadingMessage(`Gerando imagem da cena ${i + 1}/${totalScenes}...`);
-        addDebugLog(`[Imagem IA] Gerando para o prompt: "${sceneData.imagePrompt}"`);
+        addDebugLog(`[Imagem IA] Gerando para o prompt: "${sceneData.image_prompt}"`);
 
-        const encodedImagePrompt = encodeURIComponent(sceneData.imagePrompt);
+        const encodedImagePrompt = encodeURIComponent(sceneData.image_prompt);
         let imageModel = 'flux';
         let imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1920&height=1080&model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
 
