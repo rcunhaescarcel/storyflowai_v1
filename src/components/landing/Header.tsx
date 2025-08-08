@@ -10,7 +10,7 @@ const Header = () => {
       <div className="container flex h-14 max-w-screen-2xl items-center px-6 sm:px-8 md:px-12 lg:px-24">
         <div className="mr-4 flex items-center">
           <a href="/" className="mr-6 flex items-center space-x-2">
-            <Wand2 className="h-6 w-6 text-primary" />
+            <Wand2 className="h-6 w-6" stroke="url(#icon-gradient)" />
             <span className="font-bold">Viflow IA</span>
           </a>
         </div>

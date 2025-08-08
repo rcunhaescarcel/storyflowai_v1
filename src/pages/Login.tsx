@@ -20,7 +20,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Wand2 className="h-10 w-10 text-primary mx-auto mb-4" />
+          <Wand2 className="h-10 w-10 mx-auto mb-4" stroke="url(#icon-gradient)" />
           <h1 className="text-3xl font-bold">Bem-vindo de volta!</h1>
           <p className="text-muted-foreground">Faça login para continuar criando vídeos mágicos.</p>
         </div>
@@ -32,11 +32,22 @@ const Login = () => {
               variables: {
                 default: {
                   colors: {
-                    brand: 'hsl(262 80% 58%)',
-                    brandAccent: 'hsl(262 80% 53%)',
+                    brand: 'transparent',
+                    brandAccent: 'transparent',
                   },
+                  radii: {
+                    buttonBorderRadius: 'var(--radius)',
+                    inputBorderRadius: 'var(--radius)',
+                  }
                 },
               },
+              className: {
+                button: 'bg-gradient-primary text-primary-foreground hover:opacity-90 transition-opacity',
+                input: 'bg-background/50 border-border',
+                label: 'text-muted-foreground',
+                anchor: 'text-primary hover:text-primary/80',
+                message: 'text-destructive text-sm'
+              }
             }}
             providers={[]}
             theme="light"

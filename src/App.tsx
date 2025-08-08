@@ -12,6 +12,7 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import { SessionProvider } from "./contexts/SessionContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { SvgGradients } from "@/components/ui/SvgGradients";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <TooltipProvider>
+          <SvgGradients />
           <Sonner />
           <BrowserRouter>
             <Routes>
