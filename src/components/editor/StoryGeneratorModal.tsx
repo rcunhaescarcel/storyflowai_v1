@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
@@ -50,6 +50,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState('60');
   const [selectedVoice, setSelectedVoice] = useState('nova');
+  const [zoomEffect, setZoomEffect] = useState<'none' | 'in' | 'out' | 'alternate'>('alternate');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gerando...');
   const [progress, setProgress] = useState(0);
@@ -153,6 +154,29 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
         const audioFile = new File([audioBlob], audioFileName, { type: 'audio/mpeg' });
         const audioDuration = await getAudioDuration(audioFile);
 
+        // --- Effect Logic ---
+        let zoomEnabled = false;
+        let zoomDirection: 'in' | 'out' = 'in';
+
+        switch (zoomEffect) {
+          case 'in':
+            zoomEnabled = true;
+            zoomDirection = 'in';
+            break;
+          case 'out':
+            zoomEnabled = true;
+            zoomDirection = 'out';
+            break;
+          case 'alternate':
+            zoomEnabled = true;
+            zoomDirection = i % 2 === 0 ? 'in' : 'out';
+            break;
+          case 'none':
+          default:
+            zoomEnabled = false;
+            break;
+        }
+
         newScenes.push({
           id: crypto.randomUUID(),
           narrationText: sceneData.narration,
@@ -161,9 +185,9 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
           audio: audioFile,
           duration: audioDuration,
           effect: "fade",
-          zoomEnabled: false,
+          zoomEnabled: zoomEnabled,
           zoomIntensity: 20,
-          zoomDirection: "in",
+          zoomDirection: zoomDirection,
           fadeInDuration: 0.5,
           fadeOutDuration: 0.5,
         });
@@ -208,7 +232,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
         </DialogHeader>
         <div className="py-4">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center gap-4 h-[288px]">
+            <div className="flex flex-col items-center justify-center gap-4 h-[380px]">
               <Loader2 className="w-12 h-12 text-primary animate-spin" />
               <div className="w-full text-center">
                 <p className="text-sm font-medium text-foreground">{loadingMessage}</p>
@@ -259,6 +283,23 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
                     {openAIVoices.map(voice => (
                       <SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="effect-select" className="text-sm font-medium flex items-center gap-2">
+                  <Camera className="w-4 h-4" />
+                  Efeito de Zoom
+                </Label>
+                <Select value={zoomEffect} onValueChange={(value: 'none' | 'in' | 'out' | 'alternate') => setZoomEffect(value)} disabled={isLoading}>
+                  <SelectTrigger id="effect-select" className="w-full mt-2 bg-background">
+                    <SelectValue placeholder="Selecione um efeito" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alternate">Intercalar (Zoom In/Out)</SelectItem>
+                    <SelectItem value="in">Zoom In (Aproximar)</SelectItem>
+                    <SelectItem value="out">Zoom Out (Afastar)</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
