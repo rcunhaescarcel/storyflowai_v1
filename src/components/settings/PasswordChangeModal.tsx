@@ -61,49 +61,43 @@ export const PasswordChangeModal = ({ isOpen, onClose }: PasswordChangeModalProp
     setIsSaving(true);
     try {
       // Etapa 1: Verificar a senha atual.
-      // Isso é feito tentando fazer login novamente para confirmar que a senha está correta.
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: session.user.email,
         password: values.currentPassword,
       });
 
       if (signInError) {
-        // Fornece feedback específico se as credenciais estiverem erradas.
         if (signInError.message === 'Invalid login credentials') {
           toast.error("Senha atual incorreta.", {
             description: "Por favor, verifique sua senha atual e tente novamente.",
           });
         } else {
-          // Lida com outros erros de verificação (ex: rede).
           toast.error("Erro ao verificar a senha.", {
             description: signInError.message,
           });
         }
-        return; // Interrompe a execução se a verificação falhar.
-      }
-
-      // Etapa 2: Se a verificação for bem-sucedida, atualize a senha.
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: values.newPassword,
-      });
-
-      if (updateError) {
-        toast.error("Falha ao alterar a senha.", {
-          description: `Ocorreu um erro inesperado. Tente novamente. (${updateError.message})`,
-        });
       } else {
-        toast.success("Senha alterada com sucesso!");
-        form.reset();
-        onClose();
+        // Etapa 2: Se a verificação for bem-sucedida, atualize a senha.
+        const { error: updateError } = await supabase.auth.updateUser({
+          password: values.newPassword,
+        });
+
+        if (updateError) {
+          toast.error("Falha ao alterar a senha.", {
+            description: `Ocorreu um erro inesperado. Tente novamente. (${updateError.message})`,
+          });
+        } else {
+          toast.success("Senha alterada com sucesso!");
+          form.reset();
+          onClose();
+        }
       }
     } catch (error) {
-      // Captura quaisquer outros erros inesperados durante o processo.
       const message = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
       toast.error("Ocorreu um erro inesperado.", {
         description: message,
       });
     } finally {
-      // Garante que o estado de carregamento seja sempre desativado.
       setIsSaving(false);
     }
   };
