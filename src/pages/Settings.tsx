@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { storyStyles, openAIVoices, languages } from '@/lib/constants';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const fetchMonthlyVideoCount = async (userId: string): Promise<number> => {
   const now = new Date();
@@ -39,8 +40,8 @@ const fetchMonthlyVideoCount = async (userId: string): Promise<number> => {
 const Settings = () => {
   const { session, profile, setProfile } = useSession();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const [email, setEmail] = useState('');
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [isSaving, setIsSaving] = useState(false);
 
   const [preferredLanguage, setPreferredLanguage] = useState('pt-br');
@@ -65,13 +66,6 @@ const Settings = () => {
       setPreferredStyle(profile.default_style || 'pixar');
     }
   }, [session, profile]);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
 
   const handlePasswordReset = async () => {
     if (!email) {
@@ -273,9 +267,10 @@ const Settings = () => {
             <div className="space-y-2">
               <Label>Tema</Label>
               <p className="text-sm text-muted-foreground">Escolha entre modo claro ou escuro.</p>
-              <ToggleGroup type="single" value={theme} onValueChange={(value) => value && setTheme(value)} className="justify-start">
+              <ToggleGroup type="single" value={theme} onValueChange={(value) => value && setTheme(value as 'light' | 'dark' | 'system')} className="justify-start">
                 <ToggleGroupItem value="light">Claro</ToggleGroupItem>
                 <ToggleGroupItem value="dark">Escuro</ToggleGroupItem>
+                <ToggleGroupItem value="system">Sistema</ToggleGroupItem>
               </ToggleGroup>
             </div>
             <div className="space-y-2">

@@ -5,16 +5,24 @@ import { useSession } from '@/contexts/SessionContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Login = () => {
   const { session } = useSession();
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (session) {
       navigate('/editor');
     }
   }, [session, navigate]);
+
+  const getSystemTheme = () => {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  const finalTheme = theme === 'system' ? getSystemTheme() : theme;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
@@ -50,7 +58,7 @@ const Login = () => {
               }
             }}
             providers={[]}
-            theme="light"
+            theme={finalTheme}
             localization={{
               variables: {
                 sign_in: {
