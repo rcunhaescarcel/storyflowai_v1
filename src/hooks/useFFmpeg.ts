@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 
@@ -68,6 +68,7 @@ export const useFFmpeg = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [autoLoadAttempted, setAutoLoadAttempted] = useState(false);
+  const renderStageRef = useRef({ stage: 'idle', totalScenes: 0, currentScene: 0 });
 
   const addDebugLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -84,7 +85,35 @@ export const useFFmpeg = () => {
     if (!silent) addDebugLog("Iniciando carregamento do FFmpeg...");
     try {
       ffmpeg.on('log', ({ message }) => addDebugLog(`FFmpeg Log: ${message}`));
-      ffmpeg.on('progress', ({ progress: p }) => setProgress(Math.round(p * 100)));
+      ffmpeg.on('progress', ({ progress: p }) => {
+        const { stage, totalScenes, currentScene } = renderStageRef.current;
+        
+        if (stage === 'idle' || totalScenes === 0) {
+          setProgress(Math.round(p * 100));
+          return;
+        }
+
+        const sceneGenerationWeight = 0.80;
+        const concatenationWeight = 0.05;
+        const finalizationWeight = 0.15;
+        
+        let overallProgress = 0;
+
+        if (stage === 'scenes') {
+          const sceneWeight = sceneGenerationWeight / totalScenes;
+          const baseProgress = currentScene * sceneWeight;
+          const currentSceneProgress = p * sceneWeight;
+          overallProgress = baseProgress + currentSceneProgress;
+        } else if (stage === 'concat') {
+          const baseProgress = sceneGenerationWeight;
+          overallProgress = baseProgress + (p * concatenationWeight);
+        } else if (stage === 'final') {
+          const baseProgress = sceneGenerationWeight + concatenationWeight;
+          overallProgress = baseProgress + (p * finalizationWeight);
+        }
+        
+        setProgress(Math.min(100, Math.round(overallProgress * 100)));
+      });
       await ffmpeg.load();
       setIsLoaded(true);
       addDebugLog('🎉 FFmpeg carregado e configurado com sucesso!');
@@ -118,6 +147,7 @@ export const useFFmpeg = () => {
       throw new Error('No scenes to render');
     }
 
+    renderStageRef.current = { stage: 'idle', totalScenes: scenes.length, currentScene: 0 };
     setIsProcessing(true);
     setProgress(0);
 
@@ -143,7 +173,9 @@ export const useFFmpeg = () => {
       }
 
       let concatList = '';
+      renderStageRef.current.stage = 'scenes';
       for (let i = 0; i < scenes.length; i++) {
+        renderStageRef.current.currentScene = i;
         const scene = scenes[i];
         const sceneDuration = scene.duration || 5; // Use scene's duration or fallback to 5s
         addDebugLog(`  -> Duração da cena ${i + 1}: ${sceneDuration.toFixed(2)}s`);
@@ -171,12 +203,14 @@ export const useFFmpeg = () => {
         concatList += `file '${outputName}'\n`;
       }
 
+      renderStageRef.current.stage = 'concat';
       await ffmpeg.writeFile('concat_list.txt', new TextEncoder().encode(concatList));
       await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'concat_list.txt', '-c', 'copy', '-y', 'concatenated.mp4']);
       addDebugLog('✅ Passagem 1 concluída: Cenas concatenadas em concatenated.mp4');
 
       // --- PASS 2: Add global audio, subtitles, and logo ---
       addDebugLog('--- PASSAGEM 2: Adicionando trilha sonora, legendas e logotipo ---');
+      renderStageRef.current.stage = 'final';
       if (globalSrtFile) {
         const srtText = await globalSrtFile.text();
         const assContent = convertSRTtoASS(srtText, subtitleStyle);
@@ -247,14 +281,15 @@ export const useFFmpeg = () => {
       const data = await ffmpeg.readFile('final_video.mp4');
       const videoUrl = URL.createObjectURL(new Blob([new Uint8Array(data as Uint8Array)], { type: 'video/mp4' }));
       addDebugLog(`🎉 Renderização concluída!`);
+      setProgress(100);
       return videoUrl;
 
     } catch (error) {
       addDebugLog(`❌ ERRO na renderização: ${error.message}`);
       throw error;
     } finally {
+      renderStageRef.current.stage = 'idle';
       setIsProcessing(false);
-      setProgress(0);
     }
   }, [ffmpeg, isLoaded, isFontLoaded, loadFFmpeg, addDebugLog]);
 
