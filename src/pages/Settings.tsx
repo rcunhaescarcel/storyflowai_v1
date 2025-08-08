@@ -259,11 +259,13 @@ const Settings = () => {
                 </ToggleGroup>
               </div>
               <div className="space-y-2">
-                <Label>Senha</Label>
-                <Button variant="outline" onClick={() => setIsPasswordModalOpen(true)}>
-                  <KeyRound className="w-4 h-4 mr-2" />
-                  Alterar Senha
-                </Button>
+                <div className="flex items-center gap-4">
+                  <Label>Senha</Label>
+                  <Button variant="outline" onClick={() => setIsPasswordModalOpen(true)}>
+                    <KeyRound className="w-4 h-4 mr-2" />
+                    Alterar Senha
+                  </Button>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Altere sua senha de acesso à plataforma.
                 </p>
