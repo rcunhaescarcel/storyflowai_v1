@@ -9,7 +9,7 @@ import { StoryPromptForm } from "@/components/editor/StoryPromptForm";
 import { SceneCard } from "@/components/editor/SceneCard";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { DebugConsole } from "@/components/editor/DebugConsole";
 import { useSession } from "./contexts/SessionContext";
 import { supabase } from "./integrations/supabase/client";
@@ -40,6 +40,7 @@ const getAudioDuration = (file: File): Promise<number> => {
 const Editor = () => {
   const location = useLocation();
   const [scenes, setScenes] = useState<Scene[]>([]);
+  const [isProjectLoading, setIsProjectLoading] = useState(!!location.state?.project);
   const [globalSrtFile, setGlobalSrtFile] = useState<File | null>(null);
   const [backgroundMusic, setBackgroundMusic] = useState<File | null>(null);
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.5);
@@ -78,6 +79,7 @@ const Editor = () => {
     const loadProject = async (project: VideoProject) => {
         if (!project.scenes) {
             addDebugLog(`[Editor] Projeto "${project.title}" não possui cenas para carregar.`);
+            setIsProjectLoading(false);
             return;
         }
 
@@ -136,12 +138,15 @@ const Editor = () => {
             addDebugLog(`[Editor] ❌ Falha ao carregar projeto: ${errorMessage}`);
             toast.error("Falha ao carregar o projeto", { id: loadingToast, description: errorMessage });
         } finally {
+            setIsProjectLoading(false);
             window.history.replaceState({}, document.title);
         }
     };
 
     if (projectToLoad) {
         loadProject(projectToLoad);
+    } else {
+      setIsProjectLoading(false);
     }
   }, [location.state, addDebugLog]);
 
@@ -398,6 +403,17 @@ const Editor = () => {
       saveProject(newScenes, projectPrompt);
     }
   };
+
+  if (isProjectLoading) {
+    return (
+      <main className="container max-w-screen-xl mx-auto px-4 py-8">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          <p className="mt-4 text-lg text-muted-foreground">Carregando seu projeto...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <>
