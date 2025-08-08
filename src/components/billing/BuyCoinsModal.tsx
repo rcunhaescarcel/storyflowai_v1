@@ -56,14 +56,18 @@ export const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md p-6">
-        <DialogHeader className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-yellow-400/20 flex items-center justify-center mb-2">
-            <Coins className="w-7 h-7 text-yellow-500" />
+        <DialogHeader>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-yellow-400/20 flex items-center justify-center flex-shrink-0">
+              <Coins className="w-7 h-7 text-yellow-500" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl">Comprar Coins</DialogTitle>
+              <DialogDescription>
+                Seu saldo atual: {profile?.coins ?? 0} coins
+              </DialogDescription>
+            </div>
           </div>
-          <DialogTitle className="text-2xl">Comprar Coins</DialogTitle>
-          <DialogDescription>
-            Seu saldo atual: {profile?.coins ?? 0} coins
-          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 py-4">
