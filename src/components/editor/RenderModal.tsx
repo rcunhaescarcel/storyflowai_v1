@@ -36,6 +36,7 @@ import { ColorPicker } from "./render-settings/ColorPicker";
 import { urlToFile } from "@/lib/imageUtils";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 type ZoomEffect = "none" | "in" | "out" | "alternate";
 
@@ -75,6 +76,13 @@ const musicTracks = [
   { name: "Power of Prosperity", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857199070x718181362623514800/trilha_Power%20of%20Prosperity.mp3" },
   { name: "Inspiring Journey", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857492379x101851021095338000/trilha_Inspiring%20Journey.mp3" },
   { name: "Playful Whimsy", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857558889x122515034895358370/trilha_Playful%20Whimsy.mp3" },
+  { name: "Strength & Wellness", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857598050x707617959304145800/trilha_Strength%20%26%20Wellness.mp3" },
+  { name: "Journey to Success", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857478510x227379739153824800/trilha_Journey%20to%20Success.mp3" },
+  { name: "Brighter Horizons", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857430283x772209636950239400/trilha_Brighter%20Horizons.mp3" },
+  { name: "Little Dreamers", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857374490x732475513142924200/trilha_Little%20Dreamers.mp3" },
+  { name: "Magic Meadow", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857340641x357346249603159900/trilha_Magic%20Meadow.mp3" },
+  { name: "Cosmic Odyssey", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857152974x482069570006910660/trilha_Cosmic%20Odyssey.mp3" },
+  { name: "Voices of Antiquity", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749856947377x943444123013536600/trilha_Voices%20of%20Antiquity.mp3" },
 ];
 
 export const RenderModal = (props: RenderModalProps) => {
@@ -218,27 +226,35 @@ export const RenderModal = (props: RenderModalProps) => {
                         const isPlaying = playingTrackUrl === track.url;
 
                         return (
-                          <div key={track.url} className="flex items-center justify-between gap-2 p-1 rounded-md hover:bg-muted">
+                          <div
+                            key={track.url}
+                            className={cn(
+                              "flex items-center justify-between gap-2 p-1 rounded-md hover:bg-muted cursor-pointer",
+                              isSelected && "bg-primary/10"
+                            )}
+                            onClick={() => handleSelectTrack(track)}
+                          >
                             <div className="flex items-center gap-2 overflow-hidden">
                               <Button
                                 size="icon"
                                 variant="ghost"
                                 className="w-8 h-8 flex-shrink-0"
-                                onClick={(e) => { e.stopPropagation(); handlePlayToggle(track.url); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePlayToggle(track.url);
+                                }}
                               >
                                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                               </Button>
                               <span className="text-sm font-medium truncate" title={track.name}>{track.name}</span>
                             </div>
-                            <Button
-                              size="sm"
-                              variant={isSelected ? "secondary" : "outline"}
-                              onClick={() => handleSelectTrack(track)}
-                              disabled={isSelecting}
-                              className="w-20 flex-shrink-0"
-                            >
-                              {isSelecting ? <Loader2 className="w-4 h-4 animate-spin" /> : isSelected ? <CheckCircle className="w-4 h-4" /> : "Usar"}
-                            </Button>
+                            <div className="w-8 h-8 flex items-center justify-center">
+                              {isSelecting ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : isSelected ? (
+                                <CheckCircle className="w-5 h-5 text-primary" />
+                              ) : null}
+                            </div>
                           </div>
                         );
                       })}
