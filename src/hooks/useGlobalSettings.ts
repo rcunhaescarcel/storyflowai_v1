@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { SubtitleStyle, LogoPosition } from '@/hooks/useFFmpeg';
-import { resizeImage, dataURLtoFile } from '@/lib/imageUtils';
 
 type VideoQuality = 'hd' | 'fullhd';
 
@@ -13,19 +12,13 @@ export const useGlobalSettings = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoPosition, setLogoPosition] = useState<LogoPosition>('top-right');
-  const [characterImage, setCharacterImage] = useState<File | null>(null);
-  const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
   const [subtitleStyle, setSubtitleStyle] = useState<SubtitleStyle>({
     fontFamily: "Arial",
     fontSize: 24,
     fontColor: "#ffffff",
     shadowColor: "#000000",
   });
-  const [zoomEffect, setZoomEffect] = useState<'none' | 'in' | 'out' | 'alternate'>('alternate');
-  const [zoomIntensity, setZoomIntensity] = useState(20);
-  const [addFade, setAddFade] = useState(true);
-  const [fadeInDuration, setFadeInDuration] = useState(0.5);
-  const [fadeOutDuration, setFadeOutDuration] = useState(0.5);
+  const [addVisualEffects, setAddVisualEffects] = useState(true);
 
   const handleSrtUpload = useCallback((file: File) => {
     if (file && (file.name.endsWith('.srt') || file.type === 'text/plain')) {
@@ -60,27 +53,6 @@ export const useGlobalSettings = () => {
     }
   }, []);
 
-  const handleCharacterImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const originalFile = e.target.files?.[0];
-    if (originalFile && originalFile.type.startsWith('image/')) {
-      try {
-        const resizedImagePreview = await resizeImage(originalFile, 1024, 1024);
-        const resizedFile = dataURLtoFile(resizedImagePreview, originalFile.name);
-        
-        setCharacterImage(resizedFile);
-        setCharacterImagePreview(resizedImagePreview);
-        
-        toast.success("Personagem de Referência Carregado", {
-          description: "A imagem foi otimizada e está pronta para ser usada.",
-        });
-      } catch (error) {
-        toast.error("Erro ao processar imagem", {
-          description: "Não foi possível redimensionar a imagem.",
-        });
-      }
-    }
-  }, []);
-
   return {
     globalSrtFile,
     handleSrtUpload,
@@ -99,22 +71,9 @@ export const useGlobalSettings = () => {
     setLogoPreview,
     logoPosition,
     setLogoPosition,
-    characterImage,
-    characterImagePreview,
-    handleCharacterImageUpload,
-    setCharacterImage,
-    setCharacterImagePreview,
     subtitleStyle,
     setSubtitleStyle,
-    zoomEffect,
-    setZoomEffect,
-    zoomIntensity,
-    setZoomIntensity,
-    addFade,
-    setAddFade,
-    fadeInDuration,
-    setFadeInDuration,
-    fadeOutDuration,
-    setFadeOutDuration,
+    addVisualEffects,
+    setAddVisualEffects,
   };
 };

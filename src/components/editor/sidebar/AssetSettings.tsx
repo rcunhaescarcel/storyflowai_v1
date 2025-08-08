@@ -12,16 +12,11 @@ import {
   Image as ImageIcon,
   Music,
   Trash2,
-  UserSquare,
   Volume2,
 } from "lucide-react";
 import { LogoPosition } from "@/hooks/useFFmpeg";
 
 interface AssetSettingsProps {
-  characterImage: File | null;
-  characterImagePreview: string | null;
-  onCharacterImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onCharacterImageRemove: () => void;
   backgroundMusic: File | null;
   backgroundMusicVolume: number;
   onBackgroundMusicUpload: (file: File) => void;
@@ -36,10 +31,6 @@ interface AssetSettingsProps {
 }
 
 export const AssetSettings = ({
-  characterImage,
-  characterImagePreview,
-  onCharacterImageUpload,
-  onCharacterImageRemove,
   backgroundMusic,
   backgroundMusicVolume,
   onBackgroundMusicUpload,
@@ -56,52 +47,6 @@ export const AssetSettings = ({
     <Card className="bg-background">
       <CardContent className="pt-6 space-y-6">
         <div>
-          <Label className="text-sm font-medium mb-2 flex items-center gap-2">
-            <UserSquare className="w-4 h-4" />
-            Personagem (Contexto)
-          </Label>
-          <Input
-            type="file"
-            accept="image/png, image/jpeg"
-            onChange={onCharacterImageUpload}
-            className="hidden"
-            id="character-upload"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => document.getElementById("character-upload")?.click()}
-            className="w-full"
-          >
-            Selecionar Imagem
-          </Button>
-          {characterImage && (
-            <div className="bg-muted/50 rounded-lg p-3 mt-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-foreground truncate">
-                  {characterImagePreview && (
-                    <img
-                      src={characterImagePreview}
-                      alt="character preview"
-                      className="w-10 h-10 object-contain rounded"
-                    />
-                  )}
-                  <span className="truncate">{characterImage.name}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onCharacterImageRemove}
-                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="border-t pt-6">
           <Label className="text-sm font-medium mb-2 flex items-center gap-2">
             <Music className="w-4 h-4" />
             Trilha Sonora (Fundo)

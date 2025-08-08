@@ -46,18 +46,15 @@ const Editor = () => {
     videoQuality, setVideoQuality,
     logoFile, logoPreview, handleLogoUpload, setLogoFile, setLogoPreview,
     logoPosition, setLogoPosition,
-    characterImage, characterImagePreview, handleCharacterImageUpload, setCharacterImage, setCharacterImagePreview,
     subtitleStyle, setSubtitleStyle,
-    zoomEffect, setZoomEffect,
-    zoomIntensity, setZoomIntensity,
-    addFade, setAddFade,
-    fadeInDuration, setFadeInDuration,
-    fadeOutDuration, setFadeOutDuration,
+    addVisualEffects, setAddVisualEffects,
   } = useGlobalSettings();
 
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [projectTitle, setProjectTitle] = useState<string>('');
   const [persistedVideoUrl, setPersistedVideoUrl] = useState<string | null>(null);
+  const [characterImage, setCharacterImage] = useState<File | null>(null);
+  const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
 
   const { isProjectLoading } = useProjectLoader({
     onLoad: (project: VideoProject, loadedScenes: Scene[]) => {
@@ -115,11 +112,11 @@ const Editor = () => {
         videoQuality, 
         logoFile, 
         logoPosition,
-        zoomEffect,
-        zoomIntensity,
-        addFade,
-        fadeInDuration,
-        fadeOutDuration
+        addVisualEffects ? 'alternate' : 'none',
+        20, // Default zoom intensity
+        addVisualEffects,
+        0.5, // Default fade-in duration
+        0.5  // Default fade-out duration
       );
       if (result) {
         setLocalVideoUrl(result);
@@ -246,13 +243,6 @@ const Editor = () => {
               onProjectTitleChange={setProjectTitle}
               videoQuality={videoQuality}
               onVideoQualityChange={setVideoQuality}
-              characterImage={characterImage}
-              characterImagePreview={characterImagePreview}
-              onCharacterImageUpload={handleCharacterImageUpload}
-              onCharacterImageRemove={() => {
-                setCharacterImage(null);
-                setCharacterImagePreview(null);
-              }}
               backgroundMusic={backgroundMusic}
               backgroundMusicVolume={backgroundMusicVolume}
               onBackgroundMusicUpload={handleBackgroundMusicUpload}
@@ -281,16 +271,8 @@ const Editor = () => {
               onSaveProject={handleSaveProject}
               sceneCount={scenes.length}
               isEditing={!!currentProjectId}
-              zoomEffect={zoomEffect}
-              onZoomEffectChange={setZoomEffect}
-              zoomIntensity={zoomIntensity}
-              onZoomIntensityChange={setZoomIntensity}
-              addFade={addFade}
-              onAddFadeChange={setAddFade}
-              fadeInDuration={fadeInDuration}
-              onFadeInDurationChange={setFadeInDuration}
-              fadeOutDuration={fadeOutDuration}
-              onFadeOutDurationChange={setFadeOutDuration}
+              addVisualEffects={addVisualEffects}
+              onAddVisualEffectsChange={setAddVisualEffects}
             />
           </div>
         )}
