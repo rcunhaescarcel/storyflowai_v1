@@ -86,10 +86,10 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
     try {
       const numParagraphs = parseInt(duration) / 5;
-      let storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Para cada cena, forneça uma narração em português e um prompt de imagem em inglês, separados por "|||". Siga este formato para cada linha, sem adicionar texto extra ou números de cena: [Narração da cena em português] ||| [Descrição da imagem para IA em inglês, estilo animação 3D]`;
+      let storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido, onde cada objeto representa uma cena e tem as chaves "narration" (em português) e "image_prompt" (em inglês, estilo animação 3D). Exemplo: [{"narration": "...", "image_prompt": "..."}, {"narration": "...", "image_prompt": "..."}]`;
       
       if (characterImage) {
-        storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}" com um personagem principal. O vídeo deve ter aproximadamente ${numParagraphs} cenas. Para cada cena, forneça uma narração em português e um prompt de imagem em inglês com o personagem, separados por "|||". Siga este formato para cada linha, sem adicionar texto extra ou números de cena: [Narração da cena em português] ||| [Descrição da imagem com "o personagem" para IA em inglês, estilo animação 3D]`;
+        storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}" com um personagem principal. O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido, onde cada objeto representa uma cena e tem as chaves "narration" (em português) e "image_prompt" (em inglês, com "o personagem", estilo animação 3D). Exemplo: [{"narration": "...", "image_prompt": "o personagem ..."}, {"narration": "...", "image_prompt": "o personagem ..."}]`;
       }
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
@@ -110,6 +110,24 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
       addDebugLog(`[História IA] Raw story text: ${storyText}`);
       setProgress(10);
+
+      let scenesData: { narration: string; imagePrompt: string; }[];
+      try {
+        const jsonStart = storyText.indexOf('[');
+        const jsonEnd = storyText.lastIndexOf(']');
+        if (jsonStart === -1 || jsonEnd === -1) {
+          throw new Error("Nenhum array JSON encontrado na resposta da IA.");
+        }
+        const jsonString = storyText.substring(jsonStart, jsonEnd + 1);
+        scenesData = JSON.parse(jsonString);
+      } catch (e) {
+        addDebugLog(`[História IA] ❌ ERRO: Falha ao parsear o JSON do roteiro. Resposta recebida: ${storyText}`);
+        throw new Error("A IA retornou um formato de roteiro inválido. Por favor, tente novamente.");
+      }
+
+      if (!Array.isArray(scenesData) || scenesData.length === 0) {
+        throw new Error("A IA não retornou um roteiro com cenas válidas.");
+      }
 
       let characterPublicUrl: string | null = null;
       if (characterImage) {
@@ -139,22 +157,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         }
       }
       setProgress(15);
-
-      const lines = storyText.trim().split('\n').filter(p => p.includes('|||'));
-      
-      const scenesData = lines.map(line => {
-        const parts = line.split('|||');
-        return { narration: parts[0]?.trim() || '', imagePrompt: parts[1]?.trim() || '' };
-      }).filter(data => {
-        const lowerNarration = data.narration.toLowerCase();
-        const lowerImagePrompt = data.imagePrompt.toLowerCase();
-        return !(lowerNarration.includes('narração em português') || lowerImagePrompt.includes('image prompt in english'));
-      });
-
-      if (scenesData.length === 0) {
-        addDebugLog(`[História IA] ❌ ERRO: O roteiro recebido não continha cenas válidas após a filtragem.`);
-        throw new Error("A IA não retornou um roteiro com cenas válidas. Tente novamente.");
-      }
 
       const newScenes: Scene[] = [];
       const totalScenes = scenesData.length;
