@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,7 +7,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -26,10 +26,16 @@ import {
   CornerUpRight,
   CornerDownLeft,
   CornerDownRight,
+  Play,
+  Pause,
+  CheckCircle,
 } from "lucide-react";
 import { LogoPosition, SubtitleStyle } from "@/hooks/useFFmpeg";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ColorPicker } from "./render-settings/ColorPicker";
+import { urlToFile } from "@/lib/imageUtils";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 type ZoomEffect = "none" | "in" | "out" | "alternate";
 
@@ -65,6 +71,12 @@ interface RenderModalProps {
   onZoomEffectChange: (effect: ZoomEffect) => void;
 }
 
+const musicTracks = [
+  { name: "Power of Prosperity", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857199070x718181362623514800/trilha_Power%20of%20Prosperity.mp3" },
+  { name: "Inspiring Journey", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857492379x101851021095338000/trilha_Inspiring%20Journey.mp3" },
+  { name: "Playful Whimsy", url: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1749857558889x122515034895358370/trilha_Playful%20Whimsy.mp3" },
+];
+
 export const RenderModal = (props: RenderModalProps) => {
   const {
     isOpen, onClose, onRender, isProcessing,
@@ -75,6 +87,50 @@ export const RenderModal = (props: RenderModalProps) => {
     generateSubtitles, onGenerateSubtitlesChange,
     zoomEffect, onZoomEffectChange
   } = props;
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playingTrackUrl, setPlayingTrackUrl] = useState<string | null>(null);
+  const [selectingTrackUrl, setSelectingTrackUrl] = useState<string | null>(null);
+
+  const handlePlayToggle = (url: string) => {
+    if (audioRef.current) {
+      if (playingTrackUrl === url) {
+        audioRef.current.pause();
+        setPlayingTrackUrl(null);
+      } else {
+        audioRef.current.src = url;
+        audioRef.current.play();
+        setPlayingTrackUrl(url);
+      }
+    }
+  };
+
+  const handleSelectTrack = async (track: typeof musicTracks[0]) => {
+    if (backgroundMusic?.name === `${track.name}.mp3`) {
+      onBackgroundMusicRemove();
+      return;
+    }
+
+    setSelectingTrackUrl(track.url);
+    try {
+      const file = await urlToFile(track.url, `${track.name}.mp3`, 'audio/mp3');
+      onBackgroundMusicUpload(file);
+    } catch (error) {
+      toast.error("Falha ao carregar a trilha sonora.");
+      console.error(error);
+    } finally {
+      setSelectingTrackUrl(null);
+    }
+  };
+
+  useEffect(() => {
+    const audioElement = audioRef.current;
+    const onEnded = () => setPlayingTrackUrl(null);
+    audioElement?.addEventListener('ended', onEnded);
+    return () => {
+      audioElement?.removeEventListener('ended', onEnded);
+    };
+  }, []);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -144,37 +200,54 @@ export const RenderModal = (props: RenderModalProps) => {
                 <Music className="w-4 h-4" />
                 Trilha musical
               </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  type="file"
-                  accept="audio/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) onBackgroundMusicUpload(file);
-                  }}
-                  className="hidden"
-                  id="modal-bg-music-upload"
-                />
-                <Button variant="secondary" onClick={() => document.getElementById("modal-bg-music-upload")?.click()}>
-                  <Music className="w-4 h-4 mr-2" />
-                  {backgroundMusic ? "Trocar" : "Trilha"}
-                </Button>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="secondary" disabled={!backgroundMusic}>
-                      <Volume2 className="w-4 h-4 mr-2" />
-                      Volume
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2">
-                    <Slider
-                      value={[backgroundMusicVolume]}
-                      onValueChange={(value) => onBackgroundMusicVolumeChange(value[0])}
-                      max={1} min={0} step={0.05}
-                    />
-                  </PopoverContent>
-                </Popover>
+              <div className="space-y-2">
+                {musicTracks.map((track) => {
+                  const isSelected = backgroundMusic?.name === `${track.name}.mp3`;
+                  const isSelecting = selectingTrackUrl === track.url;
+                  const isPlaying = playingTrackUrl === track.url;
+
+                  return (
+                    <div key={track.url} className="flex items-center justify-between gap-2 p-2 rounded-md bg-background/50">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <Button size="icon" variant="ghost" className="w-8 h-8 flex-shrink-0" onClick={() => handlePlayToggle(track.url)}>
+                          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                        </Button>
+                        <span className="text-sm font-medium truncate" title={track.name}>{track.name}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={isSelected ? "secondary" : "outline"}
+                        onClick={() => handleSelectTrack(track)}
+                        disabled={isSelecting}
+                        className="w-20 flex-shrink-0"
+                      >
+                        {isSelecting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : isSelected ? (
+                          <CheckCircle className="w-4 h-4" />
+                        ) : (
+                          "Usar"
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="secondary" disabled={!backgroundMusic} className="w-full mt-2">
+                    <Volume2 className="w-4 h-4 mr-2" />
+                    Volume
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2">
+                  <Slider
+                    value={[backgroundMusicVolume]}
+                    onValueChange={(value) => onBackgroundMusicVolumeChange(value[0])}
+                    max={1} min={0} step={0.05}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Logo */}
@@ -237,6 +310,7 @@ export const RenderModal = (props: RenderModalProps) => {
             {isProcessing ? 'Criando...' : 'Criar vídeo'}
           </Button>
         </DialogFooter>
+        <audio ref={audioRef} />
       </DialogContent>
     </Dialog>
   );
