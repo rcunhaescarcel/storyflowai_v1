@@ -26,11 +26,10 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
     addDebugLog(`[História IA] Iniciando geração para o prompt: "${prompt}"`);
 
     try {
-      const storyPrompt = `Gere uma história curta e envolvente para um vídeo, baseada no seguinte tema: "${prompt}". A história deve ser dividida em parágrafos curtos, onde cada parágrafo representa uma cena do vídeo.`;
+      const storyPrompt = `Gere um roteiro para um vídeo de aproximadamente 60 segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de 12 parágrafos. Cada parágrafo representa uma cena de 5 segundos e deve conter uma narração curta e concisa. Não inclua títulos como "Cena 1" ou "Parágrafo 1", apenas o texto da narração para cada cena.`;
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
       const referrer = "https://vidflow.com.br/";
-      // O modelo 'gpt-2' não foi encontrado. Removendo o parâmetro do modelo para usar o padrão da API.
       const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?token=${apiToken}&referrer=${referrer}`;
 
       addDebugLog(`[História IA] URL da API: ${targetUrl.substring(0, 100)}...`);
