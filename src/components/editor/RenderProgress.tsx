@@ -61,7 +61,7 @@ export const RenderProgress = ({ stage, progress }: RenderProgressProps) => {
                             )}>{step.label}</span>
                         </div>
                     ))}
-                    <div className="absolute top-8 left-0 w-full h-1 bg-border -z-0">
+                    <div className="absolute top-8 left-10 w-[calc(100%-5rem)] h-1 bg-border -z-0">
                         <div 
                             className="h-full bg-gradient-primary transition-all duration-500"
                             style={{ width: `${(activeStep / (steps.length - 1)) * 100}%` }}
