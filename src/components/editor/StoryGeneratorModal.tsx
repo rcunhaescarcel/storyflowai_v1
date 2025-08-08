@@ -6,6 +6,8 @@ import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface StoryGeneratorModalProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebugLog }: StoryGeneratorModalProps) => {
   const [prompt, setPrompt] = useState('');
+  const [duration, setDuration] = useState('60');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gerando...');
   const [progress, setProgress] = useState(0);
@@ -40,10 +43,11 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
     setIsLoading(true);
     setProgress(0);
     setLoadingMessage('Gerando roteiro da história...');
-    addDebugLog(`[História IA] Iniciando geração para o prompt: "${prompt}"`);
+    addDebugLog(`[História IA] Iniciando geração para o prompt: "${prompt}" com duração de ${duration}s`);
 
     try {
-      const storyPrompt = `Gere um roteiro para um vídeo de aproximadamente 60 segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de 12 parágrafos. Para cada parágrafo (cena), forneça a narração em português e um prompt de imagem em inglês para gerar uma imagem no estilo de animação 3D. Use o formato: "Texto da narração. ||| English image prompt in 3D animation style." Não inclua títulos como "Cena 1".`;
+      const numParagraphs = parseInt(duration) / 5;
+      const storyPrompt = `Gere um roteiro para um vídeo de aproximadamente ${duration} segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de ${numParagraphs} parágrafos. Para cada parágrafo (cena), forneça a narração em português e um prompt de imagem em inglês para gerar uma imagem no estilo de animação 3D. Use o formato: "Texto da narração. ||| English image prompt in 3D animation style." Não inclua títulos como "Cena 1".`;
       
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
@@ -181,7 +185,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
         </DialogHeader>
         <div className="py-4">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center gap-4 h-[138px]">
+            <div className="flex flex-col items-center justify-center gap-4 h-[208px]">
               <Loader2 className="w-12 h-12 text-primary animate-spin" />
               <div className="w-full text-center">
                 <p className="text-sm font-medium text-foreground">{loadingMessage}</p>
@@ -190,15 +194,37 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
               </div>
             </div>
           ) : (
-            <Textarea
-              id="story-prompt"
-              placeholder="Ex: A jornada de um pequeno robô que se perdeu na cidade grande e tenta encontrar o caminho de volta para casa."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              disabled={isLoading}
-              rows={5}
-              className="bg-background"
-            />
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="story-prompt" className="text-sm font-medium">
+                  Tema da História
+                </Label>
+                <Textarea
+                  id="story-prompt"
+                  placeholder="Ex: A jornada de um pequeno robô que se perdeu na cidade grande e tenta encontrar o caminho de volta para casa."
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  disabled={isLoading}
+                  rows={5}
+                  className="bg-background mt-2"
+                />
+              </div>
+              <div>
+                <Label htmlFor="duration-select" className="text-sm font-medium">
+                  Duração (Aproximada)
+                </Label>
+                <Select value={duration} onValueChange={setDuration} disabled={isLoading}>
+                  <SelectTrigger id="duration-select" className="w-full mt-2 bg-background">
+                    <SelectValue placeholder="Selecione a duração" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">30 segundos (~6 cenas)</SelectItem>
+                    <SelectItem value="60">1 minuto (~12 cenas)</SelectItem>
+                    <SelectItem value="90">1 minuto e 30s (~18 cenas)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           )}
         </div>
         <DialogFooter>
