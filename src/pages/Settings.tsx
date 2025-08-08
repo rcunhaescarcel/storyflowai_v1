@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { useSession } from '@/contexts/SessionContext';
+import { useSession, Profile } from '@/contexts/SessionContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Crown, KeyRound, Palette, Save, User, LogOut, Coins } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,11 +36,14 @@ const fetchMonthlyVideoCount = async (userId: string): Promise<number> => {
 };
 
 const Settings = () => {
-  const { session, profile } = useSession();
+  const { session, profile, setProfile } = useSession();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [isSaving, setIsSaving] = useState(false);
+
+  const [preferredVoice, setPreferredVoice] = useState('nova');
+  const [preferredDuration, setPreferredDuration] = useState('60');
 
   const { data: monthlyVideoCount, isLoading: isLoadingCount } = useQuery({
     queryKey: ['monthlyVideoCount', session?.user?.id],
@@ -52,7 +55,11 @@ const Settings = () => {
     if (session?.user?.email) {
       setEmail(session.user.email);
     }
-  }, [session]);
+    if (profile) {
+      setPreferredVoice(profile.default_voice || 'nova');
+      setPreferredDuration(String(profile.default_duration || '60'));
+    }
+  }, [session, profile]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -89,12 +96,35 @@ const Settings = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!session?.user) {
+      toast.error("Você precisa estar logado para salvar as configurações.");
+      return;
+    }
     setIsSaving(true);
-    setTimeout(() => {
+
+    const updates = {
+      default_voice: preferredVoice,
+      default_duration: parseInt(preferredDuration, 10),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', session.user.id)
+      .select()
+      .single();
+
+    setIsSaving(false);
+    if (error) {
+      toast.error("Falha ao salvar configurações", { description: error.message });
+    } else {
       toast.success("Configurações salvas com sucesso!");
-      setIsSaving(false);
-    }, 1000);
+      if (data) {
+        setProfile(data as Profile);
+      }
+    }
   };
 
   const freePlanLimit = 3;
@@ -133,14 +163,14 @@ const Settings = () => {
             </div>
             <div className="space-y-2">
               <Label>Voz preferida</Label>
-              <Select defaultValue="nova">
+              <Select value={preferredVoice} onValueChange={setPreferredVoice}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="alloy">Alloy</SelectItem>
                   <SelectItem value="echo">Echo</SelectItem>
                   <SelectItem value="fable">Fable</SelectItem>
                   <SelectItem value="onyx">Onyx</SelectItem>
-                  <SelectItem value="nova">Nova (Mentor)</SelectItem>
+                  <SelectItem value="nova">Nova</SelectItem>
                   <SelectItem value="shimmer">Shimmer</SelectItem>
                 </SelectContent>
               </Select>
@@ -156,7 +186,7 @@ const Settings = () => {
             </div>
             <div className="space-y-2">
               <Label>Duração padrão</Label>
-              <Select defaultValue="60">
+              <Select value={preferredDuration} onValueChange={setPreferredDuration}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="30">30 segundos</SelectItem>

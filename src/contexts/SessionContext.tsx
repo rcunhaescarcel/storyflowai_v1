@@ -4,7 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
-export type Profile = Tables<'profiles'>;
+export type Profile = Tables<'profiles'> & {
+  default_voice?: string | null;
+  default_style?: string | null;
+  default_duration?: number | null;
+};
 
 interface SessionContextType {
   session: Session | null;
