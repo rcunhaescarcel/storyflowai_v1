@@ -51,6 +51,7 @@ export interface Scene {
   imagePreview?: string;
   audio?: File; // Per-scene narration
   narrationText?: string; // Text for generating narration
+  duration?: number; // DURATION OF THE SCENE IN SECONDS
   effect: string;
   zoomEnabled: boolean;
   zoomIntensity: number;
@@ -134,7 +135,6 @@ export const useFFmpeg = () => {
         setIsFontLoaded(true);
       }
 
-      const sceneDuration = 5;
       for (let i = 0; i < scenes.length; i++) {
         const scene = scenes[i];
         addDebugLog(`📝 Processando cena ${i + 1}/${scenes.length}`);
@@ -145,6 +145,8 @@ export const useFFmpeg = () => {
       let concatList = '';
       for (let i = 0; i < scenes.length; i++) {
         const scene = scenes[i];
+        const sceneDuration = scene.duration || 5; // Use scene's duration or fallback to 5s
+        addDebugLog(`  -> Duração da cena ${i + 1}: ${sceneDuration.toFixed(2)}s`);
         const outputName = `scene_${i}.mp4`;
         let cmd = ['-loop', '1', '-i', `image_${i}.jpg`];
         if (scene.audio) cmd.push('-i', `audio_${i}.mp3`);
@@ -156,7 +158,10 @@ export const useFFmpeg = () => {
           videoFilter += `,zoompan=z=${scene.zoomDirection === 'in' ? `1+${(zoomFactor - 1) / totalFrames}*on` : `${zoomFactor}-${(zoomFactor - 1) / totalFrames}*on`}:d=${totalFrames}:x=iw/2-(iw/zoom/2):y=ih/2-(ih/zoom/2)`;
         }
         if (scene.fadeInDuration > 0) videoFilter += `,fade=t=in:st=0:d=${scene.fadeInDuration}`;
-        if (scene.fadeOutDuration > 0) videoFilter += `,fade=t=out:st=${sceneDuration - scene.fadeOutDuration}:d=${scene.fadeOutDuration}`;
+        if (scene.fadeOutDuration > 0) {
+          const fadeOutStartTime = Math.max(0, sceneDuration - scene.fadeOutDuration);
+          videoFilter += `,fade=t=out:st=${fadeOutStartTime}:d=${scene.fadeOutDuration}`;
+        }
         
         cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-pix_fmt', 'yuv420p');
         if (scene.audio) cmd.push('-c:a', 'aac', '-shortest'); else cmd.push('-an');

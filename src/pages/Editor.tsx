@@ -46,6 +46,26 @@ import { StoryGeneratorModal } from "@/components/editor/StoryGeneratorModal";
 
 type VideoQuality = 'hd' | 'fullhd';
 
+const getAudioDuration = (file: File): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      reject("No file provided");
+      return;
+    }
+    const audio = document.createElement('audio');
+    const objectUrl = URL.createObjectURL(file);
+    audio.src = objectUrl;
+    audio.onloadedmetadata = () => {
+      resolve(audio.duration);
+      URL.revokeObjectURL(objectUrl);
+    };
+    audio.onerror = (e) => {
+      reject(`Error loading audio file: ${e}`);
+      URL.revokeObjectURL(objectUrl);
+    }
+  });
+};
+
 const Editor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -129,13 +149,23 @@ const Editor = () => {
     }
   };
 
-  const handleNarrationUpload = (sceneId: string, file: File) => {
+  const handleNarrationUpload = async (sceneId: string, file: File) => {
     if (file && file.type.startsWith('audio/')) {
-      updateScene(sceneId, { audio: file });
-      toast({
-        title: "Narração carregada",
-        description: "Áudio de narração adicionado à cena.",
-      });
+      try {
+        const duration = await getAudioDuration(file);
+        updateScene(sceneId, { audio: file, duration });
+        toast({
+          title: "Narração carregada",
+          description: `Áudio de ${duration.toFixed(1)}s adicionado à cena.`,
+        });
+      } catch (error) {
+        console.error("Error getting audio duration:", error);
+        toast({
+          title: "Erro ao carregar áudio",
+          description: "Não foi possível obter a duração do áudio.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -345,8 +375,9 @@ const Editor = () => {
                           <AudioUploader
                             sceneId={scene.id}
                             audio={scene.audio}
+                            duration={scene.duration}
                             onAudioUpload={(file) => handleNarrationUpload(scene.id, file)}
-                            onAudioRemove={() => updateScene(scene.id, { audio: undefined })}
+                            onAudioRemove={() => updateScene(scene.id, { audio: undefined, duration: undefined })}
                           />
                           <EffectsPopover
                             scene={scene}

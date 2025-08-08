@@ -5,12 +5,13 @@ import { useEffect, useState } from 'react';
 
 interface AudioUploaderProps {
   audio?: File;
+  duration?: number;
   onAudioUpload: (file: File) => void;
   onAudioRemove: () => void;
   sceneId: string;
 }
 
-export const AudioUploader = ({ audio, onAudioUpload, onAudioRemove, sceneId }: AudioUploaderProps) => {
+export const AudioUploader = ({ audio, duration, onAudioUpload, onAudioRemove, sceneId }: AudioUploaderProps) => {
   const inputId = `audio-upload-${sceneId}`;
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
@@ -42,7 +43,9 @@ export const AudioUploader = ({ audio, onAudioUpload, onAudioRemove, sceneId }: 
         <Music className="w-5 h-5 text-muted-foreground flex-shrink-0" />
         <div className="text-sm">
           <p className="font-medium text-foreground">{audio ? 'Narração da Cena' : 'Adicionar Narração'}</p>
-          <p className="text-muted-foreground truncate">{audio ? audio.name : 'Áudio por cena (opcional)'}</p>
+          <p className="text-muted-foreground truncate">
+            {audio ? `${audio.name} (${duration?.toFixed(1)}s)` : 'Áudio por cena (opcional)'}
+          </p>
         </div>
       </div>
       {audio && audioUrl ? (

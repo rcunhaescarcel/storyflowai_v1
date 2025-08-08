@@ -25,6 +25,22 @@ const blobToDataURL = (blob: Blob): Promise<string> => {
   });
 };
 
+const getAudioDuration = (file: File): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    const audio = document.createElement('audio');
+    const objectUrl = URL.createObjectURL(file);
+    audio.src = objectUrl;
+    audio.onloadedmetadata = () => {
+      resolve(audio.duration);
+      URL.revokeObjectURL(objectUrl);
+    };
+    audio.onerror = (e) => {
+      reject(`Error loading audio file: ${e}`);
+      URL.revokeObjectURL(objectUrl);
+    }
+  });
+};
+
 // Adicionando uma função de delay para evitar sobrecarregar a API
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -130,6 +146,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
         const audioBlob = await audioResponse.blob();
         const audioFileName = `narration_${i + 1}.mp3`;
         const audioFile = new File([audioBlob], audioFileName, { type: 'audio/mpeg' });
+        const audioDuration = await getAudioDuration(audioFile);
 
         newScenes.push({
           id: crypto.randomUUID(),
@@ -137,6 +154,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
           image: imageFile,
           imagePreview: imagePreview,
           audio: audioFile,
+          duration: audioDuration,
           effect: "fade",
           zoomEnabled: false,
           zoomIntensity: 20,
