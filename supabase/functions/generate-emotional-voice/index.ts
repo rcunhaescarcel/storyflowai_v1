@@ -33,7 +33,7 @@ serve(async (req) => {
           'Authorization': `Bearer ${openAIApiKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o-mini",
           messages: [{
             role: "user",
             content: `Determine the best voice tone for the following text. Respond with only a short phrase in English (e.g., "A whimsical and gentle tone."). Text: "${text}"`
