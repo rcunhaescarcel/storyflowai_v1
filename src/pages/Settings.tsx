@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { storyStyles, openAIVoices, languages } from '@/lib/constants';
 
 const fetchMonthlyVideoCount = async (userId: string): Promise<number> => {
   const now = new Date();
@@ -42,7 +43,9 @@ const Settings = () => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [isSaving, setIsSaving] = useState(false);
 
+  const [preferredLanguage, setPreferredLanguage] = useState('pt-br');
   const [preferredVoice, setPreferredVoice] = useState('nova');
+  const [preferredStyle, setPreferredStyle] = useState('pixar');
   const [preferredDuration, setPreferredDuration] = useState('60');
 
   const { data: monthlyVideoCount, isLoading: isLoadingCount } = useQuery({
@@ -56,8 +59,10 @@ const Settings = () => {
       setEmail(session.user.email);
     }
     if (profile) {
+      setPreferredLanguage(profile.default_language || 'pt-br');
       setPreferredVoice(profile.default_voice || 'nova');
       setPreferredDuration(String(profile.default_duration || '60'));
+      setPreferredStyle(profile.default_style || 'pixar');
     }
   }, [session, profile]);
 
@@ -104,7 +109,9 @@ const Settings = () => {
     setIsSaving(true);
 
     const updates = {
+      default_language: preferredLanguage,
       default_voice: preferredVoice,
+      default_style: preferredStyle,
       default_duration: parseInt(preferredDuration, 10),
       updated_at: new Date().toISOString(),
     };
@@ -154,10 +161,12 @@ const Settings = () => {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Idioma padrão da conta</Label>
-              <Select defaultValue="pt-br" disabled>
+              <Select value={preferredLanguage} onValueChange={setPreferredLanguage}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pt-br">Português</SelectItem>
+                  {Object.entries(languages).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -166,21 +175,20 @@ const Settings = () => {
               <Select value={preferredVoice} onValueChange={setPreferredVoice}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="alloy">Alloy</SelectItem>
-                  <SelectItem value="echo">Echo</SelectItem>
-                  <SelectItem value="fable">Fable</SelectItem>
-                  <SelectItem value="onyx">Onyx</SelectItem>
-                  <SelectItem value="nova">Nova</SelectItem>
-                  <SelectItem value="shimmer">Shimmer</SelectItem>
+                  {openAIVoices.map(voice => (
+                    <SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label>Estilo visual padrão</Label>
-              <Select defaultValue="motivacional" disabled>
+              <Select value={preferredStyle} onValueChange={setPreferredStyle}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="motivacional">Motivacional</SelectItem>
+                  {Object.entries(storyStyles).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

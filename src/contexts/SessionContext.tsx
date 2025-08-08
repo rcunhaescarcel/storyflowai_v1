@@ -8,6 +8,7 @@ export type Profile = Tables<'profiles'> & {
   default_voice?: string | null;
   default_style?: string | null;
   default_duration?: number | null;
+  default_language?: string | null;
 };
 
 interface SessionContextType {

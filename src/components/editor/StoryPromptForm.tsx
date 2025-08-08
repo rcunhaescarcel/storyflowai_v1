@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Wand2, Clock, Mic, UserSquare, Trash2, Palette } from 'lucide-react';
+import { Loader2, Wand2, Clock, Mic, UserSquare, Trash2, Palette, Languages } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { resizeImage, dataURLtoFile, blobToDataURL } from '@/lib/imageUtils';
 import { Input } from '@/components/ui/input';
 import { useSession } from '@/contexts/SessionContext';
+import { storyStyles, openAIVoices, languages } from '@/lib/constants';
 
 const getAudioDuration = (file: File): Promise<number> => {
   return new Promise((resolve, reject) => {
@@ -30,32 +31,6 @@ const getAudioDuration = (file: File): Promise<number> => {
 };
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
-const openAIVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
-
-const storyStyles = {
-  pixar: {
-    label: "Pixar 3D Cinemático",
-    promptSuffix: ", in the style of a cinematic 3D animation, detailed visuals, vibrant colors, rich facial expressions"
-  },
-  ghibli: {
-    label: "Ghibli / Animação 2D",
-    promptSuffix: ", in the style of a poetic 2D animation, Ghibli-inspired, soft colors, painted texture, enchanting atmosphere"
-  },
-  storybook: {
-    label: "Livro Infantil Ilustrado",
-    promptSuffix: ", in the style of a watercolor children's book illustration, organic lines, simple and warm composition"
-  },
-  cartoon: {
-    label: "HQ/Cartoon Colorido",
-    promptSuffix: ", in the style of a colorful cartoon/comic book, bold lines, strong colors, exaggerated expressions"
-  }
-};
-
-interface StoryPromptFormProps {
-  onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
-  addDebugLog: (message: string) => void;
-}
 
 const fetchWithRetry = async (url: string, { retries = 3, delayMs = 2000, addDebugLog, apiName = 'API' }: { retries?: number, delayMs?: number, addDebugLog: (msg: string) => void, apiName?: string }): Promise<Response> => {
   for (let i = 0; i < retries; i++) {
@@ -86,17 +61,32 @@ const fetchWithRetry = async (url: string, { retries = 3, delayMs = 2000, addDeb
   throw new Error('Todas as tentativas de requisição falharam.');
 };
 
+interface StoryPromptFormProps {
+  onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
+  addDebugLog: (message: string) => void;
+}
+
 export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFormProps) => {
   const { session, profile, setProfile, isLoading: isSessionLoading } = useSession();
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState('30');
   const [selectedVoice, setSelectedVoice] = useState('nova');
   const [selectedStyle, setSelectedStyle] = useState('pixar');
+  const [selectedLanguage, setSelectedLanguage] = useState('pt-br');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gerando...');
   const [progress, setProgress] = useState(0);
   const [characterImage, setCharacterImage] = useState<File | null>(null);
   const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profile) {
+      setDuration(String(profile.default_duration || '30'));
+      setSelectedVoice(profile.default_voice || 'nova');
+      setSelectedStyle(profile.default_style || 'pixar');
+      setSelectedLanguage(profile.default_language || 'pt-br');
+    }
+  }, [profile]);
 
   const handleCharacterImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -152,8 +142,9 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       const numParagraphs = parseInt(duration) / 5;
       const styleInfo = storyStyles[selectedStyle as keyof typeof storyStyles];
       const stylePrompt = styleInfo.promptSuffix;
+      const languageName = languages[selectedLanguage as keyof typeof languages];
       
-      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]`;
+      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]`;
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
@@ -254,7 +245,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         setLoadingMessage(`Gerando narração da cena ${i + 1}/${totalScenes}...`);
         addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
 
-        const audioPrompt = `speak PT-BR: ${sceneData.narration}`;
+        const audioPrompt = `speak ${selectedLanguage.toUpperCase()}: ${sceneData.narration}`;
         const encodedAudioPrompt = encodeURIComponent(audioPrompt);
         const audioUrl = `https://text.pollinations.ai/${encodedAudioPrompt}?model=openai-audio&voice=${selectedVoice}&referrer=${referrer}&token=${apiToken}`;
 
@@ -343,6 +334,26 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         />
         <div className="flex items-center justify-between p-2">
           <div className="flex items-center gap-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
+                  <Languages className="w-4 h-4 mr-2" /> Idioma
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64">
+                <div className="space-y-2">
+                  <Label>Idioma da Narração</Label>
+                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(languages).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
