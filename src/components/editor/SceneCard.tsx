@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scene } from "@/hooks/useFFmpeg";
 import { NarrationGenerator } from "./NarrationGenerator";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SceneCardProps {
   scene: Scene;
@@ -69,19 +70,24 @@ export const SceneCard = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <div className="md:col-span-3 space-y-4">
+        <div className="flex items-center gap-6">
+          <div className="flex-1 space-y-4">
+            <Textarea
+              placeholder="Digite o texto que a IA deve narrar para esta cena..."
+              value={scene.narrationText || ''}
+              onChange={(e) => onUpdate(scene.id, { narrationText: e.target.value })}
+              className="bg-transparent text-xs border-none focus-visible:ring-0 p-0 resize-none h-auto"
+              rows={3}
+            />
             <NarrationGenerator
               narrationText={scene.narrationText}
-              onTextChange={(text) => onUpdate(scene.id, { narrationText: text })}
               onAudioGenerated={(file, dataUrl) => onNarrationGenerated(scene.id, file, dataUrl)}
               addDebugLog={addDebugLog}
               audio={scene.audio}
-              duration={scene.duration}
               onAudioRemove={() => onUpdate(scene.id, { audio: undefined, duration: undefined, audioDataUrl: undefined })}
             />
           </div>
-          <div className="md:col-span-2">
+          <div className="w-1/3 max-w-[250px] flex-shrink-0">
             <div 
               className="relative aspect-video w-full bg-muted/50 rounded-lg overflow-hidden group border cursor-pointer"
               onClick={() => onEditImage(scene)}

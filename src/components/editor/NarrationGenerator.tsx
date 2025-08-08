@@ -1,37 +1,34 @@
-import { useState, useEffect } from 'react';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Loader2, Sparkles, Trash2 } from 'lucide-react';
+import { Loader2, Sparkles, Play, Pause, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { blobToDataURL } from '@/lib/imageUtils';
+import { Progress } from '@/components/ui/progress';
 
 interface NarrationGeneratorProps {
   narrationText: string | undefined;
-  onTextChange: (text: string) => void;
   onAudioGenerated: (file: File, dataUrl: string) => void;
   addDebugLog: (message: string) => void;
   audio?: File;
-  duration?: number;
   onAudioRemove: () => void;
 }
 
-export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerated, addDebugLog, audio, duration, onAudioRemove }: NarrationGeneratorProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLog, audio, onAudioRemove }: NarrationGeneratorProps) => {
+  const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (audio) {
       const url = URL.createObjectURL(audio);
       setAudioUrl(url);
-
       return () => {
         URL.revokeObjectURL(url);
-        setAudioUrl(null);
       };
-    } else {
-      setAudioUrl(null);
     }
+    setAudioUrl(null);
   }, [audio]);
 
   const handleGenerateNarration = async () => {
@@ -39,7 +36,7 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
       toast.error("Por favor, insira o texto para a narração.");
       return;
     }
-    setIsLoading(true);
+    setIsGenerating(true);
     addDebugLog(`[Narração IA] Iniciando geração para o texto: "${narrationText.slice(0, 50)}..."`);
     try {
       const audioPrompt = `speak PT-BR: ${narrationText}`;
@@ -74,51 +71,72 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
       addDebugLog(`[Narração IA] ❌ Falha na geração: ${errorMessage}`);
       toast.error(`Falha ao gerar a narração: ${errorMessage}`);
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
-  return (
-    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-      <div>
-        <Label htmlFor="narration-text" className="text-sm font-medium">Texto para Narração (IA)</Label>
-        <Textarea
-          id="narration-text"
-          placeholder="Digite o texto que a IA deve narrar para esta cena..."
-          value={narrationText || ''}
-          onChange={(e) => onTextChange(e.target.value)}
-          className="mt-2 bg-background"
-          rows={4}
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (!audioRef.current) return;
+    const newProgress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+    setProgress(newProgress);
+  };
+
+  const handleAudioEnd = () => {
+    setIsPlaying(false);
+    setProgress(0);
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+    }
+  };
+
+  if (audio && audioUrl) {
+    return (
+      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 border">
+        <audio
+          ref={audioRef}
+          src={audioUrl}
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={handleAudioEnd}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
         />
+        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={togglePlay}>
+          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        </Button>
+        <div className="w-full">
+          <Progress value={progress} className="h-1.5" />
+        </div>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0" onClick={onAudioRemove}>
+          <Trash2 className="w-4 h-4" />
+        </Button>
       </div>
-      
-      {audio && audioUrl ? (
-        <div className="space-y-2 pt-2">
-          <Label className="text-xs text-muted-foreground">Narração Gerada ({duration?.toFixed(1)}s)</Label>
-          <div className="flex items-center gap-2">
-            <audio src={audioUrl} controls className="h-10 w-full"></audio>
-            <Button variant="ghost" size="icon" onClick={onAudioRemove} className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0">
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex justify-end">
-          <Button onClick={handleGenerateNarration} disabled={isLoading || !narrationText?.trim()} className="w-full sm:w-auto">
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Gerar Narração
-              </>
-            )}
-          </Button>
-        </div>
-      )}
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center p-2 rounded-lg bg-muted/50 border h-[52px]">
+      <Button onClick={handleGenerateNarration} disabled={isGenerating || !narrationText?.trim()} size="sm" variant="ghost" className="text-muted-foreground">
+        {isGenerating ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Gerando...
+          </>
+        ) : (
+          <>
+            <Sparkles className="mr-2 h-4 w-4" />
+            Gerar Narração
+          </>
+        )}
+      </Button>
     </div>
   );
 };
