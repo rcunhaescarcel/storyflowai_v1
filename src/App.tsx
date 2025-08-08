@@ -10,33 +10,39 @@ import NotFound from "./pages/NotFound";
 import AppLayout from "@/components/layout/AppLayout";
 import Videos from "./pages/Videos";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+import { SessionProvider } from "./contexts/SessionContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  console.log("App component rendering...");
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/render" element={<Render />} />
-            
-            {/* App Routes with Layout */}
-            <Route element={<AppLayout />}>
-              <Route path="/editor" element={<Editor />} />
-              <Route path="/videos" element={<Videos />} />
-              <Route path="/settings" element={<Settings />} />
-            </Route>
+      <SessionProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/render" element={<Render />} />
+              
+              {/* Protected App Routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/editor" element={<Editor />} />
+                  <Route path="/videos" element={<Videos />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Route>
+              </Route>
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SessionProvider>
     </QueryClientProvider>
   );
 };

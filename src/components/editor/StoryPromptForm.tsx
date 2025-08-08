@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { resizeImage, dataURLtoFile } from '@/lib/imageUtils';
 import { Input } from '@/components/ui/input';
 import { SceneData } from '@/types/video';
+import { useSession } from '@/contexts/SessionContext';
 
 const blobToDataURL = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -51,6 +52,7 @@ interface StoryPromptFormProps {
 }
 
 export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFormProps) => {
+  const { session } = useSession();
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState('30');
   const [selectedVoice, setSelectedVoice] = useState('nova');
@@ -83,6 +85,10 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   const handleGenerateStory = async () => {
     if (!prompt.trim()) {
       toast.error("Por favor, insira um tema para a história.");
+      return;
+    }
+    if (!session) {
+      toast.error("Você precisa estar logado para criar uma história.");
       return;
     }
     setIsLoading(true);
@@ -227,7 +233,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       const projectTitle = prompt.slice(0, 80) || 'Novo Projeto de Vídeo';
       const totalDuration = newScenes.reduce((acc, scene) => acc + (scene.duration || 0), 0);
       const sceneDataForDb: SceneData[] = [];
-      const projectFolder = `projects/${crypto.randomUUID()}`;
+      const projectFolder = `projects/${session.user.id}/${crypto.randomUUID()}`;
 
       for (let i = 0; i < newScenes.length; i++) {
         const scene = newScenes[i];
@@ -253,6 +259,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       }
 
       const projectToInsert = {
+        user_id: session.user.id,
         title: projectTitle, description: prompt, input_type: 'story_prompt', input_content: prompt,
         scenes: sceneDataForDb, video_duration: totalDuration, status: 'draft', style: 'Animação 3D',
       };
