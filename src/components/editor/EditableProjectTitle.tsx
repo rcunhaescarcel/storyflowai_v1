@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Check, Pencil } from 'lucide-react';
@@ -11,6 +11,10 @@ interface EditableProjectTitleProps {
 export const EditableProjectTitle = ({ initialTitle, onSave }: EditableProjectTitleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(initialTitle);
+
+  useEffect(() => {
+    setTitle(initialTitle);
+  }, [initialTitle]);
 
   const handleSave = () => {
     if (title.trim() && title !== initialTitle) {
@@ -25,9 +29,16 @@ export const EditableProjectTitle = ({ initialTitle, onSave }: EditableProjectTi
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleSave();
+            if (e.key === 'Escape') {
+              setTitle(initialTitle);
+              setIsEditing(false);
+            }
+          }}
           className="text-2xl font-bold h-10"
           autoFocus
+          onBlur={handleSave}
         />
         <Button size="icon" onClick={handleSave}>
           <Check className="w-5 h-5" />
@@ -37,13 +48,13 @@ export const EditableProjectTitle = ({ initialTitle, onSave }: EditableProjectTi
   }
 
   return (
-    <div className="flex items-center gap-3 group">
+    <div className="flex items-center gap-3 group cursor-pointer" onClick={() => setIsEditing(true)}>
       <h1 className="text-2xl font-bold">{title}</h1>
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setIsEditing(true)}
         className="opacity-0 group-hover:opacity-100 transition-opacity"
+        aria-label="Editar título"
       >
         <Pencil className="w-5 h-5" />
       </Button>
