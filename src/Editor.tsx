@@ -321,6 +321,7 @@ const Editor = () => {
   }
 
   const showRenderProgress = isRendering && renderingProjectId === currentProjectId;
+  const finalVideoUrl = localVideoUrl || persistedVideoUrl;
 
   return (
     <>
@@ -345,10 +346,10 @@ const Editor = () => {
                 scenes={scenes}
                 onRenderClick={() => setIsRenderModalOpen(true)}
                 onDownloadClick={() => setIsDownloadModalOpen(true)}
-                videoUrl={localVideoUrl || persistedVideoUrl}
+                videoUrl={finalVideoUrl}
               />
             </div>
-            <div className={cn("grid gap-8", (localVideoUrl || persistedVideoUrl) && "md:grid-cols-2")}>
+            <div className={cn("grid gap-8", finalVideoUrl && "md:grid-cols-2")}>
               <div className="space-y-6">
                 {scenes.map((scene, index) => (
                   <SceneCard
@@ -372,9 +373,14 @@ const Editor = () => {
                   </Button>
                 </div>
               </div>
-              {(localVideoUrl || persistedVideoUrl) && (
+              {finalVideoUrl && (
                 <div className="sticky top-24 h-min">
-                  <video src={localVideoUrl || persistedVideoUrl} controls className="w-full rounded-lg shadow-lg aspect-video bg-black" />
+                  <video
+                    key={finalVideoUrl}
+                    src={finalVideoUrl}
+                    controls
+                    className="w-full rounded-lg shadow-lg aspect-video bg-black"
+                  />
                 </div>
               )}
             </div>
@@ -420,14 +426,14 @@ const Editor = () => {
         onBackgroundMusicUpload={handleBackgroundMusicUpload}
         onBackgroundMusicRemove={() => setBackgroundMusic(null)}
         onBackgroundMusicVolumeChange={setBackgroundMusicVolume}
-        logoFile={logoFile}
-        logoPreview={logoPreview}
-        logoPosition={logoPosition}
         onLogoUpload={handleLogoUpload}
         onLogoRemove={() => {
           setLogoFile(null);
           setLogoPreview(null);
         }}
+        logoFile={logoFile}
+        logoPreview={logoPreview}
+        logoPosition={logoPosition}
         onLogoPositionChange={setLogoPosition}
         subtitleStyle={subtitleStyle}
         onSubtitleStyleChange={(update) => setSubtitleStyle(prev => ({ ...prev, ...update }))}

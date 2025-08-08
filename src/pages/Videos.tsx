@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoProject } from "../types/video.ts";
@@ -47,6 +47,13 @@ const Videos = () => {
     queryFn: () => fetchVideoProjects(session!.user.id),
     enabled: !isSessionLoading && !!session,
   });
+
+  // Invalidate queries when a render finishes to get the new video URL
+  useEffect(() => {
+    if (!isRendering && renderingProjectId) {
+      queryClient.invalidateQueries({ queryKey: ['video_projects', session?.user?.id] });
+    }
+  }, [isRendering, renderingProjectId, queryClient, session?.user?.id]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
