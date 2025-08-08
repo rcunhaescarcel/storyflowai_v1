@@ -310,105 +310,107 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         <h1 className="text-3xl font-bold text-center mb-2">Digite seu tema e deixe a mágica acontecer</h1>
         <p className="text-muted-foreground mb-8 text-center">A IA irá criar um roteiro, gerar imagens e narrações para montar seu vídeo.</p>
         
-        <div className="w-full p-2 bg-background rounded-2xl shadow-lg border flex items-start gap-4">
-          {characterImagePreview && (
-            <div className="relative w-24 flex-shrink-0 group">
-              <img src={characterImagePreview} alt="Personagem" className="w-full rounded-lg object-cover aspect-square" />
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute -top-2 -right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => {
-                  setCharacterImage(null);
-                  setCharacterImagePreview(null);
-                }}
-              >
-                <Trash2 className="w-3 h-3" />
+        <div className="w-full p-2 bg-background rounded-2xl shadow-lg border">
+          <div className="flex items-start gap-4 p-2">
+            {characterImagePreview && (
+              <div className="relative w-24 flex-shrink-0 group">
+                <img src={characterImagePreview} alt="Personagem" className="w-full rounded-lg object-cover aspect-square" />
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => {
+                    setCharacterImage(null);
+                    setCharacterImagePreview(null);
+                  }}
+                >
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
+            <Textarea
+              placeholder="Ex: A jornada de um pequeno robô que se perdeu na cidade e tenta encontrar o caminho de volta para casa..."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={3}
+              className="w-full border-none focus-visible:ring-0 text-base resize-none p-2 bg-transparent self-center"
+              disabled={isLoading || isSessionLoading}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!isSessionLoading) handleGenerateStory();
+                }
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-2 mt-2 border-t">
+            <div className="flex items-center gap-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
+                    <Languages className="w-4 h-4 mr-2" /> Idioma
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                  <div className="space-y-2">
+                    <Label>Idioma da Narração</Label>
+                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(languages).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
+                    <Palette className="w-4 h-4 mr-2" /> Estilo
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                  <div className="space-y-2">
+                    <Label>Estilo Visual</Label>
+                    <Select value={selectedStyle} onValueChange={setSelectedStyle}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(storyStyles).map(([key, { label }]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
+                    <Clock className="w-4 h-4 mr-2" /> Duração
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64"><div className="space-y-2"><Label>Duração (Aproximada)</Label><Select value={duration} onValueChange={setDuration}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="30">30s (~6 cenas)</SelectItem><SelectItem value="60">1m (~12 cenas)</SelectItem><SelectItem value="90">1m 30s (~18 cenas)</SelectItem></SelectContent></Select></div></PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
+                    <Mic className="w-4 h-4 mr-2" /> Voz
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64"><div className="space-y-2"><Label>Voz da Narração</Label><Select value={selectedVoice} onValueChange={setSelectedVoice}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{openAIVoices.map(voice => (<SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>))}</SelectContent></Select></div></PopoverContent>
+              </Popover>
+              <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setIsCharacterModalOpen(true)} disabled={isLoading || isSessionLoading}>
+                <UserSquare className="w-4 h-4 mr-2" /> Personagem
               </Button>
             </div>
-          )}
-          <Textarea
-            placeholder="Ex: A jornada de um pequeno robô que se perdeu na cidade e tenta encontrar o caminho de volta para casa..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={3}
-            className="w-full border-none focus-visible:ring-0 text-base resize-none p-2 bg-transparent self-center"
-            disabled={isLoading || isSessionLoading}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (!isSessionLoading) handleGenerateStory();
-              }
-            }}
-          />
-        </div>
-
-        <div className="w-full flex items-center justify-between p-2 mt-2">
-          <div className="flex items-center gap-1">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                  <Languages className="w-4 h-4 mr-2" /> Idioma
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64">
-                <div className="space-y-2">
-                  <Label>Idioma da Narração</Label>
-                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(languages).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                  <Palette className="w-4 h-4 mr-2" /> Estilo
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64">
-                <div className="space-y-2">
-                  <Label>Estilo Visual</Label>
-                  <Select value={selectedStyle} onValueChange={setSelectedStyle}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(storyStyles).map(([key, { label }]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                  <Clock className="w-4 h-4 mr-2" /> Duração
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64"><div className="space-y-2"><Label>Duração (Aproximada)</Label><Select value={duration} onValueChange={setDuration}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="30">30s (~6 cenas)</SelectItem><SelectItem value="60">1m (~12 cenas)</SelectItem><SelectItem value="90">1m 30s (~18 cenas)</SelectItem></SelectContent></Select></div></PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                  <Mic className="w-4 h-4 mr-2" /> Voz
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64"><div className="space-y-2"><Label>Voz da Narração</Label><Select value={selectedVoice} onValueChange={setSelectedVoice}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{openAIVoices.map(voice => (<SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>))}</SelectContent></Select></div></PopoverContent>
-            </Popover>
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setIsCharacterModalOpen(true)} disabled={isLoading || isSessionLoading}>
-              <UserSquare className="w-4 h-4 mr-2" /> Personagem
+            <Button onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading || isSessionLoading}>
+              <Wand2 className="w-4 h-4 mr-2" />
+              Criar História
             </Button>
           </div>
-          <Button onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading || isSessionLoading}>
-            <Wand2 className="w-4 h-4 mr-2" />
-            Criar História
-          </Button>
         </div>
       </div>
       <CharacterModal

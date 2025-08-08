@@ -23,8 +23,8 @@ interface CharacterModalProps {
 }
 
 const galleryCharacters = [
+  { name: "Ana, a Aventureira", image: "https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1753231548724x195143348561129150/ana.png" },
   { name: "Robô Amigável", image: "https://placehold.co/300x300/a9d5e5/333?text=Rob%C3%B4" },
-  { name: "Aventureira Corajosa", image: "https://placehold.co/300x300/f0b8b8/333?text=Aventureira" },
   { name: "Mago Sábio", image: "https://placehold.co/300x300/c8a2c8/333?text=Mago" },
   { name: "Criatura da Floresta", image: "https://placehold.co/300x300/b8d8b8/333?text=Criatura" },
 ];
