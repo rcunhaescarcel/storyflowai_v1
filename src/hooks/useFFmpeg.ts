@@ -64,6 +64,7 @@ export const useFFmpeg = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [autoLoadAttempted, setAutoLoadAttempted] = useState(false);
+  const [renderStage, setRenderStage] = useState<'idle' | 'scenes' | 'concat' | 'final'>('idle');
   const renderStageRef = useRef({ stage: 'idle', totalScenes: 0, currentScene: 0 });
 
   const addDebugLog = useCallback((message: string) => {
@@ -190,6 +191,7 @@ export const useFFmpeg = () => {
     }
 
     renderStageRef.current = { stage: 'idle', totalScenes: scenes.length, currentScene: 0 };
+    setRenderStage('idle');
     setIsProcessing(true);
     setProgress(0);
 
@@ -216,6 +218,7 @@ export const useFFmpeg = () => {
 
       let concatList = '';
       renderStageRef.current.stage = 'scenes';
+      setRenderStage('scenes');
       for (let i = 0; i < scenes.length; i++) {
         renderStageRef.current.currentScene = i;
         const scene = scenes[i];
@@ -256,6 +259,7 @@ export const useFFmpeg = () => {
       }
 
       renderStageRef.current.stage = 'concat';
+      setRenderStage('concat');
       await ffmpeg.writeFile('concat_list.txt', new TextEncoder().encode(concatList));
       await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'concat_list.txt', '-c', 'copy', '-y', 'concatenated.mp4']);
       addDebugLog('✅ Passagem 1 concluída: Cenas concatenadas em concatenated.mp4');
@@ -263,6 +267,7 @@ export const useFFmpeg = () => {
       // --- PASS 2: Add global audio, subtitles, and logo ---
       addDebugLog('--- PASSAGEM 2: Adicionando trilha sonora, legendas e logotipo ---');
       renderStageRef.current.stage = 'final';
+      setRenderStage('final');
       if (globalSrtFile) {
         const srtText = await globalSrtFile.text();
         const assContent = convertSRTtoASS(srtText, subtitleStyle);
@@ -341,6 +346,7 @@ export const useFFmpeg = () => {
       throw error;
     } finally {
       renderStageRef.current.stage = 'idle';
+      setRenderStage('idle');
       setIsProcessing(false);
     }
   }, [ffmpeg, isLoaded, isFontLoaded, loadFFmpeg, addDebugLog]);
@@ -359,6 +365,7 @@ export const useFFmpeg = () => {
     isLoaded,
     isProcessing,
     progress,
+    renderStage,
     debugLogs,
     clearDebugLogs: () => setDebugLogs([]),
     addDebugLog

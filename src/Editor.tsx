@@ -55,6 +55,7 @@ const Editor = () => {
     concatenateAudio,
     isProcessing, 
     progress, 
+    renderStage,
     debugLogs, 
     clearDebugLogs,
     addDebugLog
@@ -311,19 +312,21 @@ const Editor = () => {
             />
           </div>
         ) : isProcessing ? (
-          <RenderProgress progress={progress} statusText={debugLogs[debugLogs.length - 1] || 'Iniciando renderização...'} />
+          <RenderProgress stage={renderStage} progress={progress} />
         ) : (
           <div className="mt-8">
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-4">
               <Clapperboard className="w-8 h-8 text-primary" />
               <EditableProjectTitle initialTitle={projectTitle} onSave={handleSaveTitle} />
             </div>
-            <ProjectActions 
-              scenes={scenes}
-              onRenderClick={() => setIsRenderModalOpen(true)}
-              onDownloadClick={() => setIsDownloadModalOpen(true)}
-              videoUrl={localVideoUrl || persistedVideoUrl}
-            />
+            <div className="mb-8">
+              <ProjectActions 
+                scenes={scenes}
+                onRenderClick={() => setIsRenderModalOpen(true)}
+                onDownloadClick={() => setIsDownloadModalOpen(true)}
+                videoUrl={localVideoUrl || persistedVideoUrl}
+              />
+            </div>
             <div className={cn("grid gap-8", (localVideoUrl || persistedVideoUrl) && "md:grid-cols-2")}>
               <div className="space-y-6">
                 {scenes.map((scene, index) => (

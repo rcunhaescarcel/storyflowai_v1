@@ -1,49 +1,80 @@
+import { FileCog, Film, Combine, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Clapperboard } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export type RenderStage = 'idle' | 'scenes' | 'concat' | 'final';
 
 interface RenderProgressProps {
+  stage: RenderStage;
   progress: number;
-  statusText: string;
 }
 
-export const RenderProgress = ({ progress, statusText }: RenderProgressProps) => {
-  const cleanStatus = statusText.replace(/\[.*?\]\s*/, '');
+const getActiveStep = (stage: RenderStage) => {
+    switch (stage) {
+        case 'scenes': return 1;
+        case 'concat': return 2;
+        case 'final': return 3;
+        default: return 0;
+    }
+};
 
-  return (
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-300px)] text-center">
-      <div className="relative w-32 h-32 mb-8">
-        <svg className="w-full h-full" viewBox="0 0 100 100">
-          <circle
-            className="text-muted"
-            strokeWidth="8"
-            stroke="currentColor"
-            fill="transparent"
-            r="42"
-            cx="50"
-            cy="50"
-          />
-          <circle
-            className="text-primary"
-            strokeWidth="8"
-            stroke="currentColor"
-            fill="transparent"
-            r="42"
-            cx="50"
-            cy="50"
-            strokeDasharray={2 * Math.PI * 42}
-            strokeDashoffset={2 * Math.PI * 42 * (1 - progress / 100)}
-            strokeLinecap="round"
-            transform="rotate(-90 50 50)"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-3xl font-bold text-foreground">
-            {Math.round(progress)}%
-          </span>
+const getLoadingMessage = (stage: RenderStage) => {
+    switch (stage) {
+        case 'scenes': return "Renderizando cenas individuais...";
+        case 'concat': return "Montando o vídeo...";
+        case 'final': return "Adicionando efeitos e finalizando...";
+        default: return "Preparando para renderizar...";
+    }
+}
+
+const steps = [
+    { icon: FileCog, label: "Preparando" },
+    { icon: Film, label: "Cenas" },
+    { icon: Combine, label: "Montagem" },
+    { icon: Sparkles, label: "Finalizando" }
+];
+
+export const RenderProgress = ({ stage, progress }: RenderProgressProps) => {
+    const activeStep = getActiveStep(stage);
+    const loadingMessage = getLoadingMessage(stage);
+
+    return (
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-300px)]">
+            <div className="text-center space-y-2 mb-12">
+                <h2 className="text-3xl font-bold text-foreground">Sua história está ganhando vida...</h2>
+                <p className="text-muted-foreground">Aguarde um momento, a mágica está acontecendo.</p>
+            </div>
+
+            <div className="w-full max-w-2xl">
+                <div className="flex items-start justify-between relative">
+                    {steps.map((step, index) => (
+                        <div key={index} className="flex flex-col items-center gap-2 z-10 w-20 text-center">
+                            <div className={cn(
+                                "w-16 h-16 rounded-full flex items-center justify-center border-2 transition-all duration-500",
+                                index <= activeStep ? "bg-primary border-primary-glow text-primary-foreground" : "bg-muted border-border text-muted-foreground"
+                            )}>
+                                <step.icon className={cn("w-7 h-7", index === activeStep && "animate-pulse")} />
+                            </div>
+                            <span className={cn(
+                                "font-medium text-sm transition-colors duration-500",
+                                index <= activeStep ? "text-foreground" : "text-muted-foreground"
+                            )}>{step.label}</span>
+                        </div>
+                    ))}
+                    <div className="absolute top-8 left-0 w-full h-1 bg-border -z-0">
+                        <div 
+                            className="h-full bg-gradient-primary transition-all duration-500"
+                            style={{ width: `${(activeStep / (steps.length - 1)) * 100}%` }}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="w-full max-w-md text-center space-y-3 pt-12">
+                <p className="text-lg font-medium text-primary h-6">{loadingMessage}</p>
+                <Progress value={progress} className="w-full h-2" />
+                <p className="text-sm text-muted-foreground">{Math.round(progress)}% concluído</p>
+            </div>
         </div>
-      </div>
-      <h2 className="text-2xl font-bold text-foreground mb-2">Renderizando seu vídeo...</h2>
-      <p className="text-muted-foreground max-w-md h-10">{cleanStatus}</p>
-    </div>
-  );
+    );
 };

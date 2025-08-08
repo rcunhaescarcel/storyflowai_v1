@@ -80,7 +80,7 @@ export const ProjectActions = ({ scenes, onRenderClick, onDownloadClick, videoUr
   const canDownload = videoUrl || scenes.some(s => s.image || s.audio);
 
   return (
-    <Card className="p-4 mb-8">
+    <Card className="p-4">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={handlePlayPause} disabled={audioPlaylist.length === 0}>
           {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
