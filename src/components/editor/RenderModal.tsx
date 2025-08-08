@@ -8,13 +8,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { GeneralSettings } from "./render-settings/GeneralSettings";
-import { AssetSettings } from "./render-settings/AssetSettings";
+import { MusicSettings } from "./render-settings/MusicSettings";
+import { LogoSettings } from "./render-settings/LogoSettings";
 import { SubtitleSettings } from "./render-settings/SubtitleSettings";
 import { VisualEffectsSettings } from "./render-settings/VisualEffectsSettings";
 import { TransitionSettings } from "./render-settings/TransitionSettings";
 import { LogoPosition, SubtitleStyle } from "@/hooks/useFFmpeg";
 import { Loader2, Video } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 type VideoQuality = "hd" | "fullhd";
 type ZoomEffect = "none" | "in" | "out" | "alternate";
@@ -60,48 +60,52 @@ export const RenderModal = (props: RenderModalProps) => {
             Ajuste as opções finais antes de criar seu vídeo.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[60vh] p-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
-            <div className="space-y-6">
-              <GeneralSettings
-                videoQuality={props.videoQuality}
-                onVideoQualityChange={props.onVideoQualityChange}
-              />
-              <SubtitleSettings
-                globalSrtFile={props.globalSrtFile}
-                onSrtUpload={props.onSrtUpload}
-                onSrtRemove={props.onSrtRemove}
-                subtitleStyle={props.subtitleStyle}
-                onSubtitleStyleChange={props.onSubtitleStyleChange}
-              />
-            </div>
-            <div className="space-y-6">
-              <AssetSettings
-                backgroundMusic={props.backgroundMusic}
-                backgroundMusicVolume={props.backgroundMusicVolume}
-                onBackgroundMusicUpload={props.onBackgroundMusicUpload}
-                onBackgroundMusicRemove={props.onBackgroundMusicRemove}
-                onBackgroundMusicVolumeChange={props.onBackgroundMusicVolumeChange}
-                logoFile={props.logoFile}
-                logoPreview={props.logoPreview}
-                logoPosition={props.logoPosition}
-                onLogoUpload={props.onLogoUpload}
-                onLogoRemove={props.onLogoRemove}
-                onLogoPositionChange={props.onLogoPositionChange}
-              />
-              <TransitionSettings
-                addFade={props.addFade}
-                onAddFadeChange={props.onAddFadeChange}
-              />
-              <VisualEffectsSettings
-                zoomEffect={props.zoomEffect}
-                onZoomEffectChange={props.onZoomEffectChange}
-                zoomIntensity={props.zoomIntensity}
-                onZoomIntensityChange={props.onZoomIntensityChange}
-              />
-            </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+          {/* Left Column */}
+          <div className="space-y-6">
+            <GeneralSettings
+              videoQuality={props.videoQuality}
+              onVideoQualityChange={props.onVideoQualityChange}
+            />
+            <SubtitleSettings
+              globalSrtFile={props.globalSrtFile}
+              onSrtUpload={props.onSrtUpload}
+              onSrtRemove={props.onSrtRemove}
+              subtitleStyle={props.subtitleStyle}
+              onSubtitleStyleChange={props.onSubtitleStyleChange}
+            />
           </div>
-        </ScrollArea>
+          {/* Right Column */}
+          <div className="space-y-6">
+            <MusicSettings
+              backgroundMusic={props.backgroundMusic}
+              backgroundMusicVolume={props.backgroundMusicVolume}
+              onBackgroundMusicUpload={props.onBackgroundMusicUpload}
+              onBackgroundMusicRemove={props.onBackgroundMusicRemove}
+              onBackgroundMusicVolumeChange={props.onBackgroundMusicVolumeChange}
+            />
+            <LogoSettings
+              logoFile={props.logoFile}
+              logoPreview={props.logoPreview}
+              logoPosition={props.logoPosition}
+              onLogoUpload={props.onLogoUpload}
+              onLogoRemove={props.onLogoRemove}
+              onLogoPositionChange={props.onLogoPositionChange}
+            />
+            <TransitionSettings
+              addFade={props.addFade}
+              onAddFadeChange={props.onAddFadeChange}
+            />
+            <VisualEffectsSettings
+              zoomEffect={props.zoomEffect}
+              onZoomEffectChange={props.onZoomEffectChange}
+              zoomIntensity={props.zoomIntensity}
+              onZoomIntensityChange={props.onZoomIntensityChange}
+            />
+          </div>
+        </div>
+        
         <DialogFooter>
           <Button variant="outline" onClick={props.onClose} disabled={props.isProcessing}>
             Cancelar

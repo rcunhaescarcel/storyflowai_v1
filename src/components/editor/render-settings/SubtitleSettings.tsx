@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -23,50 +23,49 @@ export const SubtitleSettings = ({
 }: SubtitleSettingsProps) => {
   return (
     <Card className="bg-background">
-      <CardContent className="pt-6 space-y-6">
-        <div>
-          <Label className="text-sm font-medium mb-2 flex items-center gap-2">
-            <FileVideo className="w-4 h-4" />
-            Legenda Global (SRT)
-          </Label>
-          <Input
-            type="file"
-            accept=".srt,text/plain"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onSrtUpload(file);
-            }}
-            className="hidden"
-            id="srt-upload"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => document.getElementById("srt-upload")?.click()}
-            className="w-full"
-          >
-            Selecionar Arquivo SRT
-          </Button>
-          {globalSrtFile && (
-            <div className="bg-muted/50 rounded-lg p-3 mt-2 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-foreground truncate">
-                <FileVideo className="w-4 h-4 flex-shrink-0" />
-                <span className="truncate">{globalSrtFile.name}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onSrtRemove}
-                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-3">
+          <FileVideo className="w-5 h-5" />
+          Legenda Global (SRT)
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Input
+          type="file"
+          accept=".srt,text/plain"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onSrtUpload(file);
+          }}
+          className="hidden"
+          id="srt-upload"
+        />
+        <Button
+          variant="outline"
+          onClick={() => document.getElementById("srt-upload")?.click()}
+          className="w-full"
+        >
+          Selecionar Arquivo SRT
+        </Button>
+        {globalSrtFile && (
+          <div className="bg-muted/50 rounded-lg p-3 mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-foreground truncate">
+              <FileVideo className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{globalSrtFile.name}</span>
             </div>
-          )}
-        </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onSrtRemove}
+              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
         {globalSrtFile && (
-          <div className="border-t pt-6 space-y-4">
+          <div className="border-t pt-4 mt-4 space-y-4">
             <Label className="text-sm font-medium flex items-center gap-2">
               <Palette className="w-4 h-4" />
               Estilo da Legenda
