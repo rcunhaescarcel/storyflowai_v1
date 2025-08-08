@@ -275,9 +275,9 @@ const Editor = () => {
           </div>
         ) : (
           <>
-            {/* Fixed Header */}
-            <div className="flex-shrink-0 pt-8">
-              <div className="flex items-center gap-4 mb-4">
+            {/* Sticky Header */}
+            <div className="flex-shrink-0 sticky top-[5.5rem] bg-muted/90 backdrop-blur-sm z-10 pt-4 pb-4">
+              <div className="flex items-center gap-4 mb-2">
                 <Clapperboard className="w-8 h-8 text-primary" />
                 <EditableProjectTitle initialTitle={projectTitle} onSave={handleSaveTitle} />
               </div>
@@ -308,8 +308,8 @@ const Editor = () => {
               ))}
             </div>
 
-            {/* Fixed Footer */}
-            <div className="flex-shrink-0 text-center py-4 border-t">
+            {/* Sticky Footer */}
+            <div className="flex-shrink-0 sticky bottom-0 bg-background/90 backdrop-blur-sm z-10 text-center py-4 border-t">
               <Button onClick={addNewScene}>
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Nova Cena
