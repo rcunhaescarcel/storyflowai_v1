@@ -13,9 +13,19 @@ interface StoryGeneratorModalProps {
   addDebugLog: (message: string) => void;
 }
 
+const blobToDataURL = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
 export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebugLog }: StoryGeneratorModalProps) => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Gerando...');
 
   const handleGenerateStory = async () => {
     if (!prompt.trim()) {
@@ -23,57 +33,93 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
       return;
     }
     setIsLoading(true);
+    setLoadingMessage('Gerando roteiro da história...');
     addDebugLog(`[História IA] Iniciando geração para o prompt: "${prompt}"`);
 
     try {
-      const storyPrompt = `Gere um roteiro para um vídeo de aproximadamente 60 segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de 12 parágrafos. Cada parágrafo representa uma cena de 5 segundos e deve conter uma narração curta e concisa. Não inclua títulos como "Cena 1" ou "Parágrafo 1", apenas o texto da narração para cada cena.`;
+      const storyPrompt = `Gere um roteiro para um vídeo de aproximadamente 60 segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de 12 parágrafos. Para cada parágrafo (cena), forneça a narração em português e um prompt de imagem em inglês para gerar uma imagem no estilo de animação 3D. Use o formato: "Texto da narração. ||| English image prompt in 3D animation style." Não inclua títulos como "Cena 1".`;
+      
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
       const referrer = "https://vidflow.com.br/";
       const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?token=${apiToken}&referrer=${referrer}`;
 
-      addDebugLog(`[História IA] URL da API: ${targetUrl.substring(0, 100)}...`);
-
+      addDebugLog(`[História IA] URL da API de texto: ${targetUrl.substring(0, 100)}...`);
       const response = await fetch(targetUrl);
 
       if (!response.ok) {
         const errorBody = await response.text();
-        addDebugLog(`[História IA] ❌ ERRO na API: ${errorBody}`);
+        addDebugLog(`[História IA] ❌ ERRO na API de texto: ${errorBody}`);
         throw new Error(`A geração de texto falhou com o status: ${response.status}`);
       }
 
       const storyText = await response.text();
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
 
-      const paragraphs = storyText.trim().split('\n').filter(p => p.trim() !== '');
+      const lines = storyText.trim().split('\n').filter(p => p.includes('|||'));
       
-      if (paragraphs.length === 0) {
-        addDebugLog(`[História IA] ⚠️ A IA não retornou parágrafos válidos.`);
-        toast.warning("A IA não conseguiu gerar uma história. Tente um prompt diferente.");
+      if (lines.length === 0) {
+        addDebugLog(`[História IA] ⚠️ A IA não retornou um roteiro no formato esperado.`);
+        toast.warning("A IA não conseguiu gerar um roteiro válido. Tente um prompt diferente.");
+        setIsLoading(false);
         return;
       }
 
-      const newScenes: Scene[] = paragraphs.map(paragraph => ({
-        id: crypto.randomUUID(),
-        narrationText: paragraph.trim(),
-        effect: "fade",
-        zoomEnabled: false,
-        zoomIntensity: 20,
-        zoomDirection: "in",
-        fadeInDuration: 0.5,
-        fadeOutDuration: 0.5,
-      }));
+      const scenesData = lines.map(line => {
+        const parts = line.split('|||');
+        return {
+          narration: parts[0]?.trim() || '',
+          imagePrompt: parts[1]?.trim() || ''
+        };
+      }).filter(data => data.narration && data.imagePrompt);
+
+      const newScenes: Scene[] = [];
+      const totalScenes = scenesData.length;
+
+      for (let i = 0; i < totalScenes; i++) {
+        const sceneData = scenesData[i];
+        setLoadingMessage(`Gerando imagem da cena ${i + 1}/${totalScenes}...`);
+        addDebugLog(`[Imagem IA] Gerando para o prompt: "${sceneData.imagePrompt}"`);
+
+        const encodedImagePrompt = encodeURIComponent(sceneData.imagePrompt);
+        const imageModel = 'flux';
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
+
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+          throw new Error(`Falha ao gerar imagem para a cena ${i + 1}`);
+        }
+
+        const blob = await imageResponse.blob();
+        const fileName = `scene_${i + 1}.png`;
+        const imageFile = new File([blob], fileName, { type: 'image/png' });
+        const imagePreview = await blobToDataURL(blob);
+
+        newScenes.push({
+          id: crypto.randomUUID(),
+          narrationText: sceneData.narration,
+          image: imageFile,
+          imagePreview: imagePreview,
+          effect: "fade",
+          zoomEnabled: false,
+          zoomIntensity: 20,
+          zoomDirection: "in",
+          fadeInDuration: 0.5,
+          fadeOutDuration: 0.5,
+        });
+      }
 
       onStoryGenerated(newScenes);
-      toast.success("História e cenas geradas com sucesso!");
+      toast.success("História e imagens geradas com sucesso!");
       onClose();
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
       addDebugLog(`[História IA] ❌ Falha na geração: ${errorMessage}`);
-      toast.error(`Falha ao gerar a história: ${errorMessage}`);
+      toast.error(`Falha ao gerar a história ou imagens: ${errorMessage}`);
     } finally {
       setIsLoading(false);
+      setLoadingMessage('Gerando...');
     }
   };
 
@@ -86,7 +132,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
             Gerar História com IA
           </DialogTitle>
           <DialogDescription>
-            Descreva o tema da sua história. A IA irá criar o roteiro e dividir em cenas para você.
+            Descreva o tema da sua história. A IA irá criar o roteiro e as imagens para cada cena.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
@@ -108,10 +154,10 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando...
+                {loadingMessage}
               </>
             ) : (
-              "Gerar História"
+              "Gerar História e Imagens"
             )}
           </Button>
         </DialogFooter>
