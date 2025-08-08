@@ -138,7 +138,7 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
 
   return (
     <Dialog open={!!scene} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="w-5 h-5 text-primary" />
@@ -149,9 +149,9 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid md:grid-cols-2 gap-8 py-4">
+        <div className="grid md:grid-cols-3 gap-8 py-4">
           {/* Left Column: Image Preview */}
-          <div className="space-y-2">
+          <div className="md:col-span-2 space-y-2">
             <Label>Pré-visualização</Label>
             <div className="rounded-lg overflow-hidden border aspect-video bg-muted flex items-center justify-center">
               {scene.imagePreview ? (
@@ -166,7 +166,7 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
           </div>
 
           {/* Right Column: Controls */}
-          <div className="space-y-4">
+          <div className="md:col-span-1 space-y-4">
             {characterImage && characterImagePreview && (
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <Label htmlFor="use-character" className="flex flex-col space-y-1">

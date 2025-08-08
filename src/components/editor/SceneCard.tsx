@@ -82,30 +82,24 @@ export const SceneCard = ({
             />
           </div>
           <div className="md:col-span-2">
-            <div className="relative aspect-video w-full bg-muted/50 rounded-lg overflow-hidden group border">
+            <div 
+              className="relative aspect-video w-full bg-muted/50 rounded-lg overflow-hidden group border cursor-pointer"
+              onClick={() => onEditImage(scene)}
+            >
               {!scene.imagePreview ? (
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-3">
-                  <ImagePlus className="w-10 h-10 text-muted-foreground" />
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => onEditImage(scene)}
-                  >
-                    <Wand2 className="w-4 h-4 mr-2" />
-                    Gerar com IA
-                  </Button>
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-2 text-muted-foreground">
+                  <ImagePlus className="w-10 h-10" />
+                  <p className="text-sm font-medium text-center">Clique para gerar imagem</p>
                 </div>
               ) : (
                 <>
                   <img src={scene.imagePreview} alt="Preview da cena" className="w-full h-full object-cover" crossOrigin="anonymous" />
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
-                    onClick={() => onEditImage(scene)}
-                  >
-                    <Wand2 className="w-4 h-4" />
-                  </Button>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <p className="text-white font-semibold flex items-center gap-2">
+                      <Wand2 className="w-5 h-5" />
+                      Editar Imagem
+                    </p>
+                  </div>
                 </>
               )}
             </div>
