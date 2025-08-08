@@ -146,7 +146,7 @@ const Videos = () => {
   };
 
   return (
-    <main className="container max-w-screen-xl mx-auto px-4 py-8">
+    <main className="container max-w-screen-xl mx-auto px-12 py-8">
       <div className="text-center mt-8 mb-12">
         <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
           <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
