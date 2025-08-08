@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, Play, Pause, Trash2 } from 'lucide-react';
+import { Loader2, Sparkles, Play, Pause } from 'lucide-react';
 import { toast } from 'sonner';
 import { blobToDataURL } from '@/lib/imageUtils';
 import { Progress } from '@/components/ui/progress';
@@ -10,10 +10,9 @@ interface NarrationGeneratorProps {
   onAudioGenerated: (file: File, dataUrl: string) => void;
   addDebugLog: (message: string) => void;
   audio?: File;
-  onAudioRemove: () => void;
 }
 
-export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLog, audio, onAudioRemove }: NarrationGeneratorProps) => {
+export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLog, audio }: NarrationGeneratorProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -115,9 +114,6 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
         <div className="w-full">
           <Progress value={progress} className="h-1.5" />
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0" onClick={onAudioRemove}>
-          <Trash2 className="w-4 h-4" />
-        </Button>
       </div>
     );
   }
