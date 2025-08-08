@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Clock, Download, Save, Video } from "lucide-react";
-import { DebugConsole } from "../DebugConsole";
 
 interface ActionPanelProps {
   isEditing: boolean;
@@ -14,9 +13,6 @@ interface ActionPanelProps {
   progress: number;
   videoUrl: string | null;
   onDownloadVideo: () => void;
-  debugLogs: string[];
-  onCopyLogs: () => void;
-  onClearLogs: () => void;
 }
 
 export const ActionPanel = ({
@@ -29,9 +25,6 @@ export const ActionPanel = ({
   progress,
   videoUrl,
   onDownloadVideo,
-  debugLogs,
-  onCopyLogs,
-  onClearLogs,
 }: ActionPanelProps) => {
   return (
     <Card className="bg-background">
@@ -79,7 +72,6 @@ export const ActionPanel = ({
             </Button>
           </div>
         )}
-        <DebugConsole logs={debugLogs} onCopy={onCopyLogs} onClear={onClearLogs} defaultOpen={true} />
       </CardContent>
     </Card>
   );

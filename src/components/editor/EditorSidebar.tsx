@@ -37,10 +37,7 @@ interface EditorSidebarProps {
   isSaving: boolean;
   progress: number;
   videoUrl: string | null;
-  debugLogs: string[];
   onDownloadVideo: () => void;
-  onCopyLogs: () => void;
-  onClearLogs: () => void;
   onRender: () => void;
   onSaveProject: () => void;
   sceneCount: number;
@@ -114,9 +111,6 @@ export const EditorSidebar = (props: EditorSidebarProps) => {
           progress={props.progress}
           videoUrl={props.videoUrl}
           onDownloadVideo={props.onDownloadVideo}
-          debugLogs={props.debugLogs}
-          onCopyLogs={props.onCopyLogs}
-          onClearLogs={props.onClearLogs}
         />
       </div>
     </aside>

@@ -7,8 +7,8 @@ import { StoryPromptForm } from "@/components/editor/StoryPromptForm";
 import { SceneCard } from "@/components/editor/SceneCard";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus } from "lucide-react";
-import { DebugConsole } from "@/components/editor/DebugConsole";
+import { Loader2, Plus, Bug } from "lucide-react";
+import { DebugLogModal } from "@/components/editor/DebugLogModal";
 import { useScenes } from "./hooks/useScenes";
 import { useGlobalSettings } from "./hooks/useGlobalSettings";
 import { useProjectLoader } from "./hooks/useProjectLoader";
@@ -71,6 +71,7 @@ const Editor = () => {
   
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
+  const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
 
   useEffect(() => {
     // Se não houver um projeto no estado da localização, resete o editor.
@@ -205,11 +206,6 @@ const Editor = () => {
               onStoryGenerated={handleStoryGenerated}
               addDebugLog={addDebugLog}
             />
-            <DebugConsole 
-              logs={debugLogs} 
-              onCopy={copyLogsToClipboard} 
-              onClear={clearDebugLogs} 
-            />
           </div>
         ) : (
           <div className="grid lg:grid-cols-12 gap-8 mt-8">
@@ -274,10 +270,7 @@ const Editor = () => {
               isSaving={isSaving}
               progress={progress}
               videoUrl={videoUrl}
-              debugLogs={debugLogs}
               onDownloadVideo={downloadVideo}
-              onCopyLogs={copyLogsToClipboard}
-              onClearLogs={clearDebugLogs}
               onRender={handleRenderVideo}
               onSaveProject={handleSaveProject}
               sceneCount={scenes.length}
@@ -296,6 +289,24 @@ const Editor = () => {
           </div>
         )}
       </main>
+
+      <Button
+        variant="outline"
+        size="icon"
+        className="fixed bottom-6 left-6 z-50 rounded-full h-12 w-12 shadow-lg bg-background/80 backdrop-blur-sm"
+        onClick={() => setIsDebugModalOpen(true)}
+        aria-label="Abrir logs de debug"
+      >
+        <Bug className="w-6 h-6" />
+      </Button>
+
+      <DebugLogModal
+        isOpen={isDebugModalOpen}
+        onClose={() => setIsDebugModalOpen(false)}
+        logs={debugLogs}
+        onCopy={copyLogsToClipboard}
+        onClear={clearDebugLogs}
+      />
 
       <ImageGenerationModal
         scene={editingImageScene}
