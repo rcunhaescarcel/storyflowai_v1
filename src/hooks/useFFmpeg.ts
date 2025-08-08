@@ -241,7 +241,7 @@ export const useFFmpeg = () => {
           }
         }
         
-        cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-pix_fmt', 'yuv420p');
+        cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-pix_fmt', 'yuv420p');
         if (scene.audio) {
           cmd.push('-c:a', 'aac');
         } else {
@@ -322,7 +322,7 @@ export const useFFmpeg = () => {
         
         finalCmd.push('-filter_complex', filterComplexParts.join(';'));
         finalCmd.push('-map', '[v_out]', '-map', '[a_out]');
-        finalCmd.push('-c:v', 'libx264', '-c:a', 'aac', '-y', 'final_video.mp4');
+        finalCmd.push('-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-c:a', 'aac', '-y', 'final_video.mp4');
       }
 
       addDebugLog(`🔧 Comando FFmpeg final: ${finalCmd.join(' ')}`);

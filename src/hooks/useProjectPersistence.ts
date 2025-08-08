@@ -130,6 +130,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       const { data: { publicUrl } } = supabase.storage.from('final_videos').getPublicUrl(filePath);
       addDebugLog(`[Storage] ✅ Vídeo salvo. URL pública: ${publicUrl}`);
 
+      addDebugLog(`[DB] Atualizando projeto ${projectId} com a URL do vídeo...`);
       const { error: dbError } = await supabase
         .from('video_projects')
         .update({ final_video_url: publicUrl, status: 'completed', updated_at: new Date().toISOString() })
@@ -138,6 +139,8 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       if (dbError) {
         throw new Error(`Falha ao atualizar o projeto no banco de dados: ${dbError.message}`);
       }
+      
+      addDebugLog(`[DB] ✅ Registro do projeto atualizado com sucesso.`);
 
       await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
       toast.success("Vídeo salvo na nuvem!", { id: savingToast });
