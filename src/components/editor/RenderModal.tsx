@@ -80,10 +80,10 @@ export const RenderModal = (props: RenderModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl p-0 bg-[#1C1C1E] text-gray-100 border-gray-700">
+      <DialogContent className="sm:max-w-3xl p-0">
         <DialogHeader className="p-6 pb-4">
           <DialogTitle className="flex items-center gap-3 text-lg font-semibold">
-            <Clapperboard className="w-5 h-5" />
+            <Clapperboard className="w-5 h-5 text-primary" />
             Criar vídeo
           </DialogTitle>
         </DialogHeader>
@@ -92,8 +92,8 @@ export const RenderModal = (props: RenderModalProps) => {
           {/* Left Column */}
           <div className="space-y-6">
             {/* Trilha Musical */}
-            <div className="space-y-4 p-4 bg-gray-800/30 rounded-lg">
-              <h3 className="text-base font-semibold flex items-center gap-2 text-gray-300">
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+              <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <Music className="w-4 h-4" />
                 Trilha musical
               </h3>
@@ -108,18 +108,18 @@ export const RenderModal = (props: RenderModalProps) => {
                   className="hidden"
                   id="modal-bg-music-upload"
                 />
-                <Button variant="outline" className="bg-gray-700/50 border-gray-600 hover:bg-gray-700" onClick={() => document.getElementById("modal-bg-music-upload")?.click()}>
+                <Button variant="secondary" onClick={() => document.getElementById("modal-bg-music-upload")?.click()}>
                   <Music className="w-4 h-4 mr-2" />
                   {backgroundMusic ? "Trocar" : "Trilha"}
                 </Button>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="bg-gray-700/50 border-gray-600 hover:bg-gray-700" disabled={!backgroundMusic}>
+                    <Button variant="secondary" disabled={!backgroundMusic}>
                       <Volume2 className="w-4 h-4 mr-2" />
                       Volume
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2 bg-gray-800 border-gray-700">
+                  <PopoverContent className="w-48 p-2">
                     <Slider
                       value={[backgroundMusicVolume]}
                       onValueChange={(value) => onBackgroundMusicVolumeChange(value[0])}
@@ -131,8 +131,8 @@ export const RenderModal = (props: RenderModalProps) => {
             </div>
 
             {/* Efeitos */}
-            <div className="space-y-4 p-4 bg-gray-800/30 rounded-lg">
-              <h3 className="text-base font-semibold flex items-center gap-2 text-gray-300">
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+              <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <Sparkles className="w-4 h-4" />
                 Efeitos
               </h3>
@@ -143,10 +143,10 @@ export const RenderModal = (props: RenderModalProps) => {
               <div className="space-y-2">
                 <Label>Efeito de Zoom</Label>
                 <Select value={zoomEffect} onValueChange={onZoomEffectChange}>
-                  <SelectTrigger className="bg-gray-700/50 border-gray-600">
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione um efeito" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                  <SelectContent>
                     <SelectItem value="none">Nenhum</SelectItem>
                     <SelectItem value="in">Zoom In</SelectItem>
                     <SelectItem value="out">Zoom Out</SelectItem>
@@ -170,8 +170,8 @@ export const RenderModal = (props: RenderModalProps) => {
           {/* Right Column */}
           <div className="space-y-6">
             {/* Legenda */}
-            <div className="space-y-4 p-4 bg-gray-800/30 rounded-lg">
-              <h3 className="text-base font-semibold flex items-center gap-2 text-gray-300">
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+              <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <FileText className="w-4 h-4" />
                 Legenda
               </h3>
@@ -190,14 +190,14 @@ export const RenderModal = (props: RenderModalProps) => {
             </div>
 
             {/* Logo */}
-            <div className="space-y-4 p-4 bg-gray-800/30 rounded-lg flex flex-col">
-              <h3 className="text-base font-semibold flex items-center gap-2 text-gray-300">
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg flex flex-col">
+              <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <ImageIcon className="w-4 h-4" />
                 Logo
               </h3>
               <Input type="file" accept="image/*" onChange={onLogoUpload} className="hidden" id="modal-logo-upload" />
               <div
-                className="relative w-full h-32 mt-2 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-700/50"
+                className="relative w-full h-32 mt-2 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:bg-accent"
                 onClick={() => document.getElementById("modal-logo-upload")?.click()}
               >
                 {logoPreview ? (
@@ -213,26 +213,25 @@ export const RenderModal = (props: RenderModalProps) => {
                     </Button>
                   </>
                 ) : (
-                  <span className="text-gray-400">Clique para adicionar seu logo</span>
+                  <span className="text-muted-foreground">Clique para adicionar seu logo</span>
                 )}
               </div>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full mt-4 bg-gray-700/50 border-gray-600 hover:bg-gray-700" disabled={!logoFile}>
+                  <Button variant="secondary" className="w-full mt-4" disabled={!logoFile}>
                     <Move className="w-4 h-4 mr-2" /> Posição
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-1 bg-gray-800 border-gray-700">
+                <PopoverContent className="w-auto p-1">
                   <ToggleGroup
                     type="single"
                     value={logoPosition}
                     onValueChange={(v) => { if (v) onLogoPositionChange(v as LogoPosition); }}
-                    className="text-white"
                   >
-                    <ToggleGroupItem value="top-left" className="hover:bg-gray-700 data-[state=on]:bg-primary"><CornerUpLeft /></ToggleGroupItem>
-                    <ToggleGroupItem value="top-right" className="hover:bg-gray-700 data-[state=on]:bg-primary"><CornerUpRight /></ToggleGroupItem>
-                    <ToggleGroupItem value="bottom-left" className="hover:bg-gray-700 data-[state=on]:bg-primary"><CornerDownLeft /></ToggleGroupItem>
-                    <ToggleGroupItem value="bottom-right" className="hover:bg-gray-700 data-[state=on]:bg-primary"><CornerDownRight /></ToggleGroupItem>
+                    <ToggleGroupItem value="top-left" aria-label="Topo Esquerda"><CornerUpLeft /></ToggleGroupItem>
+                    <ToggleGroupItem value="top-right" aria-label="Topo Direita"><CornerUpRight /></ToggleGroupItem>
+                    <ToggleGroupItem value="bottom-left" aria-label="Baixo Esquerda"><CornerDownLeft /></ToggleGroupItem>
+                    <ToggleGroupItem value="bottom-right" aria-label="Baixo Direita"><CornerDownRight /></ToggleGroupItem>
                   </ToggleGroup>
                 </PopoverContent>
               </Popover>
@@ -240,8 +239,8 @@ export const RenderModal = (props: RenderModalProps) => {
           </div>
         </div>
         
-        <DialogFooter className="p-4 bg-black/30">
-          <Button onClick={onRender} disabled={isProcessing} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-6 text-base">
+        <DialogFooter className="p-4 bg-muted/50 border-t">
+          <Button onClick={onRender} disabled={isProcessing} className="w-full bg-gradient-primary text-primary-foreground font-bold py-6 text-base hover:opacity-90 transition-opacity">
             {isProcessing ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
