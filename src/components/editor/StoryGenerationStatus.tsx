@@ -8,10 +8,11 @@ interface StoryGenerationStatusProps {
 }
 
 const getActiveStep = (message: string, progress: number) => {
-    if (progress >= 100) return 3;
-    if (message.includes("narração")) return 2;
-    if (message.includes("imagem") || message.includes("personagem") || progress >= 10) return 1;
-    if (message.includes("roteiro") || progress < 10) return 0;
+    const lowerCaseMessage = message.toLowerCase();
+    if (lowerCaseMessage.includes("finalizando") || progress >= 95) return 3;
+    if (lowerCaseMessage.includes("narração") || progress >= 55) return 2;
+    if (lowerCaseMessage.includes("imagem") || lowerCaseMessage.includes("personagem") || progress >= 15) return 1;
+    if (lowerCaseMessage.includes("roteiro") || progress < 15) return 0;
     return 0; // Default
 };
 

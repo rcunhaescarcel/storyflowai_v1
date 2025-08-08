@@ -140,15 +140,17 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       }
       setProgress(15);
 
-      const newScenes: Scene[] = [];
       const totalScenes = scenesData.length;
-      const progressPerScene = 85 / totalScenes;
+      
+      // --- Stage 1: Generate all images ---
+      const imageGenerationProgress = 40;
+      const progressPerImage = imageGenerationProgress / totalScenes;
+      const imageResults: { imageFile: File, imagePreview: string }[] = [];
 
       for (let i = 0; i < totalScenes; i++) {
         const sceneData = scenesData[i];
-        const baseProgress = 15 + (i * progressPerScene);
-
-        setLoadingMessage(`Gerando imagem da cena ${i + 1}/${totalScenes}...`);
+        const baseProgress = 15 + (i * progressPerImage);
+        setLoadingMessage(`Gerando imagem ${i + 1}/${totalScenes}...`);
         
         const imagePromptForApi = sceneData.image_prompt;
         addDebugLog(`[Imagem IA] Gerando para o prompt: "${imagePromptForApi}"`);
@@ -168,10 +170,22 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         const imageBlob = await imageResponse.blob();
         const imageFile = new File([imageBlob], `scene_${i + 1}.png`, { type: 'image/png' });
         const imagePreview = await blobToDataURL(imageBlob);
-        
-        setProgress(baseProgress + progressPerScene / 2);
 
-        setLoadingMessage(`Gerando narração da cena ${i + 1}/${totalScenes}...`);
+        imageResults.push({ imageFile, imagePreview });
+        setProgress(Math.round(baseProgress + progressPerImage));
+      }
+      addDebugLog(`[História IA] ✅ Todas as ${totalScenes} imagens foram geradas.`);
+
+      // --- Stage 2: Generate all audios ---
+      const audioGenerationProgress = 40;
+      const progressPerAudio = audioGenerationProgress / totalScenes;
+      const audioResults: { audioFile: File, audioDataUrl: string, audioDuration: number }[] = [];
+
+      for (let i = 0; i < totalScenes; i++) {
+        const sceneData = scenesData[i];
+        const baseProgress = 15 + imageGenerationProgress + (i * progressPerAudio);
+        setLoadingMessage(`Gerando narração ${i + 1}/${totalScenes}...`);
+        
         addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
 
         const audioPrompt = `speak ${languageKey.toUpperCase()}: ${sceneData.narration}`;
@@ -185,20 +199,34 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         const audioDuration = await getAudioDuration(audioFile);
         const audioDataUrl = await blobToDataURL(audioBlob);
 
+        audioResults.push({ audioFile, audioDataUrl, audioDuration });
+        setProgress(Math.round(baseProgress + progressPerAudio));
+      }
+      addDebugLog(`[História IA] ✅ Todas as ${totalScenes} narrações foram geradas.`);
+
+      // --- Stage 3: Combine and finalize ---
+      setLoadingMessage('Finalizando...');
+      setProgress(95);
+
+      const newScenes: Scene[] = [];
+      for (let i = 0; i < totalScenes; i++) {
+        const sceneData = scenesData[i];
+        const imageResult = imageResults[i];
+        const audioResult = audioResults[i];
+
         newScenes.push({
           id: crypto.randomUUID(),
           narrationText: sceneData.narration,
-          image: imageFile,
-          imagePreview: imagePreview,
+          image: imageResult.imageFile,
+          imagePreview: imageResult.imagePreview,
           imagePrompt: sceneData.image_prompt,
-          audio: audioFile,
-          audioDataUrl: audioDataUrl,
-          duration: audioDuration,
+          audio: audioResult.audioFile,
+          audioDataUrl: audioResult.audioDataUrl,
+          duration: audioResult.audioDuration,
         });
-        
-        setProgress(baseProgress + progressPerScene);
       }
 
+      setProgress(100);
       onStoryGenerated(newScenes, characterImage, characterImagePreview, prompt, styleInfo.label);
 
     } catch (error) {
