@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Wand2, Clock, Mic, UserSquare, Trash2, Palette, Languages } from 'lucide-react';
+import { Loader2, Wand2, Clock, Mic, UserSquare, Trash2, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
@@ -11,8 +11,6 @@ import { resizeImage, dataURLtoFile, blobToDataURL } from '@/lib/imageUtils';
 import { useSession } from '@/contexts/SessionContext';
 import { storyStyles, openAIVoices, languages } from '@/lib/constants';
 import { CharacterModal } from './CharacterModal';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Label } from '@/components/ui/label';
 
 const getAudioDuration = (file: File): Promise<number> => {
   return new Promise((resolve, reject) => {
@@ -72,7 +70,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   const [duration, setDuration] = useState('30');
   const [selectedVoice, setSelectedVoice] = useState('nova');
   const [selectedStyle, setSelectedStyle] = useState('pixar');
-  const [selectedLanguage, setSelectedLanguage] = useState('pt-br');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gerando...');
   const [progress, setProgress] = useState(0);
@@ -85,7 +82,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       setDuration(String(profile.default_duration || '30'));
       setSelectedVoice(profile.default_voice || 'nova');
       setSelectedStyle(profile.default_style || 'pixar');
-      setSelectedLanguage(profile.default_language || 'pt-br');
     }
   }, [profile]);
 
@@ -134,7 +130,8 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       const numParagraphs = parseInt(duration) / 5;
       const styleInfo = storyStyles[selectedStyle as keyof typeof storyStyles];
       const stylePrompt = styleInfo.promptSuffix;
-      const languageName = languages[selectedLanguage as keyof typeof languages];
+      const languageKey = profile.default_language || 'pt-br';
+      const languageName = languages[languageKey as keyof typeof languages];
       
       const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]`;
 
@@ -237,7 +234,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         setLoadingMessage(`Gerando narração da cena ${i + 1}/${totalScenes}...`);
         addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
 
-        const audioPrompt = `speak ${selectedLanguage.toUpperCase()}: ${sceneData.narration}`;
+        const audioPrompt = `speak ${languageKey.toUpperCase()}: ${sceneData.narration}`;
         const encodedAudioPrompt = encodeURIComponent(audioPrompt);
         const audioUrl = `https://text.pollinations.ai/${encodedAudioPrompt}?model=openai-audio&voice=${selectedVoice}&referrer=${referrer}&token=${apiToken}`;
 
@@ -346,41 +343,17 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
           <div className="flex items-center justify-between p-2 mt-2 border-t">
             <div className="flex flex-wrap items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 px-3 text-muted-foreground gap-2">
-                    <Languages className="w-4 h-4" />
-                    <span>{languages[selectedLanguage as keyof typeof languages]}</span>
-                    <span className="text-gray-400">/</span>
-                    <Mic className="w-4 h-4" />
-                    <span className="capitalize">{selectedVoice}</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-2 space-y-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="language-select">Idioma</Label>
-                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                      <SelectTrigger id="language-select"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(languages).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="voice-select">Voz</Label>
-                    <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-                      <SelectTrigger id="voice-select"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {openAIVoices.map(voice => (
-                          <SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isLoading || isSessionLoading}>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
+                  <Mic className="w-4 h-4 flex-shrink-0" />
+                  <SelectValue placeholder="Voz" />
+                </SelectTrigger>
+                <SelectContent>
+                  {openAIVoices.map(voice => (
+                    <SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isLoading || isSessionLoading}>
                 <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
