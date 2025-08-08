@@ -120,8 +120,8 @@ const Landing = () => {
             <div className="absolute -bottom-8 -right-8 w-72 h-72 bg-primary/5 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-200"></div>
             <div className="relative shadow-2xl rounded-2xl overflow-hidden">
               <img
-                src="https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1754575804125x446543522981079230/ChatGPT%20Image%205%20de%20ago.%20de%202025%2C%2018_10_34.png"
-                alt="Personagem 3D em um ambiente criativo, no estilo Pixar"
+                src="https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1754690261301x876398286890502700/ChatGPT%20Image%205%20de%20ago.%20de%202025%2C%2018_10_30.png"
+                alt="Personagem 3D lendo um livro em um ambiente mágico, no estilo Pixar"
                 className="w-full object-cover object-center"
                 crossOrigin="anonymous"
               />
