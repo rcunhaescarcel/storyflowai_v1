@@ -20,7 +20,6 @@ export const useGlobalSettings = () => {
   const [addFade, setAddFade] = useState(true);
   const [generateSubtitles, setGenerateSubtitles] = useState(true);
   const [zoomEffect, setZoomEffect] = useState<ZoomEffect>('alternate');
-  const [zoomIntensity, setZoomIntensity] = useState(5);
 
   const handleBackgroundMusicUpload = useCallback((file: File) => {
     if (file && file.type.startsWith('audio/')) {
@@ -67,7 +66,5 @@ export const useGlobalSettings = () => {
     setGenerateSubtitles,
     zoomEffect,
     setZoomEffect,
-    zoomIntensity,
-    setZoomIntensity,
   };
 };

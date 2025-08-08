@@ -170,7 +170,6 @@ export const useFFmpeg = () => {
     logoFile: File | null,
     logoPosition: LogoPosition,
     zoomEffect: 'none' | 'in' | 'out' | 'alternate',
-    zoomIntensity: number,
     addFade: boolean,
     fadeInDuration: number,
     fadeOutDuration: number
@@ -228,6 +227,7 @@ export const useFFmpeg = () => {
         
         if (zoomEffect !== 'none') {
           const zoomDirection = zoomEffect === 'alternate' ? (i % 2 === 0 ? 'in' : 'out') : zoomEffect;
+          const zoomIntensity = 5;
           const zoomFactor = 1 + (zoomIntensity / 100);
           const totalFrames = sceneDuration * 30;
           videoFilter += `,zoompan=z=${zoomDirection === 'in' ? `1+${(zoomFactor - 1) / totalFrames}*on` : `${zoomFactor}-${(zoomFactor - 1) / totalFrames}*on`}:d=${totalFrames}:x=iw/2-(iw/zoom/2):y=ih/2-(ih/zoom/2)`;

@@ -94,7 +94,6 @@ const Editor = () => {
     addFade, setAddFade,
     generateSubtitles, setGenerateSubtitles,
     zoomEffect, setZoomEffect,
-    zoomIntensity, setZoomIntensity,
   } = useGlobalSettings();
 
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -180,7 +179,6 @@ const Editor = () => {
         logoFile, 
         logoPosition,
         zoomEffect,
-        zoomIntensity,
         addFade,
         0.5,
         0.5
@@ -435,8 +433,6 @@ const Editor = () => {
         onGenerateSubtitlesChange={setGenerateSubtitles}
         zoomEffect={zoomEffect}
         onZoomEffectChange={setZoomEffect}
-        zoomIntensity={zoomIntensity}
-        onZoomIntensityChange={setZoomIntensity}
       />
 
       <DownloadModal

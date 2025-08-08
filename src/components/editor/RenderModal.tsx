@@ -63,8 +63,6 @@ interface RenderModalProps {
 
   zoomEffect: ZoomEffect;
   onZoomEffectChange: (effect: ZoomEffect) => void;
-  zoomIntensity: number;
-  onZoomIntensityChange: (intensity: number) => void;
 }
 
 export const RenderModal = (props: RenderModalProps) => {
@@ -75,7 +73,7 @@ export const RenderModal = (props: RenderModalProps) => {
     subtitleStyle, onSubtitleStyleChange,
     addFade, onAddFadeChange,
     generateSubtitles, onGenerateSubtitlesChange,
-    zoomEffect, onZoomEffectChange, zoomIntensity, onZoomIntensityChange
+    zoomEffect, onZoomEffectChange
   } = props;
 
   return (
@@ -154,21 +152,8 @@ export const RenderModal = (props: RenderModalProps) => {
                   </SelectContent>
                 </Select>
               </div>
-              {zoomEffect !== 'none' && (
-                <div className="space-y-2">
-                  <Label>Intensidade do Zoom ({zoomIntensity}%)</Label>
-                  <Slider
-                    value={[zoomIntensity]}
-                    onValueChange={(value) => onZoomIntensityChange(value[0])}
-                    max={50} min={5} step={1}
-                  />
-                </div>
-              )}
             </div>
-          </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
             {/* Legenda */}
             <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
               <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
@@ -188,16 +173,19 @@ export const RenderModal = (props: RenderModalProps) => {
                 />
               </div>
             </div>
+          </div>
 
+          {/* Right Column */}
+          <div className="space-y-6">
             {/* Logo */}
-            <div className="space-y-4 p-4 bg-muted/50 rounded-lg flex flex-col">
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg flex flex-col h-full">
               <h3 className="text-base font-semibold flex items-center gap-2 text-foreground">
                 <ImageIcon className="w-4 h-4" />
                 Logo
               </h3>
               <Input type="file" accept="image/*" onChange={onLogoUpload} className="hidden" id="modal-logo-upload" />
               <div
-                className="relative w-full h-32 mt-2 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:bg-accent"
+                className="relative w-full h-32 mt-2 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:bg-accent flex-1"
                 onClick={() => document.getElementById("modal-logo-upload")?.click()}
               >
                 {logoPreview ? (
