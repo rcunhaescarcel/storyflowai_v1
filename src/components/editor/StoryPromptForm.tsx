@@ -11,6 +11,8 @@ import { resizeImage, dataURLtoFile, blobToDataURL } from '@/lib/imageUtils';
 import { useSession } from '@/contexts/SessionContext';
 import { storyStyles, openAIVoices, languages } from '@/lib/constants';
 import { CharacterModal } from './CharacterModal';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Label } from '@/components/ui/label';
 
 const getAudioDuration = (file: File): Promise<number> => {
   return new Promise((resolve, reject) => {
@@ -344,17 +346,41 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
           <div className="flex items-center justify-between p-2 mt-2 border-t">
             <div className="flex flex-wrap items-center gap-2">
-              <Select value={selectedLanguage} onValueChange={setSelectedLanguage} disabled={isLoading || isSessionLoading}>
-                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
-                  <Languages className="w-4 h-4 flex-shrink-0" />
-                  <SelectValue placeholder="Idioma" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(languages).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-9 px-3 text-muted-foreground gap-2">
+                    <Languages className="w-4 h-4" />
+                    <span>{languages[selectedLanguage as keyof typeof languages]}</span>
+                    <span className="text-gray-400">/</span>
+                    <Mic className="w-4 h-4" />
+                    <span className="capitalize">{selectedVoice}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2 space-y-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="language-select">Idioma</Label>
+                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                      <SelectTrigger id="language-select"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(languages).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="voice-select">Voz</Label>
+                    <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                      <SelectTrigger id="voice-select"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {openAIVoices.map(voice => (
+                          <SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </PopoverContent>
+              </Popover>
 
               <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isLoading || isSessionLoading}>
                 <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
@@ -374,21 +400,9 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
                   <SelectValue placeholder="Duração" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="30">30s (~6 cenas)</SelectItem>
-                  <SelectItem value="60">1m (~12 cenas)</SelectItem>
-                  <SelectItem value="90">1m 30s (~18 cenas)</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isLoading || isSessionLoading}>
-                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
-                  <Mic className="w-4 h-4 flex-shrink-0" />
-                  <SelectValue placeholder="Voz" />
-                </SelectTrigger>
-                <SelectContent>
-                  {openAIVoices.map(voice => (
-                    <SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>
-                  ))}
+                  <SelectItem value="30">30s</SelectItem>
+                  <SelectItem value="60">1m</SelectItem>
+                  <SelectItem value="90">1m 30s</SelectItem>
                 </SelectContent>
               </Select>
               
