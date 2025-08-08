@@ -4,6 +4,8 @@ import { Loader2, Sparkles, Play, Pause } from 'lucide-react';
 import { toast } from 'sonner';
 import { blobToDataURL } from '@/lib/imageUtils';
 import { Progress } from '@/components/ui/progress';
+import { useSession } from '@/contexts/SessionContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NarrationGeneratorProps {
   narrationText: string | undefined;
@@ -13,6 +15,7 @@ interface NarrationGeneratorProps {
 }
 
 export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLog, audio }: NarrationGeneratorProps) => {
+  const { profile } = useSession();
   const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -38,28 +41,25 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
     setIsGenerating(true);
     addDebugLog(`[Narração IA] Iniciando geração para o texto: "${narrationText.slice(0, 50)}..."`);
     try {
-      const audioPrompt = `speak PT-BR: ${narrationText}`;
-      const encodedTextPrompt = encodeURIComponent(audioPrompt);
-      const token = "76b4jfL5SsXI48nS";
-      const referrer = "https://storyflow.app/";
-      
-      const targetUrl = `https://text.pollinations.ai/${encodedTextPrompt}?model=openai-audio&voice=nova&referrer=${referrer}&token=${token}`;
-      
-      addDebugLog(`[Narração IA] URL da API: ${targetUrl.substring(0, 100)}...`);
+      const selectedVoice = profile?.default_voice || 'nova';
+      const languageKey = profile?.default_language || 'pt-br';
+      addDebugLog(`[Narração IA] Usando a voz: ${selectedVoice}`);
 
-      const response = await fetch(targetUrl);
+      const { data: audioBlob, error: audioError } = await supabase.functions.invoke('generate-emotional-voice', {
+        body: {
+          text: narrationText,
+          voice: selectedVoice,
+          language: languageKey,
+        },
+      });
 
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error("API Error:", errorBody);
-        addDebugLog(`[Narração IA] ❌ ERRO na API: ${errorBody}`);
-        throw new Error(`A geração de áudio falhou com o status: ${response.status}`);
+      if (audioError) {
+        throw new Error(`A geração de áudio falhou: ${audioError.message}`);
       }
 
-      const blob = await response.blob();
-      const fileName = `narration_nova.mp3`;
-      const file = new File([blob], fileName, { type: 'audio/mp3' });
-      const dataUrl = await blobToDataURL(blob);
+      const fileName = `narration_${selectedVoice}.mp3`;
+      const file = new File([audioBlob], fileName, { type: 'audio/mp3' });
+      const dataUrl = await blobToDataURL(audioBlob);
 
       onAudioGenerated(file, dataUrl);
       addDebugLog(`[Narração IA] ✅ Áudio gerado e carregado com sucesso!`);

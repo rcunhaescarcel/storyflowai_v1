@@ -72,7 +72,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       const languageKey = profile.default_language || 'pt-br';
       const languageName = languages[languageKey as keyof typeof languages];
       
-      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um único objeto JSON válido com EXATAMENTE duas chaves: "title" e "scenes". A chave "title" deve conter um título criativo para a história em ${languageName}. A chave "scenes" deve ser um array de objetos, onde cada objeto representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: {"title": "As Aventuras do Robô Perdido", "scenes": [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]}`;
+      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um único objeto JSON válido com EXATAMENTE duas chaves: "title" e "scenes". A chave "scenes" deve ser um array de objetos, onde cada objeto representa uma cena e deve ter EXATAMENTE três chaves: "narration", "image_prompt" e "voice_tone". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". A chave "voice_tone" deve conter o melhor tom de voz para a narração como uma frase curta em inglês (por exemplo, "A calm and inspiring tone."). Não inclua o prompt da imagem na narração. Exemplo: {"title": "As Aventuras do Robô Perdido", "scenes": [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}", "voice_tone": "A whimsical and gentle tone."}]}`;
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
@@ -92,7 +92,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
       setProgress(10);
 
-      let storyData: { title: string; scenes: { narration: string; image_prompt: string; }[] };
+      let storyData: { title: string; scenes: { narration: string; image_prompt: string; voice_tone: string; }[] };
       try {
         const jsonStart = storyText.indexOf('{');
         const jsonEnd = storyText.lastIndexOf('}');
@@ -189,15 +189,19 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         const baseProgress = 15 + imageGenerationProgress + (i * progressPerAudio);
         setLoadingMessage(`Gerando narração ${i + 1}/${totalScenes}...`);
         
-        addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
+        addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..." com o tom: "${sceneData.voice_tone}"`);
 
-        const audioPrompt = `speak ${languageKey.toUpperCase()}: ${sceneData.narration}`;
-        const encodedAudioPrompt = encodeURIComponent(audioPrompt);
-        const audioUrl = `https://text.pollinations.ai/${encodedAudioPrompt}?model=openai-audio&voice=${selectedVoice}&referrer=${referrer}&token=${apiToken}`;
+        const { data: audioBlob, error: audioError } = await supabase.functions.invoke('generate-emotional-voice', {
+          body: {
+            text: sceneData.narration,
+            voice: selectedVoice,
+            tone: sceneData.voice_tone,
+            language: languageKey,
+          },
+        });
 
-        const audioResponse = await fetchWithRetry(audioUrl, { addDebugLog, apiName: 'Áudio IA' });
-        if (!audioResponse.ok) throw new Error(`Falha ao gerar áudio para a cena ${i + 1}`);
-        const audioBlob = await audioResponse.blob();
+        if (audioError) throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${audioError.message}`);
+
         const audioFile = new File([audioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
         const audioDuration = await getAudioDuration(audioFile);
         const audioDataUrl = await blobToDataURL(audioBlob);

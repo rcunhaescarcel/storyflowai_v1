@@ -28,6 +28,11 @@ export const openAIVoices = [
   { value: 'onyx', label: 'Draven' },
   { value: 'nova', label: 'Sora' },
   { value: 'shimmer', label: 'Elara' },
+  { value: 'coral', label: 'Neria' },
+  { value: 'verse', label: 'Roric' },
+  { value: 'ballad', label: 'Aria' },
+  { value: 'sage', label: 'Zane' },
+  { value: 'ash', label: 'Cinder' },
 ];
 
 export const languages = {
