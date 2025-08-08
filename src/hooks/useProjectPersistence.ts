@@ -4,7 +4,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/contexts/SessionContext';
 import { Scene } from '@/hooks/useFFmpeg';
-import { SceneData } from '@/types/video';
+import { SceneData, VideoProject } from '@/types/video';
+import { urlToFile } from '@/lib/imageUtils';
 
 export const useProjectPersistence = (addDebugLog: (message: string) => void) => {
   const { session } = useSession();
@@ -19,20 +20,12 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       let imageUrl = scene.imagePreview || '';
       let audioDataUrl = scene.audioDataUrl || '';
 
-      // Upload image if it's a new file
       if (scene.image && !imageUrl.startsWith('http')) {
         const imagePath = `${projectFolder}/${scene.id}-image.png`;
         const { error: imageUploadError } = await supabase.storage.from('image-references').upload(imagePath, scene.image, { upsert: true });
         if (imageUploadError) throw new Error(`Upload da imagem falhou: ${imageUploadError.message}`);
         const { data: { publicUrl } } = supabase.storage.from('image-references').getPublicUrl(imagePath);
         imageUrl = publicUrl!;
-      }
-
-      // Upload audio if it's a new file
-      if (scene.audio && !audioDataUrl.startsWith('http')) {
-         // This part is tricky as audio is not stored in storage currently.
-         // For now, we assume audioDataUrl is sufficient if it exists.
-         // A more robust solution would upload audio to storage as well.
       }
 
       sceneDataForDb.push({
@@ -47,7 +40,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
     return sceneDataForDb;
   };
 
-  const saveProject = async (scenesToSave: Scene[], projectPrompt: string, projectStyle?: string): Promise<{id: string, title: string} | null> => {
+  const saveProject = async (scenesToSave: Scene[], projectPrompt: string, projectStyle?: string): Promise<VideoProject | null> => {
     if (!session) {
       toast.error("Sessão não encontrada. Não foi possível salvar o projeto.");
       return null;
@@ -66,7 +59,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       const sceneDataForDb = await uploadSceneAssets(scenesToSave, projectFolder);
       const thumbnailUrl = sceneDataForDb.length > 0 ? sceneDataForDb[0].image_url : null;
 
-      const projectToInsert = {
+      const projectToInsert: Omit<VideoProject, 'user_id' | 'created_at' | 'updated_at'> & { user_id: string } = {
         id: projectId,
         user_id: session.user.id,
         title: projectTitle,
@@ -79,10 +72,11 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
         style: projectStyle,
         thumbnail_url: thumbnailUrl,
         scene_count: scenesToSave.length,
+        final_video_url: null,
       };
 
       addDebugLog('[DB] Inserindo registro do projeto no banco de dados...');
-      const { error: insertError } = await supabase.from('video_projects').insert(projectToInsert);
+      const { data: newProject, error: insertError } = await supabase.from('video_projects').insert(projectToInsert).select().single();
       if (insertError) {
         throw new Error(`Falha ao salvar o projeto: ${insertError.message}`);
       }
@@ -90,7 +84,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
       addDebugLog('[DB] ✅ Projeto salvo com sucesso!');
       toast.success("Projeto salvo!", { id: savingToast, description: "Seu novo vídeo já está na galeria." });
-      return { id: projectId, title: projectTitle };
+      return newProject;
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
@@ -149,5 +143,50 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
     }
   };
 
-  return { saveProject, updateProject, isSaving };
+  const saveRenderedVideo = async (projectId: string, videoBlobUrl: string): Promise<string | null> => {
+    if (!session) {
+      toast.error("Sessão não encontrada. Não foi possível salvar o vídeo.");
+      return null;
+    }
+    const savingToast = toast.loading("Salvando vídeo na nuvem...");
+    setIsSaving(true);
+    try {
+      const videoFile = await urlToFile(videoBlobUrl, `final_video_${projectId}.mp4`, 'video/mp4');
+      const filePath = `${session.user.id}/${projectId}/final_video.mp4`;
+
+      addDebugLog(`[Storage] Enviando vídeo para: ${filePath}`);
+      const { error: uploadError } = await supabase.storage
+        .from('final_videos')
+        .upload(filePath, videoFile, { upsert: true });
+
+      if (uploadError) {
+        throw new Error(`Falha no upload do vídeo: ${uploadError.message}`);
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('final_videos').getPublicUrl(filePath);
+      addDebugLog(`[Storage] ✅ Vídeo salvo. URL pública: ${publicUrl}`);
+
+      const { error: dbError } = await supabase
+        .from('video_projects')
+        .update({ final_video_url: publicUrl, status: 'completed', updated_at: new Date().toISOString() })
+        .eq('id', projectId);
+
+      if (dbError) {
+        throw new Error(`Falha ao atualizar o projeto no banco de dados: ${dbError.message}`);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
+      toast.success("Vídeo salvo na nuvem!", { id: savingToast });
+      return publicUrl;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
+      addDebugLog(`[Storage] ❌ Falha ao salvar vídeo: ${errorMessage}`);
+      toast.error("Falha ao salvar o vídeo", { id: savingToast, description: errorMessage });
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return { saveProject, updateProject, saveRenderedVideo, isSaving };
 };

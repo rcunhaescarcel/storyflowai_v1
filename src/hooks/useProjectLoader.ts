@@ -21,6 +21,7 @@ export const useProjectLoader = ({ onLoad, addDebugLog }: UseProjectLoaderProps)
     const loadProject = async (project: VideoProject) => {
       if (!project.scenes) {
         addDebugLog(`[Editor] Projeto "${project.title}" não possui cenas para carregar.`);
+        onLoad(project, []);
         setIsLoading(false);
         return;
       }

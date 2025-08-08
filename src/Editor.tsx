@@ -57,25 +57,25 @@ const Editor = () => {
 
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [projectTitle, setProjectTitle] = useState<string>('');
+  const [persistedVideoUrl, setPersistedVideoUrl] = useState<string | null>(null);
 
   const { isProjectLoading } = useProjectLoader({
     onLoad: (project: VideoProject, loadedScenes: Scene[]) => {
       setScenes(loadedScenes);
       setCurrentProjectId(project.id);
       setProjectTitle(project.title);
+      setPersistedVideoUrl(project.final_video_url);
     },
     addDebugLog
   });
 
-  const { saveProject, updateProject, isSaving } = useProjectPersistence(addDebugLog);
+  const { saveProject, updateProject, saveRenderedVideo, isSaving } = useProjectPersistence(addDebugLog);
   
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
 
   useEffect(() => {
-    // Se não houver um projeto no estado da localização, resete o editor.
-    // Isso garante que clicar em "Criar" limpe um projeto que estava sendo editado.
     if (!location.state?.project) {
       setScenes([]);
       setCurrentProjectId(null);
@@ -86,13 +86,12 @@ const Editor = () => {
       setLogoPreview(null);
       setCharacterImage(null);
       setCharacterImagePreview(null);
-      setVideoUrl(null);
+      setLocalVideoUrl(null);
+      setPersistedVideoUrl(null);
       clearDebugLogs();
       addDebugLog("[Editor] Estado do editor resetado para o modo de criação.");
     }
-  // A dependência é location.state, então isso roda sempre que o estado de navegação muda.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state]);
+  }, [location.state, setScenes, setGlobalSrtFile, setBackgroundMusic, setLogoFile, setLogoPreview, setCharacterImage, setCharacterImagePreview, clearDebugLogs, addDebugLog]);
 
   const handleRenderVideo = async () => {
     if (scenes.length === 0) {
@@ -105,7 +104,7 @@ const Editor = () => {
     }
 
     try {
-      setVideoUrl(null);
+      setLocalVideoUrl(null);
       clearDebugLogs();
       const result = await renderVideo(
         scenes, 
@@ -123,8 +122,14 @@ const Editor = () => {
         fadeOutDuration
       );
       if (result) {
-        setVideoUrl(result);
+        setLocalVideoUrl(result);
         toast.success("Sucesso!", { description: "Vídeo renderizado com sucesso" });
+        if (currentProjectId) {
+          const finalUrl = await saveRenderedVideo(currentProjectId, result);
+          if (finalUrl) {
+            setPersistedVideoUrl(finalUrl);
+          }
+        }
       } else {
         toast.error("Erro", { description: "Falha ao renderizar o vídeo" });
       }
@@ -142,9 +147,10 @@ const Editor = () => {
   };
 
   const downloadVideo = () => {
-    if (videoUrl) {
+    const urlToDownload = localVideoUrl || persistedVideoUrl;
+    if (urlToDownload) {
       const link = document.createElement('a');
-      link.href = videoUrl;
+      link.href = urlToDownload;
       link.download = 'viflow-video.mp4';
       document.body.appendChild(link);
       link.click();
@@ -269,7 +275,7 @@ const Editor = () => {
               isProcessing={isProcessing}
               isSaving={isSaving}
               progress={progress}
-              videoUrl={videoUrl}
+              videoUrl={localVideoUrl || persistedVideoUrl}
               onDownloadVideo={downloadVideo}
               onRender={handleRenderVideo}
               onSaveProject={handleSaveProject}
