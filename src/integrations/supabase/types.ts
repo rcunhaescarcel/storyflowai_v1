@@ -53,6 +53,7 @@ export type Database = {
           final_video_url: string | null
           created_at: string
           updated_at: string
+          style: string | null
         }
         Insert: {
           id?: string
@@ -67,6 +68,7 @@ export type Database = {
           final_video_url?: string | null
           created_at?: string
           updated_at?: string
+          style?: string | null
         }
         Update: {
           id?: string
@@ -81,6 +83,7 @@ export type Database = {
           final_video_url?: string | null
           created_at?: string
           updated_at?: string
+          style?: string | null
         }
         Relationships: [
           {

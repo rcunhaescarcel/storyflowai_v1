@@ -155,7 +155,7 @@ const Editor = () => {
     });
   };
 
-  const handleStoryGenerated = useCallback(async (newScenes: Scene[], characterFile?: File, characterPreview?: string, projectPrompt?: string) => {
+  const handleStoryGenerated = useCallback(async (newScenes: Scene[], characterFile?: File, characterPreview?: string, projectPrompt?: string, projectStyle?: string) => {
     setScenes(newScenes);
     if (characterFile && characterPreview) {
       setCharacterImage(characterFile);
@@ -167,7 +167,7 @@ const Editor = () => {
     });
   
     if (projectPrompt) {
-      const newProject = await saveProject(newScenes, projectPrompt);
+      const newProject = await saveProject(newScenes, projectPrompt, projectStyle);
       if (newProject) {
         setCurrentProjectId(newProject.id);
         setProjectTitle(newProject.title);

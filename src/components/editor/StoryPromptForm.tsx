@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Loader2, ArrowUp, Wand2, Clock, Mic, Camera, Film, UserSquare, Trash2 } from 'lucide-react';
+import { Loader2, ArrowUp, Wand2, Clock, Mic, Camera, Film, UserSquare, Trash2, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
@@ -35,8 +35,27 @@ const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const openAIVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 
+const storyStyles = {
+  pixar: {
+    label: "Pixar 3D Cinemático",
+    promptSuffix: ", in the style of a cinematic 3D animation, detailed visuals, vibrant colors, rich facial expressions"
+  },
+  ghibli: {
+    label: "Ghibli / Animação 2D",
+    promptSuffix: ", in the style of a poetic 2D animation, Ghibli-inspired, soft colors, painted texture, enchanting atmosphere"
+  },
+  storybook: {
+    label: "Livro Infantil Ilustrado",
+    promptSuffix: ", in the style of a watercolor children's book illustration, organic lines, simple and warm composition"
+  },
+  cartoon: {
+    label: "HQ/Cartoon Colorido",
+    promptSuffix: ", in the style of a colorful cartoon/comic book, bold lines, strong colors, exaggerated expressions"
+  }
+};
+
 interface StoryPromptFormProps {
-  onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string, prompt?: string) => void;
+  onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
   addDebugLog: (message: string) => void;
 }
 
@@ -45,6 +64,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState('30');
   const [selectedVoice, setSelectedVoice] = useState('nova');
+  const [selectedStyle, setSelectedStyle] = useState('pixar');
   const [zoomEffect, setZoomEffect] = useState<'none' | 'in' | 'out' | 'alternate'>('alternate');
   const [addFade, setAddFade] = useState(true);
   const [fadeInDuration, setFadeInDuration] = useState(0.5);
@@ -106,10 +126,13 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       addDebugLog(`[Coins] 1 coin debitado. Saldo restante: ${updatedProfile.coins}`);
 
       const numParagraphs = parseInt(duration) / 5;
-      let storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, no estilo de animação 3D. Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A 3D animation of a magical castle."}]`;
+      const styleInfo = storyStyles[selectedStyle as keyof typeof storyStyles];
+      const stylePrompt = styleInfo.promptSuffix;
+      
+      let storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]`;
       
       if (characterImage) {
-        storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}" com um personagem principal. O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, incluindo "o personagem", no estilo de animação 3D. Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "O personagem caminhava pela floresta.", "image_prompt": "o personagem walking through a magical forest, 3D animation style."}]`;
+        storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}" com um personagem principal. O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, incluindo "o personagem", e terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "O personagem caminhava pela floresta.", "image_prompt": "o personagem walking through a magical forest${stylePrompt}"}]`;
       }
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
@@ -249,7 +272,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         await delay(500);
       }
 
-      onStoryGenerated(newScenes, characterImage, characterImagePreview, prompt);
+      onStoryGenerated(newScenes, characterImage, characterImagePreview, prompt, styleInfo.label);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
@@ -297,6 +320,26 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         />
         <div className="flex items-center justify-between p-2">
           <div className="flex items-center gap-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
+                  <Palette className="w-4 h-4 mr-2" /> Estilo
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64">
+                <div className="space-y-2">
+                  <Label>Estilo Visual</Label>
+                  <Select value={selectedStyle} onValueChange={setSelectedStyle}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(storyStyles).map(([key, { label }]) => (
+                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>

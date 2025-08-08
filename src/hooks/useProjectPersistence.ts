@@ -53,7 +53,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
     return sceneDataForDb;
   };
 
-  const saveProject = async (scenesToSave: Scene[], projectPrompt: string): Promise<{id: string, title: string} | null> => {
+  const saveProject = async (scenesToSave: Scene[], projectPrompt: string, projectStyle?: string): Promise<{id: string, title: string} | null> => {
     if (!session) {
       toast.error("Sessão não encontrada. Não foi possível salvar o projeto.");
       return null;
@@ -81,6 +81,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
         scenes: sceneDataForDb,
         video_duration: totalDuration,
         status: 'draft',
+        style: projectStyle,
       };
 
       addDebugLog('[DB] Inserindo registro do projeto no banco de dados...');
