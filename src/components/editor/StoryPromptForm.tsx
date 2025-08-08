@@ -10,9 +10,9 @@ import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { resizeImage, dataURLtoFile, blobToDataURL } from '@/lib/imageUtils';
-import { Input } from '@/components/ui/input';
 import { useSession } from '@/contexts/SessionContext';
 import { storyStyles, openAIVoices, languages } from '@/lib/constants';
+import { CharacterModal } from './CharacterModal';
 
 const getAudioDuration = (file: File): Promise<number> => {
   return new Promise((resolve, reject) => {
@@ -78,6 +78,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   const [progress, setProgress] = useState(0);
   const [characterImage, setCharacterImage] = useState<File | null>(null);
   const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
+  const [isCharacterModalOpen, setIsCharacterModalOpen] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -88,19 +89,10 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
     }
   }, [profile]);
 
-  const handleCharacterImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const resizedPreview = await resizeImage(file, 256, 256);
-        const resizedFile = dataURLtoFile(resizedPreview, file.name);
-        setCharacterImage(resizedFile);
-        setCharacterImagePreview(resizedPreview);
-        toast.success("Imagem do personagem carregada!");
-      } catch (error) {
-        toast.error("Falha ao processar a imagem do personagem.");
-      }
-    }
+  const handleCharacterConfirm = (file: File, preview: string) => {
+    setCharacterImage(file);
+    setCharacterImagePreview(preview);
+    toast.success("Personagem selecionado com sucesso!");
   };
 
   const handleGenerateStory = async () => {
@@ -312,27 +304,46 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center h-full py-10">
-      <Wand2 className="w-12 h-12 text-primary mb-4" />
-      <h1 className="text-3xl font-bold text-center mb-2">Digite seu tema e deixe a mágica acontecer</h1>
-      <p className="text-muted-foreground mb-8 text-center">A IA irá criar um roteiro, gerar imagens e narrações para montar seu vídeo.</p>
-      
-      <div className="w-full p-2 bg-background rounded-2xl shadow-lg border">
-        <Textarea
-          placeholder="Ex: A jornada de um pequeno robô que se perdeu na cidade e tenta encontrar o caminho de volta para casa..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          rows={3}
-          className="w-full border-none focus-visible:ring-0 text-base resize-none p-4 bg-transparent"
-          disabled={isLoading || isSessionLoading}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              if (!isSessionLoading) handleGenerateStory();
-            }
-          }}
-        />
-        <div className="flex items-center justify-between p-2">
+    <>
+      <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center h-full py-10">
+        <Wand2 className="w-12 h-12 text-primary mb-4" />
+        <h1 className="text-3xl font-bold text-center mb-2">Digite seu tema e deixe a mágica acontecer</h1>
+        <p className="text-muted-foreground mb-8 text-center">A IA irá criar um roteiro, gerar imagens e narrações para montar seu vídeo.</p>
+        
+        <div className="w-full p-2 bg-background rounded-2xl shadow-lg border flex items-start gap-4">
+          {characterImagePreview && (
+            <div className="relative w-24 flex-shrink-0 group">
+              <img src={characterImagePreview} alt="Personagem" className="w-full rounded-lg object-cover aspect-square" />
+              <Button
+                variant="destructive"
+                size="icon"
+                className="absolute -top-2 -right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => {
+                  setCharacterImage(null);
+                  setCharacterImagePreview(null);
+                }}
+              >
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
+          <Textarea
+            placeholder="Ex: A jornada de um pequeno robô que se perdeu na cidade e tenta encontrar o caminho de volta para casa..."
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={3}
+            className="w-full border-none focus-visible:ring-0 text-base resize-none p-2 bg-transparent self-center"
+            disabled={isLoading || isSessionLoading}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!isSessionLoading) handleGenerateStory();
+              }
+            }}
+          />
+        </div>
+
+        <div className="w-full flex items-center justify-between p-2 mt-2">
           <div className="flex items-center gap-1">
             <Popover>
               <PopoverTrigger asChild>
@@ -390,31 +401,9 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
               </PopoverTrigger>
               <PopoverContent className="w-64"><div className="space-y-2"><Label>Voz da Narração</Label><Select value={selectedVoice} onValueChange={setSelectedVoice}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{openAIVoices.map(voice => (<SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>))}</SelectContent></Select></div></PopoverContent>
             </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                  <UserSquare className="w-4 h-4 mr-2" /> Personagem
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="space-y-4">
-                  <Label>Personagem de Referência</Label>
-                  <Input id="character-upload-popover" type="file" accept="image/*" onChange={handleCharacterImageUpload} className="text-xs" />
-                  {characterImagePreview && (
-                    <div className="flex items-center gap-4 p-2 bg-muted/50 rounded-lg">
-                      <img src={characterImagePreview} alt="Preview" className="w-12 h-12 rounded-md object-cover" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium truncate">{characterImage?.name}</p>
-                        <p className="text-xs text-muted-foreground">Personagem carregado</p>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => { setCharacterImage(null); setCharacterImagePreview(null); }}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setIsCharacterModalOpen(true)} disabled={isLoading || isSessionLoading}>
+              <UserSquare className="w-4 h-4 mr-2" /> Personagem
+            </Button>
           </div>
           <Button onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading || isSessionLoading}>
             <Wand2 className="w-4 h-4 mr-2" />
@@ -422,6 +411,11 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
           </Button>
         </div>
       </div>
-    </div>
+      <CharacterModal
+        isOpen={isCharacterModalOpen}
+        onClose={() => setIsCharacterModalOpen(false)}
+        onConfirm={handleCharacterConfirm}
+      />
+    </>
   );
 };
