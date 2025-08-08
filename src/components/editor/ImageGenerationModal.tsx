@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, UserSquare, Trash2 } from 'lucide-react';
+import { Loader2, Wand2, UserSquare, Trash2, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -138,7 +138,7 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
 
   return (
     <Dialog open={!!scene} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="w-5 h-5 text-primary" />
@@ -148,43 +148,59 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
             Descreva a imagem que você quer criar ou edite o prompt para gerar uma nova versão.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid md:grid-cols-2 gap-6 py-4">
-          <div>
-            {scene.imagePreview && (
-              <div className="rounded-lg overflow-hidden border aspect-video bg-muted">
-                <img src={scene.imagePreview} alt="Imagem atual" className="w-full h-full object-cover" />
-              </div>
-            )}
+        
+        <div className="grid md:grid-cols-2 gap-8 py-4">
+          {/* Left Column: Image Preview */}
+          <div className="space-y-2">
+            <Label>Pré-visualização</Label>
+            <div className="rounded-lg overflow-hidden border aspect-video bg-muted flex items-center justify-center">
+              {scene.imagePreview ? (
+                <img src={scene.imagePreview} alt="Imagem atual da cena" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-center text-muted-foreground p-4">
+                  <ImagePlus className="w-10 h-10 mx-auto mb-2" />
+                  <p className="text-sm">A imagem gerada aparecerá aqui.</p>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Right Column: Controls */}
           <div className="space-y-4">
             {characterImage && characterImagePreview && (
-              <div className="space-y-4 rounded-lg border p-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="use-character" className="flex flex-col space-y-1">
-                    <span className="font-medium flex items-center gap-2">
-                      <UserSquare className="w-4 h-4" />
-                      Usar Personagem
-                    </span>
-                  </Label>
-                  <Switch
-                    id="use-character"
-                    checked={useCharacter}
-                    onCheckedChange={setUseCharacter}
-                  />
-                </div>
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <Label htmlFor="use-character" className="flex flex-col space-y-1">
+                  <span className="font-medium flex items-center gap-2">
+                    <UserSquare className="w-4 h-4" />
+                    Usar Personagem de Referência
+                  </span>
+                  <span className="font-normal leading-snug text-muted-foreground text-xs">
+                    Usa a imagem do personagem como base.
+                  </span>
+                </Label>
+                <Switch
+                  id="use-character"
+                  checked={useCharacter}
+                  onCheckedChange={setUseCharacter}
+                />
               </div>
             )}
-            <Input
-              id="prompt"
-              placeholder="Ex: uma floresta mágica, noite, estilo 3D"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              disabled={isLoading}
-              onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="prompt">Prompt da Imagem</Label>
+              <Textarea
+                id="prompt"
+                placeholder="Ex: uma floresta mágica à noite, com uma lua brilhante, em estilo de animação 3D..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                disabled={isLoading}
+                rows={5}
+                className="resize-none"
+              />
+            </div>
           </div>
         </div>
-        <DialogFooter className="sm:justify-between">
+
+        <DialogFooter className="sm:justify-between items-center pt-4 border-t">
           <div>
             {scene.image && (
               <Button type="button" variant="destructive" onClick={handleRemove} disabled={isLoading}>
@@ -204,7 +220,10 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
                   Gerando...
                 </>
               ) : (
-                scene.image ? "Gerar Nova Imagem" : "Gerar Imagem"
+                <>
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  {scene.image ? "Gerar Nova Imagem" : "Gerar Imagem"}
+                </>
               )}
             </Button>
           </div>
