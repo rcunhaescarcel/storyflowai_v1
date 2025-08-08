@@ -231,13 +231,10 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
         setLoadingMessage(`Gerando imagem da cena ${i + 1}/${totalScenes}...`);
         
-        let finalImagePrompt = sceneData.image_prompt;
-        if (characterPublicUrl) {
-          finalImagePrompt = `o personagem, ${sceneData.image_prompt}`;
-        }
-        addDebugLog(`[Imagem IA] Gerando para o prompt: "${finalImagePrompt}"`);
+        const imagePromptForApi = sceneData.image_prompt;
+        addDebugLog(`[Imagem IA] Gerando para o prompt: "${imagePromptForApi}"`);
 
-        const encodedImagePrompt = encodeURIComponent(finalImagePrompt);
+        const encodedImagePrompt = encodeURIComponent(imagePromptForApi);
         let imageModel = 'flux';
         let imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1920&height=1080&model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
 
