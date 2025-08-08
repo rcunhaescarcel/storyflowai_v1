@@ -40,13 +40,11 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
         return data;
       }
 
-      // If no data and the error is PGRST116, it means the profile doesn't exist.
-      // This is the fix for existing users without a profile.
       if (error && error.code === 'PGRST116') {
         console.warn("No profile found for user, creating one now.");
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
-          .insert({ id: user.id }) // The DB default will set coins to 100
+          .insert({ id: user.id })
           .select()
           .single();
 
@@ -71,7 +69,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     setIsLoading(true);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session?.user) {
         const userProfile = await getProfile(session.user);
@@ -79,15 +77,13 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setProfile(null);
       }
-      
-      // The 'INITIAL_SESSION' event fires on page load. 
-      // We stop loading after this first event is handled.
-      if (event === 'INITIAL_SESSION') {
-        setIsLoading(false);
-      }
+      // A lógica de carregamento foi simplificada.
+      // Agora, qualquer evento de autenticação inicial irá parar o spinner,
+      // tornando o carregamento mais robusto em diferentes cenários de sessão.
+      setIsLoading(false);
     });
 
-    // Initial check in case onAuthStateChange doesn't fire immediately
+    // Fallback para garantir que o carregamento pare mesmo se nenhum evento for disparado.
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         setIsLoading(false);
