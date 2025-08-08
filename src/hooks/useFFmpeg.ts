@@ -58,6 +58,8 @@ export interface Scene {
   zoomDirection: 'in' | 'out';
   fadeInDuration: number;
   fadeOutDuration: number;
+  sceneCharacterImage?: File;
+  sceneCharacterImagePreview?: string;
 }
 
 export const useFFmpeg = () => {

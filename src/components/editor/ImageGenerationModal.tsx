@@ -36,7 +36,10 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
     const height = 1080;
 
     try {
-      const encodedPrompt = encodeURIComponent(prompt);
+      const finalPrompt = (characterImage && useCharacter)
+        ? `o personagem ${prompt}`
+        : prompt;
+      const encodedPrompt = encodeURIComponent(finalPrompt);
       
       if (characterImage && useCharacter) {
         addDebugLog('[IA] Fazendo upload da imagem de referência para o Supabase Storage...');
@@ -147,7 +150,7 @@ export const ImageGenerationModal = ({ isOpen, onClose, onImageGenerated, charac
           )}
           <Input
             id="prompt"
-            placeholder="Ex: personagem em uma floresta mágica, noite"
+            placeholder="Ex: em uma floresta mágica, noite"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={isLoading}
