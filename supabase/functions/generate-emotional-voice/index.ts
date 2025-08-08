@@ -36,7 +36,7 @@ serve(async (req) => {
           model: "gpt-3.5-turbo",
           messages: [{
             role: "user",
-            content: `Baseado no seguinte texto, determine o melhor tom de voz para a narração como uma frase curta em inglês (por exemplo, "A calm and inspiring tone."). O texto é: "${text}". Responda APENAS com a frase do tom de voz, sem aspas.`
+            content: `Determine the best voice tone for the following text. Respond with only a short phrase in English (e.g., "A whimsical and gentle tone."). Text: "${text}"`
           }],
           temperature: 0.5,
           max_tokens: 20,
@@ -64,7 +64,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${openAIApiKey}`,
       },
       body: JSON.stringify({
-        model: "tts-1",
+        model: "tts-1-hd",
         input: textToSpeak,
         voice: voice,
       }),
