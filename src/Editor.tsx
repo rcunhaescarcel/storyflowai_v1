@@ -256,41 +256,38 @@ const Editor = () => {
 
   if (isProjectLoading) {
     return (
-      <div className="container max-w-screen-xl mx-auto px-4 h-full flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-lg text-muted-foreground">Carregando seu projeto...</p>
-      </div>
+      <main className="container max-w-screen-xl mx-auto px-4 py-8">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          <p className="mt-4 text-lg text-muted-foreground">Carregando seu projeto...</p>
+        </div>
+      </main>
     );
   }
 
   return (
     <>
-      <div className="container max-w-screen-lg mx-auto px-4 h-full flex flex-col">
+      <main className="container max-w-screen-lg mx-auto px-4 py-8">
         {scenes.length === 0 ? (
-          <div className="flex-grow flex items-center justify-center">
+          <div className="max-w-3xl mx-auto space-y-8">
             <StoryPromptForm 
               onStoryGenerated={handleStoryGenerated}
               addDebugLog={addDebugLog}
             />
           </div>
         ) : (
-          <>
-            {/* Sticky Header */}
-            <div className="flex-shrink-0 sticky top-[5.5rem] bg-muted z-10 pt-4 pb-4 border-b">
-              <div className="flex items-center gap-4 mb-4">
-                <Clapperboard className="w-8 h-8 text-primary" />
-                <EditableProjectTitle initialTitle={projectTitle} onSave={handleSaveTitle} />
-              </div>
-              <ProjectActions 
-                scenes={scenes}
-                onRenderClick={() => setIsRenderModalOpen(true)}
-                onDownloadClick={() => setIsDownloadModalOpen(true)}
-                videoUrl={localVideoUrl || persistedVideoUrl}
-              />
+          <div className="mt-8">
+            <div className="flex items-center gap-4 mb-8">
+              <Clapperboard className="w-8 h-8 text-primary" />
+              <EditableProjectTitle initialTitle={projectTitle} onSave={handleSaveTitle} />
             </div>
-
-            {/* Scrollable Scenes */}
-            <div className="flex-1 overflow-y-auto space-y-6 py-6 pr-2 -mr-2">
+            <ProjectActions 
+              scenes={scenes}
+              onRenderClick={() => setIsRenderModalOpen(true)}
+              onDownloadClick={() => setIsDownloadModalOpen(true)}
+              videoUrl={localVideoUrl || persistedVideoUrl}
+            />
+            <div className="space-y-6">
               {scenes.map((scene, index) => (
                 <SceneCard
                   key={scene.id}
@@ -307,17 +304,15 @@ const Editor = () => {
                 />
               ))}
             </div>
-
-            {/* Sticky Footer */}
-            <div className="flex-shrink-0 sticky bottom-0 bg-background z-10 text-center py-4 border-t">
+            <div className="text-center pt-8">
               <Button onClick={addNewScene}>
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Nova Cena
               </Button>
             </div>
-          </>
+          </div>
         )}
-      </div>
+      </main>
 
       <Button
         variant="outline"
