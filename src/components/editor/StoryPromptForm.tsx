@@ -154,11 +154,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       const styleInfo = storyStyles[selectedStyle as keyof typeof storyStyles];
       const stylePrompt = styleInfo.promptSuffix;
       
-      let storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]`;
-      
-      if (characterImage) {
-        storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}" com um personagem principal. O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, incluindo "o personagem", e terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "O personagem caminhava pela floresta.", "image_prompt": "o personagem walking through a magical forest${stylePrompt}"}]`;
-      }
+      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]`;
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
@@ -234,9 +230,14 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         const baseProgress = 15 + (i * progressPerScene);
 
         setLoadingMessage(`Gerando imagem da cena ${i + 1}/${totalScenes}...`);
-        addDebugLog(`[Imagem IA] Gerando para o prompt: "${sceneData.image_prompt}"`);
+        
+        let finalImagePrompt = sceneData.image_prompt;
+        if (characterPublicUrl) {
+          finalImagePrompt = `o personagem, ${sceneData.image_prompt}`;
+        }
+        addDebugLog(`[Imagem IA] Gerando para o prompt: "${finalImagePrompt}"`);
 
-        const encodedImagePrompt = encodeURIComponent(sceneData.image_prompt);
+        const encodedImagePrompt = encodeURIComponent(finalImagePrompt);
         let imageModel = 'flux';
         let imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1920&height=1080&model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
 
