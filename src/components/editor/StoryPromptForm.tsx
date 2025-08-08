@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, ArrowUp, Wand2, Clock, Mic, UserSquare, Trash2, Palette } from 'lucide-react';
+import { Loader2, Wand2, Clock, Mic, UserSquare, Trash2, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
@@ -405,8 +405,9 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
               </PopoverContent>
             </Popover>
           </div>
-          <Button size="icon" className="rounded-full bg-primary hover:bg-primary/90" onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading || isSessionLoading}>
-            <ArrowUp className="w-5 h-5" />
+          <Button onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading || isSessionLoading}>
+            <Wand2 className="w-4 h-4 mr-2" />
+            Criar História
           </Button>
         </div>
       </div>
