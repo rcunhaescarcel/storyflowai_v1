@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, UploadCloud, CheckCircle } from "lucide-react";
+import { Loader2, UploadCloud, CheckCircle, UserSquare, GalleryHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { resizeImage, dataURLtoFile, urlToResizedFile } from "@/lib/imageUtils";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,7 @@ const galleryCharacters = [
 ];
 
 export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalProps) => {
-  const [selected, setSelected] = useState<{ file: File | null; preview: string | null }>({ file: null, preview: null });
+  const [selected, setSelected] = useState<{ file: File | null; preview: string | null; source: 'gallery' | 'upload' | null }>({ file: null, preview: null, source: null });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,9 +37,9 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
     if (file) {
       setIsLoading(true);
       try {
-        const resizedPreview = await resizeImage(file, 512, 512);
+        const resizedPreview = await resizeImage(file, 512, 768); // Taller aspect ratio
         const resizedFile = dataURLtoFile(resizedPreview, file.name);
-        setSelected({ file: resizedFile, preview: resizedPreview });
+        setSelected({ file: resizedFile, preview: resizedPreview, source: 'upload' });
       } catch (error) {
         toast.error("Falha ao processar a imagem.");
       } finally {
@@ -49,10 +49,14 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
   };
 
   const handleGallerySelect = async (character: typeof galleryCharacters[0]) => {
+    if (selected.preview && selected.preview.includes(character.name)) {
+        setSelected({ file: null, preview: null, source: null });
+        return;
+    }
     setIsLoading(true);
     try {
       const { file, preview } = await urlToResizedFile(character.image, `${character.name}.png`, 512, 768);
-      setSelected({ file, preview });
+      setSelected({ file, preview, source: 'gallery' });
     } catch (error) {
       console.error("Error processing gallery image:", error);
       toast.error("Falha ao carregar personagem da galeria.");
@@ -72,7 +76,7 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Escolher Personagem de Referência</DialogTitle>
           <DialogDescription>
@@ -81,62 +85,68 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
         </DialogHeader>
         <Tabs defaultValue="gallery" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="gallery">Galeria</TabsTrigger>
-            <TabsTrigger value="upload">Fazer Upload</TabsTrigger>
+            <TabsTrigger value="gallery"><GalleryHorizontal className="w-4 h-4 mr-2" />Galeria</TabsTrigger>
+            <TabsTrigger value="upload"><UploadCloud className="w-4 h-4 mr-2" />Fazer Upload</TabsTrigger>
           </TabsList>
-          <TabsContent value="gallery">
-            <div className="p-4">
-              <Carousel className="w-full max-w-xs mx-auto">
-                <CarouselContent>
-                  {galleryCharacters.map((char) => (
-                    <CarouselItem key={char.name}>
-                      <div className="p-1">
-                        <Card
-                          onClick={() => handleGallerySelect(char)}
-                          className={cn(
-                            "cursor-pointer transition-all",
-                            selected.preview === char.image ? "border-primary ring-2 ring-primary" : ""
+          <TabsContent value="gallery" className="mt-4">
+            <Carousel className="w-full max-w-sm mx-auto">
+              <CarouselContent>
+                {galleryCharacters.map((char, index) => (
+                  <CarouselItem key={index}>
+                    <div className="p-1">
+                      <Card
+                        onClick={() => handleGallerySelect(char)}
+                        className={cn(
+                          "cursor-pointer transition-all overflow-hidden",
+                          selected.source === 'gallery' && selected.preview?.includes(char.name) ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
+                        )}
+                      >
+                        <CardContent className="flex aspect-[3/4] items-center justify-center p-0 relative">
+                          <img
+                            src={char.image}
+                            alt={char.name}
+                            className="w-full h-full object-cover"
+                            crossOrigin="anonymous"
+                          />
+                          {selected.source === 'gallery' && selected.preview?.includes(char.name) && (
+                            <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
+                              <CheckCircle className="w-4 h-4" />
+                            </div>
                           )}
-                        >
-                          <CardContent className="flex h-[400px] items-center justify-center p-2 relative">
-                            <img
-                              src={char.image}
-                              alt={char.name}
-                              className="w-full h-full object-contain"
-                              crossOrigin="anonymous"
-                            />
-                            {selected.preview === char.image && (
-                              <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                                <CheckCircle className="w-4 h-4 text-white" />
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                        <p className="text-center font-medium mt-2">{char.name}</p>
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-              </Carousel>
-            </div>
+                        </CardContent>
+                      </Card>
+                      <p className="text-center font-medium mt-2 text-sm">{char.name}</p>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
           </TabsContent>
-          <TabsContent value="upload">
-            <div className="py-4 flex flex-col items-center justify-center gap-4">
+          <TabsContent value="upload" className="mt-4">
+            <div className="flex flex-col items-center justify-center gap-4">
               <Label
                 htmlFor="character-upload-modal"
-                className="w-full h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+                className={cn(
+                    "w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden",
+                    selected.source === 'upload' ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
+                )}
               >
-                {isLoading ? (
+                {isLoading && selected.source !== 'gallery' ? (
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                ) : selected.preview ? (
-                  <img src={selected.preview} alt="Preview" className="max-h-full rounded-md" crossOrigin="anonymous" />
+                ) : selected.source === 'upload' && selected.preview ? (
+                  <>
+                    <img src={selected.preview} alt="Preview" className="w-full h-full object-contain" crossOrigin="anonymous" />
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
+                        <CheckCircle className="w-4 h-4" />
+                    </div>
+                  </>
                 ) : (
                   <>
-                    <UploadCloud className="w-8 h-8 text-muted-foreground" />
+                    <UserSquare className="w-10 h-10 text-muted-foreground" />
                     <span className="mt-2 text-sm font-medium">Clique para fazer upload</span>
-                    <span className="text-xs text-muted-foreground">PNG ou JPG (max 512x512)</span>
+                    <span className="text-xs text-muted-foreground">PNG ou JPG (Recomendado: 512x768)</span>
                   </>
                 )}
               </Label>
@@ -144,7 +154,7 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
             </div>
           </TabsContent>
         </Tabs>
-        <DialogFooter>
+        <DialogFooter className="pt-4">
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button onClick={handleConfirmClick} disabled={!selected.file || isLoading}>
             {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
