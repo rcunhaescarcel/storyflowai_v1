@@ -45,7 +45,7 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
       const audioPrompt = `speak PT-BR: ${narrationText}`;
       const encodedTextPrompt = encodeURIComponent(audioPrompt);
       const token = "76b4jfL5SsXI48nS";
-      const referrer = "https://vidflow.com.br/";
+      const referrer = "https://storyflow.app/";
       
       const targetUrl = `https://text.pollinations.ai/${encodedTextPrompt}?model=openai-audio&voice=nova&referrer=${referrer}&token=${token}`;
       

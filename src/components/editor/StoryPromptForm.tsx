@@ -137,7 +137,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
-      const referrer = "https://vidflow.com.br/";
+      const referrer = "https://storyflow.app/";
       const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?token=${apiToken}&referrer=${referrer}`;
 
       addDebugLog(`[História IA] URL da API de texto: ${targetUrl.substring(0, 100)}...`);

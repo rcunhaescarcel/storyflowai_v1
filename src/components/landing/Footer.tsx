@@ -11,7 +11,7 @@ const Footer = () => {
           </p>
         </div>
         <p className="text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Viflow IA. Todos os direitos reservados.
+          © {new Date().getFullYear()} StoryFlow. Todos os direitos reservados.
         </p>
       </div>
     </footer>

@@ -42,7 +42,7 @@ const convertSRTtoASS = (srtText: string, style: SubtitleStyle): string => {
     const assEnd = end.trim().replace(',', '.').slice(0, -1);
     return `Dialogue: 0,${assStart},${assEnd},Default,,0,0,0,,${text}`;
   }).filter(Boolean).join('\n');
-  return `[Script Info]\nTitle: Viflow IA Subtitle\nScriptType: v4.00+\n\n${styleHeader}\n\n${eventsHeader}\n${dialogues}`;
+  return `[Script Info]\nTitle: StoryFlow Subtitle\nScriptType: v4.00+\n\n${styleHeader}\n\n${eventsHeader}\n${dialogues}`;
 };
 
 export interface Scene {

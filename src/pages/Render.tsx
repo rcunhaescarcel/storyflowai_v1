@@ -91,7 +91,7 @@ const Render = () => {
     if (videoUrl) {
       const link = document.createElement('a');
       link.href = videoUrl;
-      link.download = 'viflow-video.mp4';
+      link.download = 'storyflow-video.mp4';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

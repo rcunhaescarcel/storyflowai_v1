@@ -149,7 +149,7 @@ const Settings = () => {
           </span>
         </h1>
         <p className="text-muted-foreground mt-2">
-          Personalize sua experiência no Viflow IA.
+          Personalize sua experiência no StoryFlow.
         </p>
       </div>
 

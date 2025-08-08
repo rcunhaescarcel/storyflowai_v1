@@ -41,7 +41,7 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
 
     let targetUrl = '';
     const apiToken = "76b4jfL5SsXI48nS";
-    const referrer = "https://vidflow.com.br/";
+    const referrer = "https://storyflow.app/";
     const width = 1920;
     const height = 1080;
 
