@@ -43,10 +43,9 @@ const openAIVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 interface StoryPromptFormProps {
   onStoryGenerated: (scenes: Scene[]) => void;
   addDebugLog: (message: string) => void;
-  onAddSceneManually: () => void;
 }
 
-export const StoryPromptForm = ({ onStoryGenerated, addDebugLog, onAddSceneManually }: StoryPromptFormProps) => {
+export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFormProps) => {
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState('30');
   const [selectedVoice, setSelectedVoice] = useState('nova');
@@ -251,9 +250,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog, onAddSceneManua
           </Button>
         </div>
       </div>
-      <Button variant="link" className="mt-6 text-muted-foreground" onClick={onAddSceneManually}>
-        Ou adicione a primeira cena manualmente
-      </Button>
     </div>
   );
 };

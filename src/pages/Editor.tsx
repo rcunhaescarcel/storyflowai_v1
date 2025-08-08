@@ -267,7 +267,6 @@ const Editor = () => {
           <StoryPromptForm 
             onStoryGenerated={handleStoryGenerated}
             addDebugLog={addDebugLog}
-            onAddSceneManually={addNewScene}
           />
         ) : (
           <div className="grid lg:grid-cols-12 gap-8">
@@ -335,7 +334,7 @@ const Editor = () => {
               debugLogs={debugLogs}
               onDownloadVideo={downloadVideo}
               onCopyLogs={copyLogsToClipboard}
-              onClearLogs={clearDebugLogs}
+      onClearLogs={clearDebugLogs}
             />
           </div>
         )}
