@@ -14,7 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          id: string
+          updated_at: string | null
+          coins: number | null
+        }
+        Insert: {
+          id: string
+          updated_at?: string | null
+          coins?: number | null
+        }
+        Update: {
+          id?: string
+          updated_at?: string | null
+          coins?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_projects: {
+        Row: {
+          id: string
+          user_id: string | null
+          title: string
+          description: string | null
+          input_type: string
+          input_content: string
+          scenes: Json | null
+          video_duration: number | null
+          status: string
+          final_video_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          title: string
+          description?: string | null
+          input_type: string
+          input_content: string
+          scenes?: Json | null
+          video_duration?: number | null
+          status?: string
+          final_video_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          title?: string
+          description?: string | null
+          input_type?: string
+          input_content?: string
+          scenes?: Json | null
+          video_duration?: number | null
+          status?: string
+          final_video_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_projects_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

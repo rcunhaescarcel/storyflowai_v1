@@ -41,7 +41,7 @@ interface StoryPromptFormProps {
 }
 
 export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFormProps) => {
-  const { session } = useSession();
+  const { session, profile, setProfile } = useSession();
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState('30');
   const [selectedVoice, setSelectedVoice] = useState('nova');
@@ -79,12 +79,32 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       toast.error("Você precisa estar logado para criar uma história.");
       return;
     }
+    if (!profile || (profile.coins ?? 0) < 1) {
+      toast.error("Créditos insuficientes", { description: "Você não tem coins suficientes para gerar uma história. Recarregue para continuar." });
+      return;
+    }
+
     setIsLoading(true);
     setProgress(0);
     setLoadingMessage('Gerando roteiro da história...');
     addDebugLog(`[História IA] Iniciando geração para o prompt: "${prompt}" com duração de ${duration}s`);
 
     try {
+      // Decrement coins first
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from('profiles')
+        .update({ coins: (profile.coins ?? 0) - 1 })
+        .eq('id', session.user.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new Error(`Falha ao debitar os créditos: ${updateError.message}`);
+      }
+      
+      setProfile(updatedProfile); // Update local state
+      addDebugLog(`[Coins] 1 coin debitado. Saldo restante: ${updatedProfile.coins}`);
+
       const numParagraphs = parseInt(duration) / 5;
       let storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. Retorne a resposta como um array JSON válido. Cada objeto no array representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em português. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, no estilo de animação 3D. Não inclua o prompt da imagem na narração. Exemplo: [{"narration": "Era uma vez...", "image_prompt": "A 3D animation of a magical castle."}]`;
       

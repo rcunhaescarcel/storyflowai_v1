@@ -1,10 +1,12 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wand2, Video, Settings } from "lucide-react";
+import { Wand2, Video, Settings, History } from "lucide-react";
+import { useSession } from "@/contexts/SessionContext";
 
 const AppHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { profile } = useSession();
 
   const isEditingProject = location.pathname === '/editor' && !!location.state?.project;
   const isCreating = location.pathname === '/editor' && !isEditingProject;
@@ -44,6 +46,12 @@ const AppHeader = () => {
               </Button>
             )}
           </NavLink>
+          {profile && (
+            <Button variant="ghost" size="sm" className="gap-2 rounded-full px-4 cursor-default hover:bg-transparent">
+              <History className="w-4 h-4" />
+              {profile.coins ?? 0} Coins
+            </Button>
+          )}
         </nav>
       </div>
     </header>
