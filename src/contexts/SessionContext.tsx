@@ -68,7 +68,17 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    const initializeSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      if (session?.user) {
+        const userProfile = await getProfile(session.user);
+        setProfile(userProfile);
+      }
+      setIsLoading(false);
+    };
+
+    initializeSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
@@ -77,17 +87,6 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
         setProfile(userProfile);
       } else {
         setProfile(null);
-      }
-      // A lógica de carregamento foi simplificada.
-      // Agora, qualquer evento de autenticação inicial irá parar o spinner,
-      // tornando o carregamento mais robusto em diferentes cenários de sessão.
-      setIsLoading(false);
-    });
-
-    // Fallback para garantir que o carregamento pare mesmo se nenhum evento for disparado.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        setIsLoading(false);
       }
     });
 
