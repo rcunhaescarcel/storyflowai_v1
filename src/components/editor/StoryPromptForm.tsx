@@ -98,10 +98,10 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
     try {
       const numParagraphs = parseInt(duration) / 5;
-      let storyPrompt = `Gere um roteiro para um vídeo de aproximadamente ${duration} segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de ${numParagraphs} parágrafos. Para cada parágrafo (cena), forneça a narração em português e um prompt de imagem em inglês para gerar uma imagem no estilo de animação 3D. Use o formato: "Texto da narração. ||| English image prompt in 3D animation style." Não inclua títulos como "Cena 1".`;
+      let storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter ${numParagraphs} cenas. Para cada cena, escreva uma linha no formato exato: "NARRAÇÃO EM PORTUGUÊS. ||| IMAGE PROMPT IN ENGLISH FOR 3D ANIMATION STYLE.". Não adicione números de cena ou qualquer outro texto. Cada cena deve estar em uma nova linha.`;
       
       if (characterImage) {
-        storyPrompt = `Gere um roteiro para um vídeo de aproximadamente ${duration} segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de ${numParagraphs} parágrafos. Para cada parágrafo (cena), forneça a narração em português e um prompt de imagem em inglês para gerar uma imagem no estilo de animação 3D. O prompt de imagem DEVE começar com "o personagem" para descrever a ação do personagem principal. Use o formato: "Texto da narração. ||| o personagem [descrição da ação e cenário]." Não inclua títulos como "Cena 1".`;
+        storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}" com um personagem principal. O vídeo deve ter ${numParagraphs} cenas. Para cada cena, escreva uma linha no formato exato: "NARRAÇÃO EM PORTUGUÊS. ||| o personagem [descrição da ação e cenário em inglês, estilo animação 3D].". Não adicione números de cena ou qualquer outro texto. Cada cena deve estar em uma nova linha.`;
       }
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
@@ -120,6 +120,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
       const storyText = await response.text();
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
+      addDebugLog(`[História IA] Raw story text: ${storyText}`);
       setProgress(5);
 
       let characterPublicUrl: string | null = null;
@@ -151,7 +152,10 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       }
 
       const lines = storyText.trim().split('\n').filter(p => p.includes('|||'));
-      if (lines.length === 0) throw new Error("A IA não retornou um roteiro no formato esperado.");
+      if (lines.length === 0) {
+        addDebugLog(`[História IA] ❌ ERRO: O roteiro recebido não está no formato esperado. Nenhuma linha contém '|||'.`);
+        throw new Error("A IA não retornou um roteiro no formato esperado. Tente novamente ou ajuste o tema.");
+      }
 
       const scenesData = lines.map(line => {
         const parts = line.split('|||');
@@ -260,13 +264,21 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
       const projectToInsert = {
         user_id: session.user.id,
-        title: projectTitle, description: prompt, input_type: 'story_prompt', input_content: prompt,
-        scenes: sceneDataForDb, video_duration: totalDuration, status: 'draft', style: 'Animação 3D',
+        title: projectTitle,
+        description: prompt,
+        input_type: 'story_prompt',
+        input_content: prompt,
+        scenes: sceneDataForDb,
+        video_duration: totalDuration,
+        status: 'draft',
       };
 
       addDebugLog('[DB] Inserindo registro do projeto no banco de dados...');
       const { error: insertError } = await supabase.from('video_projects').insert(projectToInsert);
-      if (insertError) throw new Error(`Falha ao salvar o projeto: ${insertError.message}`);
+      if (insertError) {
+        addDebugLog(`[DB] ❌ ERRO ao inserir no banco de dados: ${insertError.message}`);
+        throw new Error(`Falha ao salvar o projeto: ${insertError.message}`);
+      }
 
       addDebugLog('[DB] ✅ Projeto salvo com sucesso!');
       await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
