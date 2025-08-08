@@ -59,6 +59,30 @@ interface StoryPromptFormProps {
   addDebugLog: (message: string) => void;
 }
 
+const fetchWithRetry = async (url: string, { retries = 3, delayMs = 2000, addDebugLog }: { retries?: number, delayMs?: number, addDebugLog: (msg: string) => void }): Promise<Response> => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        return response;
+      }
+      const errorText = await response.text();
+      addDebugLog(`[API Tentativa ${i + 1}/${retries}] Falha com status ${response.status}.`);
+      
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        throw new Error(`Erro da API (${response.status}): ${errorText}`);
+      }
+      await delay(delayMs * (i + 1));
+    } catch (error) {
+      if (i === retries - 1) {
+        addDebugLog(`[API] Todas as ${retries} tentativas falharam.`);
+        throw error;
+      }
+    }
+  }
+  throw new Error('Todas as tentativas de requisição falharam.');
+};
+
 export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFormProps) => {
   const { session, profile, setProfile, isLoading: isSessionLoading } = useSession();
   const [prompt, setPrompt] = useState('');
@@ -109,11 +133,12 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
     setLoadingMessage('Gerando roteiro da história...');
     addDebugLog(`[História IA] Iniciando geração para o prompt: "${prompt}" com duração de ${duration}s`);
 
+    const initialCoins = profile.coins ?? 0;
+
     try {
-      // Decrement coins first
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
-        .update({ coins: (profile.coins ?? 0) - 1 })
+        .update({ coins: initialCoins - 1 })
         .eq('id', session.user.id)
         .select()
         .single();
@@ -122,7 +147,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         throw new Error(`Falha ao debitar os créditos: ${updateError.message}`);
       }
       
-      setProfile(updatedProfile); // Update local state
+      setProfile(updatedProfile);
       addDebugLog(`[Coins] 1 coin debitado. Saldo restante: ${updatedProfile.coins}`);
 
       const numParagraphs = parseInt(duration) / 5;
@@ -141,7 +166,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?token=${apiToken}&referrer=${referrer}`;
 
       addDebugLog(`[História IA] URL da API de texto: ${targetUrl.substring(0, 100)}...`);
-      const response = await fetch(targetUrl);
+      const response = await fetchWithRetry(targetUrl, { addDebugLog });
 
       if (!response.ok) {
         const errorBody = await response.text();
@@ -151,7 +176,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
       const storyText = await response.text();
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
-      addDebugLog(`[História IA] Raw story text: ${storyText}`);
       setProgress(10);
 
       let scenesData: { narration: string; image_prompt: string; }[];
@@ -222,15 +246,13 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
           imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1920&height=1080&model=${imageModel}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}&nologo=true`;
         }
 
-        const imageResponse = await fetch(imageUrl);
+        const imageResponse = await fetchWithRetry(imageUrl, { addDebugLog });
         if (!imageResponse.ok) throw new Error(`Falha ao gerar imagem para a cena ${i + 1}`);
         const imageBlob = await imageResponse.blob();
         const imageFile = new File([imageBlob], `scene_${i + 1}.png`, { type: 'image/png' });
         const imagePreview = await blobToDataURL(imageBlob);
         
         setProgress(baseProgress + progressPerScene / 2);
-
-        await delay(200); // Pausa para estabilidade
 
         setLoadingMessage(`Gerando narração da cena ${i + 1}/${totalScenes}...`);
         addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
@@ -239,7 +261,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         const encodedAudioPrompt = encodeURIComponent(audioPrompt);
         const audioUrl = `https://text.pollinations.ai/${encodedAudioPrompt}?model=openai-audio&voice=${selectedVoice}&referrer=${referrer}&token=${apiToken}`;
 
-        const audioResponse = await fetch(audioUrl);
+        const audioResponse = await fetchWithRetry(audioUrl, { addDebugLog });
         if (!audioResponse.ok) throw new Error(`Falha ao gerar áudio para a cena ${i + 1}`);
         const audioBlob = await audioResponse.blob();
         const audioFile = new File([audioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
@@ -271,7 +293,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         });
         
         setProgress(baseProgress + progressPerScene);
-        await delay(500);
       }
 
       onStoryGenerated(newScenes, characterImage, characterImagePreview, prompt, styleInfo.label);
@@ -280,6 +301,22 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
       addDebugLog(`[História IA] ❌ Falha na geração: ${errorMessage}`);
       toast.error(`Falha ao gerar a história: ${errorMessage}`);
+      
+      addDebugLog(`[Coins] Erro na geração. Reembolsando 1 coin...`);
+      const { error: refundError } = await supabase
+        .from('profiles')
+        .update({ coins: initialCoins })
+        .eq('id', session!.user.id);
+
+      if (refundError) {
+        addDebugLog(`[Coins] ❌ FALHA CRÍTICA: Não foi possível reembolsar o coin. Erro: ${refundError.message}`);
+        toast.error("Falha Crítica", { description: "Ocorreu um erro e não foi possível devolver seu crédito. Por favor, contate o suporte." });
+      } else {
+        setProfile(prev => prev ? { ...prev, coins: initialCoins } : null);
+        addDebugLog(`[Coins] ✅ Coin reembolsado com sucesso.`);
+        toast.info("Seu crédito foi devolvido", { description: "Como a geração falhou, o coin utilizado foi estornado para sua conta." });
+      }
+
     } finally {
       setIsLoading(false);
       setProgress(0);
