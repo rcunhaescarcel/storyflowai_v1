@@ -112,6 +112,12 @@ const Settings = () => {
     }
   };
 
+  const handleThemeChange = (newTheme: string) => {
+    if (newTheme === 'light' || newTheme === 'dark' || newTheme === 'system') {
+      setTheme(newTheme);
+    }
+  };
+
   const freePlanLimit = 3;
   const videosCreated = monthlyVideoCount ?? 0;
   const progressValue = (videosCreated / freePlanLimit) * 100;
@@ -252,7 +258,7 @@ const Settings = () => {
               <div className="space-y-2">
                 <Label>Tema</Label>
                 <p className="text-sm text-muted-foreground">Escolha entre modo claro ou escuro.</p>
-                <ToggleGroup type="single" value={theme} onValueChange={(value) => value && setTheme(value as 'light' | 'dark' | 'system')} className="justify-start">
+                <ToggleGroup type="single" value={theme} onValueChange={handleThemeChange} className="justify-start">
                   <ToggleGroupItem value="light">Claro</ToggleGroupItem>
                   <ToggleGroupItem value="dark">Escuro</ToggleGroupItem>
                   <ToggleGroupItem value="system">Sistema</ToggleGroupItem>
