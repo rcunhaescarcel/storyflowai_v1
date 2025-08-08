@@ -155,7 +155,7 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
             <Label>Pré-visualização</Label>
             <div className="rounded-lg overflow-hidden border aspect-video bg-muted flex items-center justify-center">
               {scene.imagePreview ? (
-                <img src={scene.imagePreview} alt="Imagem atual da cena" className="w-full h-full object-cover" />
+                <img src={scene.imagePreview} alt="Imagem atual da cena" className="w-full h-full object-cover" crossOrigin="anonymous" />
               ) : (
                 <div className="text-center text-muted-foreground p-4">
                   <ImagePlus className="w-10 h-10 mx-auto mb-2" />

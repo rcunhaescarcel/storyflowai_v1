@@ -76,7 +76,7 @@ export const SceneCard = ({
               placeholder="Digite o texto que a IA deve narrar para esta cena..."
               value={scene.narrationText || ''}
               onChange={(e) => onUpdate(scene.id, { narrationText: e.target.value })}
-              className="bg-transparent text-xs border-none focus-visible:ring-0 p-0 resize-none h-auto"
+              className="bg-transparent text-xs border border-input p-2 rounded-md resize-none h-auto focus-visible:ring-1 focus-visible:ring-ring"
               rows={3}
             />
             <NarrationGenerator
