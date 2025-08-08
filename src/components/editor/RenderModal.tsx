@@ -24,8 +24,6 @@ interface RenderModalProps {
   onClose: () => void;
   onRender: () => void;
   isProcessing: boolean;
-  projectTitle: string;
-  onProjectTitleChange: (title: string) => void;
   videoQuality: VideoQuality;
   onVideoQualityChange: (quality: VideoQuality) => void;
   backgroundMusic: File | null;
@@ -66,9 +64,6 @@ export const RenderModal = (props: RenderModalProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
             <div className="space-y-6">
               <GeneralSettings
-                isEditing={true}
-                projectTitle={props.projectTitle}
-                onProjectTitleChange={props.onProjectTitleChange}
                 videoQuality={props.videoQuality}
                 onVideoQualityChange={props.onVideoQualityChange}
               />

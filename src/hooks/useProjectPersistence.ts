@@ -91,6 +91,24 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
     }
   };
 
+  const updateProject = async (projectId: string, updates: Partial<VideoProject>) => {
+    if (!session) {
+      toast.error("Sessão não encontrada. Não foi possível atualizar o projeto.");
+      return null;
+    }
+    const { error } = await supabase
+      .from('video_projects')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', projectId);
+
+    if (error) {
+      toast.error("Falha ao salvar alterações", { description: error.message });
+    } else {
+      toast.success("Alterações salvas com sucesso!");
+      await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
+    }
+  };
+
   const saveRenderedVideo = async (projectId: string, videoBlobUrl: string): Promise<string | null> => {
     if (!session) {
       toast.error("Sessão não encontrada. Não foi possível salvar o vídeo.");
@@ -133,5 +151,5 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
     }
   };
 
-  return { saveProject, saveRenderedVideo };
+  return { saveProject, updateProject, saveRenderedVideo };
 };

@@ -6,7 +6,7 @@ import { ImageGenerationModal } from "@/components/editor/ImageGenerationModal";
 import { StoryPromptForm } from "@/components/editor/StoryPromptForm";
 import { SceneCard } from "@/components/editor/SceneCard";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Bug } from "lucide-react";
+import { Loader2, Plus, Bug, Clapperboard } from "lucide-react";
 import { DebugLogModal } from "@/components/editor/DebugLogModal";
 import { useScenes } from "./hooks/useScenes";
 import { useGlobalSettings } from "./hooks/useGlobalSettings";
@@ -15,6 +15,7 @@ import { useProjectPersistence } from "./hooks/useProjectPersistence";
 import { VideoProject } from "./types/video";
 import { ProjectActions } from "./components/editor/ProjectActions";
 import { RenderModal } from "./components/editor/RenderModal";
+import { EditableProjectTitle } from "./components/editor/EditableProjectTitle";
 
 const Editor = () => {
   const location = useLocation();
@@ -71,7 +72,7 @@ const Editor = () => {
     addDebugLog
   });
 
-  const { saveProject, saveRenderedVideo } = useProjectPersistence(addDebugLog);
+  const { saveProject, updateProject, saveRenderedVideo } = useProjectPersistence(addDebugLog);
   
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
@@ -152,8 +153,6 @@ const Editor = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } else {
-      toast.error("Nenhum vídeo para baixar.");
     }
   };
 
@@ -191,6 +190,13 @@ const Editor = () => {
     }
   }, [setScenes, setCharacterImage, setCharacterImagePreview, addDebugLog, saveProject]);
 
+  const handleSaveTitle = (newTitle: string) => {
+    setProjectTitle(newTitle);
+    if (currentProjectId) {
+      updateProject(currentProjectId, { title: newTitle });
+    }
+  };
+
   if (isProjectLoading) {
     return (
       <main className="container max-w-screen-xl mx-auto px-4 py-8">
@@ -214,6 +220,10 @@ const Editor = () => {
           </div>
         ) : (
           <div className="mt-8">
+            <div className="flex items-center gap-4 mb-8">
+              <Clapperboard className="w-8 h-8 text-primary" />
+              <EditableProjectTitle initialTitle={projectTitle} onSave={handleSaveTitle} />
+            </div>
             <ProjectActions 
               scenes={scenes}
               onRenderClick={() => setIsRenderModalOpen(true)}
@@ -280,8 +290,6 @@ const Editor = () => {
         onClose={() => setIsRenderModalOpen(false)}
         onRender={handleRenderVideo}
         isProcessing={isProcessing}
-        projectTitle={projectTitle}
-        onProjectTitleChange={setProjectTitle}
         videoQuality={videoQuality}
         onVideoQualityChange={setVideoQuality}
         backgroundMusic={backgroundMusic}
