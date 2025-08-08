@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Wand2, Video, Settings, LogOut } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
@@ -8,6 +8,9 @@ import { toast } from "sonner";
 const AppHeader = () => {
   const { session } = useSession();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isEditingProject = location.pathname === '/editor' && !!location.state?.project;
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -26,7 +29,7 @@ const AppHeader = () => {
         <nav className="flex items-center gap-1 p-2 rounded-full bg-background/80 border shadow-lg backdrop-blur-sm">
           <NavLink to="/editor">
             {({ isActive }) => (
-              <Button variant={isActive ? "default" : "ghost"} size="sm" className="gap-2 rounded-full px-4">
+              <Button variant={isActive && !isEditingProject ? "default" : "ghost"} size="sm" className="gap-2 rounded-full px-4">
                 <Wand2 className="w-4 h-4" />
                 Criar
               </Button>
@@ -34,7 +37,7 @@ const AppHeader = () => {
           </NavLink>
           <NavLink to="/videos">
             {({ isActive }) => (
-              <Button variant={isActive ? "default" : "ghost"} size="sm" className="gap-2 rounded-full px-4">
+              <Button variant={isActive || isEditingProject ? "default" : "ghost"} size="sm" className="gap-2 rounded-full px-4">
                 <Video className="w-4 h-4" />
                 Vídeos
               </Button>
