@@ -44,9 +44,12 @@ const getAudioDuration = (file: File): Promise<number> => {
 // Adicionando uma função de delay para evitar sobrecarregar a API
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
+const openAIVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+
 export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebugLog }: StoryGeneratorModalProps) => {
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState('60');
+  const [selectedVoice, setSelectedVoice] = useState('nova');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gerando...');
   const [progress, setProgress] = useState(0);
@@ -135,7 +138,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
 
         const audioPrompt = `speak PT-BR: ${sceneData.narration}`;
         const encodedAudioPrompt = encodeURIComponent(audioPrompt);
-        const audioUrl = `https://text.pollinations.ai/${encodedAudioPrompt}?model=openai-audio&voice=alloy&referrer=${referrer}&token=${apiToken}`;
+        const audioUrl = `https://text.pollinations.ai/${encodedAudioPrompt}?model=openai-audio&voice=${selectedVoice}&referrer=${referrer}&token=${apiToken}`;
 
         const audioResponse = await fetch(audioUrl);
         if (!audioResponse.ok) {
@@ -203,7 +206,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
         </DialogHeader>
         <div className="py-4">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center gap-4 h-[208px]">
+            <div className="flex flex-col items-center justify-center gap-4 h-[288px]">
               <Loader2 className="w-12 h-12 text-primary animate-spin" />
               <div className="w-full text-center">
                 <p className="text-sm font-medium text-foreground">{loadingMessage}</p>
@@ -239,6 +242,21 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
                     <SelectItem value="30">30 segundos (~6 cenas)</SelectItem>
                     <SelectItem value="60">1 minuto (~12 cenas)</SelectItem>
                     <SelectItem value="90">1 minuto e 30s (~18 cenas)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="voice-select" className="text-sm font-medium">
+                  Voz da Narração (OpenAI)
+                </Label>
+                <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isLoading}>
+                  <SelectTrigger id="voice-select" className="w-full mt-2 bg-background">
+                    <SelectValue placeholder="Selecione uma voz" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {openAIVoices.map(voice => (
+                      <SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
