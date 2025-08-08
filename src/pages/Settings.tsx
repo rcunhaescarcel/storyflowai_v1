@@ -113,53 +113,6 @@ const Settings = () => {
       </div>
 
       <div className="space-y-8">
-        {/* Plano e Faturamento */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <Crown className="w-6 h-6 text-primary" />
-              Plano e Faturamento
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
-              <h3 className="text-lg font-semibold">Plano Gratuito</h3>
-              <p className="text-muted-foreground text-sm mt-1">{freePlanLimit} vídeos por mês • Qualidade HD</p>
-              <div className="mt-4 space-y-2">
-                {isLoadingCount ? (
-                  <>
-                    <Skeleton className="h-2 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </>
-                ) : (
-                  <>
-                    <Progress value={progressValue} className="h-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Você já criou {videosCreated} de {freePlanLimit} vídeos este mês.
-                    </p>
-                  </>
-                )}
-              </div>
-              <Button className="mt-6" onClick={() => toast.info("Funcionalidade em breve!", { description: "A opção de upgrade estará disponível em breve." })}>
-                Upgrade
-              </Button>
-            </div>
-            <div className="bg-yellow-400/10 border border-yellow-500/20 rounded-lg p-6">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Coins className="w-5 h-5 text-yellow-600" />
-                Seu Saldo de Coins
-              </h3>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-4xl font-bold">{profile?.coins ?? 0}</span>
-                <span className="text-muted-foreground">coins</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Com seu saldo atual, você pode criar aproximadamente mais {estimatedVideosWithCoins} vídeos.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Preferências Padrão */}
         <Card>
           <CardHeader>
@@ -211,6 +164,53 @@ const Settings = () => {
                   <SelectItem value="90">1 minuto e 30s</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Plano e Faturamento */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <Crown className="w-6 h-6 text-primary" />
+              Plano e Faturamento
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
+              <h3 className="text-lg font-semibold">Plano Gratuito</h3>
+              <p className="text-muted-foreground text-sm mt-1">{freePlanLimit} vídeos por mês • Qualidade HD</p>
+              <div className="mt-4 space-y-2">
+                {isLoadingCount ? (
+                  <>
+                    <Skeleton className="h-2 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </>
+                ) : (
+                  <>
+                    <Progress value={progressValue} className="h-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Você já criou {videosCreated} de {freePlanLimit} vídeos este mês.
+                    </p>
+                  </>
+                )}
+              </div>
+              <Button className="mt-6" onClick={() => toast.info("Funcionalidade em breve!", { description: "A opção de upgrade estará disponível em breve." })}>
+                Upgrade
+              </Button>
+            </div>
+            <div className="bg-yellow-400/10 border border-yellow-500/20 rounded-lg p-6">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Coins className="w-5 h-5 text-yellow-600" />
+                Seu Saldo de Coins
+              </h3>
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-4xl font-bold">{profile?.coins ?? 0}</span>
+                <span className="text-muted-foreground">coins</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Com seu saldo atual, você pode criar aproximadamente mais {estimatedVideosWithCoins} vídeos.
+              </p>
             </div>
           </CardContent>
         </Card>
