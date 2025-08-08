@@ -58,7 +58,7 @@ export const ImageUploader = ({ imagePreview, onImageUpload, onImageRemove, onVi
           </div>
         ) : (
           <>
-            <img src={imagePreview} alt="Preview da cena" className="w-full h-full object-cover" />
+            <img src={imagePreview} alt="Preview da cena" className="w-full h-full object-cover" crossOrigin="anonymous" />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <Button
                 variant="secondary"

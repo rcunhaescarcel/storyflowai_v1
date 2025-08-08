@@ -27,7 +27,7 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete }: VideoCardPr
     <Card className="overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1">
       <div className="relative">
         <AspectRatio ratio={16 / 9}>
-          <img src={thumbnailUrl} alt={project.title} className="object-cover w-full h-full bg-muted" />
+          <img src={thumbnailUrl} alt={project.title} className="object-cover w-full h-full bg-muted" crossOrigin="anonymous" />
         </AspectRatio>
         
         {isRendered ? (
