@@ -207,7 +207,7 @@ const Editor = () => {
 
   const handleDownload = async (selection: DownloadSelection) => {
     setIsDownloading(true);
-    const finalVideoUrl = localVideoUrl || persistedVideoUrl;
+    const finalVideoUrl = persistedVideoUrl || localVideoUrl;
     const zip = new JSZip();
     let filesToZip = 0;
 
@@ -321,7 +321,7 @@ const Editor = () => {
   }
 
   const showRenderProgress = isRendering && renderingProjectId === currentProjectId;
-  const finalVideoUrl = localVideoUrl || persistedVideoUrl;
+  const finalVideoUrl = persistedVideoUrl || localVideoUrl;
 
   return (
     <>

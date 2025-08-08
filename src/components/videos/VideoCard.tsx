@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -18,18 +18,9 @@ interface VideoCardProps {
 
 export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing, isCurrentlyRendering }: VideoCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const isRendered = !!project.final_video_url;
   const thumbnailUrl = project.thumbnail_url || `https://placehold.co/1600x900/2a2a2a/ffffff?text=${encodeURI(project.title)}`;
   
-  useEffect(() => {
-    if (isPlaying && videoRef.current) {
-      videoRef.current.play().catch(error => {
-        console.error("Video play failed:", error);
-      });
-    }
-  }, [isPlaying]);
-
   const formatDuration = (seconds: number | null | undefined) => {
     if (seconds === null || seconds === undefined) return '0:00';
     const minutes = Math.floor(seconds / 60);
@@ -51,9 +42,10 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing, is
         <AspectRatio ratio={16 / 9} className="bg-muted">
           {isPlaying && isRendered ? (
             <video
-              ref={videoRef}
+              key={project.final_video_url}
               src={project.final_video_url!}
               controls
+              autoPlay
               className="w-full h-full object-contain bg-black"
               onEnded={() => setIsPlaying(false)}
             />
