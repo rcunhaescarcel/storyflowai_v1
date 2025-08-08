@@ -120,6 +120,47 @@ export const useFFmpeg = () => {
     }
   }, [ffmpeg, isLoaded, addDebugLog]);
 
+  const concatenateAudio = useCallback(async (scenes: Scene[]): Promise<File | null> => {
+    addDebugLog(`🎵 Iniciando concatenação de áudio para ${scenes.length} cenas...`);
+    if (!isLoaded) {
+      addDebugLog('FFmpeg não carregado, tentando carregar agora...');
+      if (!await loadFFmpeg()) {
+        addDebugLog('❌ FALHA: Não foi possível carregar o FFmpeg.');
+        return null;
+      }
+    }
+    const audioScenes = scenes.filter(s => s.audio);
+    if (audioScenes.length === 0) {
+      addDebugLog('⚠️ Nenhum áudio para concatenar.');
+      return null;
+    }
+
+    setIsProcessing(true);
+    try {
+      let concatList = '';
+      for (let i = 0; i < audioScenes.length; i++) {
+        const scene = audioScenes[i];
+        const fileName = `audio_${i}.mp3`;
+        await ffmpeg.writeFile(fileName, await fetchFile(scene.audio!));
+        concatList += `file '${fileName}'\n`;
+      }
+
+      await ffmpeg.writeFile('concat_audio_list.txt', new TextEncoder().encode(concatList));
+      await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'concat_audio_list.txt', '-c', 'copy', '-y', 'full_narration.mp3']);
+      
+      const data = await ffmpeg.readFile('full_narration.mp3');
+      const audioFile = new File([new Uint8Array(data as Uint8Array)], 'narracao_completa.mp3', { type: 'audio/mp3' });
+      
+      addDebugLog('✅ Concatenação de áudio concluída!');
+      return audioFile;
+    } catch (error) {
+      addDebugLog(`❌ ERRO na concatenação de áudio: ${error.message}`);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [ffmpeg, isLoaded, loadFFmpeg, addDebugLog]);
+
   const renderVideo = useCallback(async (
     scenes: Scene[],
     globalSrtFile: File | null,
@@ -314,6 +355,7 @@ export const useFFmpeg = () => {
   return {
     loadFFmpeg,
     renderVideo,
+    concatenateAudio,
     isLoaded,
     isProcessing,
     progress,

@@ -16,12 +16,15 @@ import { VideoProject } from "./types/video";
 import { ProjectActions } from "./components/editor/ProjectActions";
 import { RenderModal } from "./components/editor/RenderModal";
 import { EditableProjectTitle } from "./components/editor/EditableProjectTitle";
-import { DownloadModal } from "./components/editor/DownloadModal";
+import { DownloadModal, DownloadSelection } from "./components/editor/DownloadModal";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 const Editor = () => {
   const location = useLocation();
   const { 
-    renderVideo, 
+    renderVideo,
+    concatenateAudio,
     isProcessing, 
     progress, 
     debugLogs, 
@@ -80,6 +83,7 @@ const Editor = () => {
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
   const [isRenderModalOpen, setIsRenderModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (!location.state?.project) {
@@ -143,6 +147,69 @@ const Editor = () => {
       }
     } catch (error) {
       toast.error("Erro na Renderização", { description: `${error}` });
+    }
+  };
+
+  const handleDownload = async (selection: DownloadSelection) => {
+    setIsDownloading(true);
+    const finalVideoUrl = localVideoUrl || persistedVideoUrl;
+    const zip = new JSZip();
+    let filesToZip = 0;
+
+    try {
+      if (selection.video && finalVideoUrl) {
+        const response = await fetch(finalVideoUrl);
+        const blob = await response.blob();
+        zip.file(`${projectTitle || 'video'}.mp4`, blob);
+        filesToZip++;
+      }
+
+      if (selection.images) {
+        const imagesFolder = zip.folder("images");
+        for (let i = 0; i < scenes.length; i++) {
+          if (scenes[i].image) {
+            imagesFolder?.file(`image_${i + 1}.png`, scenes[i].image!);
+            filesToZip++;
+          }
+        }
+      }
+
+      if (selection.audio) {
+        const fullAudio = await concatenateAudio(scenes);
+        if (fullAudio) {
+          zip.file(fullAudio.name, fullAudio);
+          filesToZip++;
+        }
+      }
+
+      if (filesToZip > 1) {
+        const content = await zip.generateAsync({ type: "blob" });
+        saveAs(content, `${projectTitle || 'projeto'}_assets.zip`);
+      } else if (filesToZip === 1) {
+        // If only one thing was selected, download it directly
+        if (selection.video && finalVideoUrl) saveAs(finalVideoUrl, `${projectTitle || 'video'}.mp4`);
+        if (selection.images) {
+          const content = await zip.generateAsync({ type: "blob" });
+          saveAs(content, `${projectTitle || 'projeto'}_images.zip`);
+        }
+        if (selection.audio) {
+          const fullAudio = await concatenateAudio(scenes);
+          if (fullAudio) saveAs(fullAudio, fullAudio.name);
+        }
+      } else {
+        toast.info("Nenhum arquivo para baixar", { description: "Nenhum arquivo correspondente à sua seleção foi encontrado." });
+      }
+
+      if (filesToZip > 0) {
+        toast.success("Download iniciado!");
+      }
+      
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast.error("Falha no Download", { description: "Ocorreu um erro ao preparar os arquivos." });
+    } finally {
+      setIsDownloading(false);
+      setIsDownloadModalOpen(false);
     }
   };
 
@@ -312,9 +379,11 @@ const Editor = () => {
       <DownloadModal
         isOpen={isDownloadModalOpen}
         onClose={() => setIsDownloadModalOpen(false)}
-        scenes={scenes}
-        videoUrl={localVideoUrl || persistedVideoUrl}
-        projectTitle={projectTitle}
+        onDownload={handleDownload}
+        isDownloading={isDownloading || isProcessing}
+        hasVideo={!!(localVideoUrl || persistedVideoUrl)}
+        hasImages={scenes.some(s => s.image)}
+        hasAudios={scenes.some(s => s.audio)}
       />
     </>
   );

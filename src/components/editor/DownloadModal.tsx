@@ -5,75 +5,49 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Scene } from "@/hooks/useFFmpeg";
-import { Download, FileImage, FileAudio, FileArchive, Video, Loader2 } from "lucide-react";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
-import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Download, FileImage, FileAudio, Video, Loader2 } from "lucide-react";
+
+export type DownloadSelection = {
+  video: boolean;
+  images: boolean;
+  audio: boolean;
+};
 
 interface DownloadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  scenes: Scene[];
-  videoUrl: string | null;
-  projectTitle: string;
+  onDownload: (selection: DownloadSelection) => void;
+  isDownloading: boolean;
+  hasVideo: boolean;
+  hasImages: boolean;
+  hasAudios: boolean;
 }
 
-export const DownloadModal = ({ isOpen, onClose, scenes, videoUrl, projectTitle }: DownloadModalProps) => {
-  const [isZipping, setIsZipping] = useState(false);
+export const DownloadModal = ({
+  isOpen,
+  onClose,
+  onDownload,
+  isDownloading,
+  hasVideo,
+  hasImages,
+  hasAudios,
+}: DownloadModalProps) => {
+  const [selection, setSelection] = useState<DownloadSelection>({
+    video: true,
+    images: false,
+    audio: false,
+  });
 
-  const handleDownloadVideo = () => {
-    if (videoUrl) {
-      saveAs(videoUrl, `${projectTitle || 'video'}.mp4`);
-    }
+  const handleDownloadClick = () => {
+    onDownload(selection);
   };
 
-  const handleDownloadAssets = async (type: 'images' | 'audios' | 'all') => {
-    setIsZipping(true);
-    const zip = new JSZip();
-    const hasImages = scenes.some(s => s.image);
-    const hasAudios = scenes.some(s => s.audio);
-
-    try {
-      if ((type === 'images' || type === 'all') && hasImages) {
-        const imagesFolder = zip.folder("images");
-        if (imagesFolder) {
-          for (let i = 0; i < scenes.length; i++) {
-            const scene = scenes[i];
-            if (scene.image) {
-              const fileExtension = scene.image.name.split('.').pop() || 'png';
-              imagesFolder.file(`image_${i + 1}.${fileExtension}`, scene.image);
-            }
-          }
-        }
-      }
-
-      if ((type === 'audios' || type === 'all') && hasAudios) {
-        for (let i = 0; i < scenes.length; i++) {
-          const scene = scenes[i];
-          if (scene.audio) {
-            const fileExtension = scene.audio.name.split('.').pop() || 'mp3';
-            zip.file(`narration_${i + 1}.${fileExtension}`, scene.audio);
-          }
-        }
-      }
-
-      const content = await zip.generateAsync({ type: "blob" });
-      saveAs(content, `${projectTitle || 'projeto'}_${type}.zip`);
-      toast.success("Download iniciado!");
-
-    } catch (error) {
-      console.error("Failed to create zip file", error);
-      toast.error("Falha ao criar arquivo zip.");
-    } finally {
-      setIsZipping(false);
-    }
-  };
-
-  const hasImages = scenes.some(s => s.image);
-  const hasAudios = scenes.some(s => s.audio);
+  const isAnythingSelected = selection.video || selection.images || selection.audio;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -84,30 +58,67 @@ export const DownloadModal = ({ isOpen, onClose, scenes, videoUrl, projectTitle 
             Opções de Download
           </DialogTitle>
           <DialogDescription>
-            Escolha o que você deseja baixar do seu projeto.
+            Selecione os arquivos que você deseja baixar.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-3">
-          <Button onClick={handleDownloadVideo} disabled={!videoUrl || isZipping} className="w-full justify-start gap-3">
-            <Video className="w-5 h-5" />
-            Baixar Vídeo Final (.mp4)
-          </Button>
-          <Button variant="outline" onClick={() => handleDownloadAssets('images')} disabled={!hasImages || isZipping} className="w-full justify-start gap-3">
-            {isZipping && <Loader2 className="w-4 h-4 animate-spin" />}
-            <FileImage className="w-5 h-5" />
-            Baixar Apenas Imagens (.zip)
-          </Button>
-          <Button variant="outline" onClick={() => handleDownloadAssets('audios')} disabled={!hasAudios || isZipping} className="w-full justify-start gap-3">
-            {isZipping && <Loader2 className="w-4 h-4 animate-spin" />}
-            <FileAudio className="w-5 h-5" />
-            Baixar Apenas Narrações (.zip)
-          </Button>
-          <Button variant="outline" onClick={() => handleDownloadAssets('all')} disabled={(!hasImages && !hasAudios) || isZipping} className="w-full justify-start gap-3">
-            {isZipping && <Loader2 className="w-4 h-4 animate-spin" />}
-            <FileArchive className="w-5 h-5" />
-            Baixar Todos os Arquivos (.zip)
-          </Button>
+        <div className="py-4 space-y-4">
+          <div className="flex items-center space-x-3 rounded-md border p-4">
+            <Checkbox
+              id="download-video"
+              checked={selection.video}
+              onCheckedChange={(checked) =>
+                setSelection((s) => ({ ...s, video: !!checked }))
+              }
+              disabled={!hasVideo}
+            />
+            <Label htmlFor="download-video" className="flex items-center gap-3 font-normal cursor-pointer">
+              <Video className="w-5 h-5" />
+              Vídeo Final (.mp4)
+            </Label>
+          </div>
+          <div className="flex items-center space-x-3 rounded-md border p-4">
+            <Checkbox
+              id="download-images"
+              checked={selection.images}
+              onCheckedChange={(checked) =>
+                setSelection((s) => ({ ...s, images: !!checked }))
+              }
+              disabled={!hasImages}
+            />
+            <Label htmlFor="download-images" className="flex items-center gap-3 font-normal cursor-pointer">
+              <FileImage className="w-5 h-5" />
+              Imagens das Cenas (.zip)
+            </Label>
+          </div>
+          <div className="flex items-center space-x-3 rounded-md border p-4">
+            <Checkbox
+              id="download-audio"
+              checked={selection.audio}
+              onCheckedChange={(checked) =>
+                setSelection((s) => ({ ...s, audio: !!checked }))
+              }
+              disabled={!hasAudios}
+            />
+            <Label htmlFor="download-audio" className="flex items-center gap-3 font-normal cursor-pointer">
+              <FileAudio className="w-5 h-5" />
+              Narração Completa (.mp3)
+            </Label>
+          </div>
         </div>
+        <DialogFooter>
+          <Button
+            onClick={handleDownloadClick}
+            disabled={isDownloading || !isAnythingSelected}
+            className="w-full"
+          >
+            {isDownloading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {isDownloading ? "Baixando..." : "Baixar Arquivos"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
