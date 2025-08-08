@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { SubtitleStyle, LogoPosition } from '@/hooks/useFFmpeg';
 
 type VideoQuality = 'hd' | 'fullhd';
+type ZoomEffect = 'none' | 'in' | 'out' | 'alternate';
 
 export const useGlobalSettings = () => {
   const [globalSrtFile, setGlobalSrtFile] = useState<File | null>(null);
@@ -18,7 +19,12 @@ export const useGlobalSettings = () => {
     fontColor: "#ffffff",
     shadowColor: "#000000",
   });
-  const [addVisualEffects, setAddVisualEffects] = useState(true);
+  
+  const [zoomEffect, setZoomEffect] = useState<ZoomEffect>('alternate');
+  const [zoomIntensity, setZoomIntensity] = useState(5);
+  const [addFade, setAddFade] = useState(true);
+  const [fadeInDuration, setFadeInDuration] = useState(0.5);
+  const [fadeOutDuration, setFadeOutDuration] = useState(0.5);
 
   const handleSrtUpload = useCallback((file: File) => {
     if (file && (file.name.endsWith('.srt') || file.type === 'text/plain')) {
@@ -73,7 +79,15 @@ export const useGlobalSettings = () => {
     setLogoPosition,
     subtitleStyle,
     setSubtitleStyle,
-    addVisualEffects,
-    setAddVisualEffects,
+    zoomEffect,
+    setZoomEffect,
+    zoomIntensity,
+    setZoomIntensity,
+    addFade,
+    setAddFade,
+    fadeInDuration,
+    setFadeInDuration,
+    fadeOutDuration,
+    setFadeOutDuration,
   };
 };

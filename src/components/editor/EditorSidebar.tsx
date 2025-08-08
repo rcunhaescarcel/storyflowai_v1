@@ -2,10 +2,12 @@ import { GeneralSettings } from "./sidebar/GeneralSettings";
 import { AssetSettings } from "./sidebar/AssetSettings";
 import { SubtitleSettings } from "./sidebar/SubtitleSettings";
 import { VisualEffectsSettings } from "./sidebar/VisualEffectsSettings";
+import { TransitionSettings } from "./sidebar/TransitionSettings";
 import { ActionPanel } from "./sidebar/ActionPanel";
 import { LogoPosition, SubtitleStyle } from "@/hooks/useFFmpeg";
 
 type VideoQuality = "hd" | "fullhd";
+type ZoomEffect = "none" | "in" | "out" | "alternate";
 
 interface EditorSidebarProps {
   projectTitle: string;
@@ -37,8 +39,12 @@ interface EditorSidebarProps {
   onSaveProject: () => void;
   sceneCount: number;
   isEditing: boolean;
-  addVisualEffects: boolean;
-  onAddVisualEffectsChange: (add: boolean) => void;
+  zoomEffect: ZoomEffect;
+  onZoomEffectChange: (effect: ZoomEffect) => void;
+  zoomIntensity: number;
+  onZoomIntensityChange: (intensity: number) => void;
+  addFade: boolean;
+  onAddFadeChange: (add: boolean) => void;
 }
 
 export const EditorSidebar = (props: EditorSidebarProps) => {
@@ -72,9 +78,15 @@ export const EditorSidebar = (props: EditorSidebarProps) => {
           subtitleStyle={props.subtitleStyle}
           onSubtitleStyleChange={props.onSubtitleStyleChange}
         />
+        <TransitionSettings
+          addFade={props.addFade}
+          onAddFadeChange={props.onAddFadeChange}
+        />
         <VisualEffectsSettings
-          addVisualEffects={props.addVisualEffects}
-          onAddVisualEffectsChange={props.onAddVisualEffectsChange}
+          zoomEffect={props.zoomEffect}
+          onZoomEffectChange={props.onZoomEffectChange}
+          zoomIntensity={props.zoomIntensity}
+          onZoomIntensityChange={props.onZoomIntensityChange}
         />
         <ActionPanel
           isEditing={props.isEditing}

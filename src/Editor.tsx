@@ -47,7 +47,11 @@ const Editor = () => {
     logoFile, logoPreview, handleLogoUpload, setLogoFile, setLogoPreview,
     logoPosition, setLogoPosition,
     subtitleStyle, setSubtitleStyle,
-    addVisualEffects, setAddVisualEffects,
+    zoomEffect, setZoomEffect,
+    zoomIntensity, setZoomIntensity,
+    addFade, setAddFade,
+    fadeInDuration, setFadeInDuration,
+    fadeOutDuration, setFadeOutDuration,
   } = useGlobalSettings();
 
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -112,11 +116,11 @@ const Editor = () => {
         videoQuality, 
         logoFile, 
         logoPosition,
-        addVisualEffects ? 'alternate' : 'none',
-        20, // Default zoom intensity
-        addVisualEffects,
-        0.5, // Default fade-in duration
-        0.5  // Default fade-out duration
+        zoomEffect,
+        zoomIntensity,
+        addFade,
+        fadeInDuration,
+        fadeOutDuration
       );
       if (result) {
         setLocalVideoUrl(result);
@@ -271,8 +275,12 @@ const Editor = () => {
               onSaveProject={handleSaveProject}
               sceneCount={scenes.length}
               isEditing={!!currentProjectId}
-              addVisualEffects={addVisualEffects}
-              onAddVisualEffectsChange={setAddVisualEffects}
+              zoomEffect={zoomEffect}
+              onZoomEffectChange={setZoomEffect}
+              zoomIntensity={zoomIntensity}
+              onZoomIntensityChange={setZoomIntensity}
+              addFade={addFade}
+              onAddFadeChange={setAddFade}
             />
           </div>
         )}
