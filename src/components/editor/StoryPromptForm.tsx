@@ -59,7 +59,7 @@ interface StoryPromptFormProps {
   addDebugLog: (message: string) => void;
 }
 
-const fetchWithRetry = async (url: string, { retries = 3, delayMs = 2000, addDebugLog }: { retries?: number, delayMs?: number, addDebugLog: (msg: string) => void }): Promise<Response> => {
+const fetchWithRetry = async (url: string, { retries = 3, delayMs = 2000, addDebugLog, apiName = 'API' }: { retries?: number, delayMs?: number, addDebugLog: (msg: string) => void, apiName?: string }): Promise<Response> => {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fetch(url);
@@ -67,7 +67,7 @@ const fetchWithRetry = async (url: string, { retries = 3, delayMs = 2000, addDeb
         return response;
       }
       const errorText = await response.text();
-      addDebugLog(`[API Tentativa ${i + 1}/${retries}] Falha com status ${response.status}.`);
+      addDebugLog(`[${apiName} Tentativa ${i + 1}/${retries}] Falha com status ${response.status}.`);
       
       if (response.status >= 400 && response.status < 500 && response.status !== 429) {
         throw new Error(`Erro da API (${response.status}): ${errorText}`);
@@ -75,7 +75,7 @@ const fetchWithRetry = async (url: string, { retries = 3, delayMs = 2000, addDeb
       await delay(delayMs * (i + 1));
     } catch (error) {
       if (i === retries - 1) {
-        addDebugLog(`[API] Todas as ${retries} tentativas falharam.`);
+        addDebugLog(`[${apiName}] Todas as ${retries} tentativas falharam.`);
         throw error;
       }
     }
@@ -162,7 +162,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?token=${apiToken}&referrer=${referrer}`;
 
       addDebugLog(`[História IA] URL da API de texto: ${targetUrl.substring(0, 100)}...`);
-      const response = await fetchWithRetry(targetUrl, { addDebugLog });
+      const response = await fetchWithRetry(targetUrl, { addDebugLog, apiName: 'História IA' });
 
       if (!response.ok) {
         const errorBody = await response.text();
@@ -244,7 +244,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
           imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1920&height=1080&model=${imageModel}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}&nologo=true`;
         }
 
-        const imageResponse = await fetchWithRetry(imageUrl, { addDebugLog });
+        const imageResponse = await fetchWithRetry(imageUrl, { addDebugLog, apiName: 'Imagem IA' });
         if (!imageResponse.ok) throw new Error(`Falha ao gerar imagem para a cena ${i + 1}`);
         const imageBlob = await imageResponse.blob();
         const imageFile = new File([imageBlob], `scene_${i + 1}.png`, { type: 'image/png' });
@@ -259,7 +259,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         const encodedAudioPrompt = encodeURIComponent(audioPrompt);
         const audioUrl = `https://text.pollinations.ai/${encodedAudioPrompt}?model=openai-audio&voice=${selectedVoice}&referrer=${referrer}&token=${apiToken}`;
 
-        const audioResponse = await fetchWithRetry(audioUrl, { addDebugLog });
+        const audioResponse = await fetchWithRetry(audioUrl, { addDebugLog, apiName: 'Áudio IA' });
         if (!audioResponse.ok) throw new Error(`Falha ao gerar áudio para a cena ${i + 1}`);
         const audioBlob = await audioResponse.blob();
         const audioFile = new File([audioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
