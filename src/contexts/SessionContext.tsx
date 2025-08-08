@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Session } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -20,63 +20,73 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const setupSessionAndProfile = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
+  const getProfile = async (user: User): Promise<Profile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-        if (session?.user) {
-          // Attempt to fetch the profile
-          let { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          // If the profile doesn't exist (specific error code for 0 rows), create it.
-          // This handles existing users who signed up before the profiles table was created.
-          if (profileError && profileError.code === 'PGRST116') {
-            console.warn("No profile found for user, creating one now.");
-            const { data: newProfile, error: insertError } = await supabase
-              .from('profiles')
-              .insert({ id: session.user.id })
-              .select()
-              .single();
-            
-            if (insertError) {
-              throw new Error(`Failed to create profile: ${insertError.message}`);
-            }
-            profileData = newProfile;
-            toast.info("Perfil de usuário criado com 100 coins iniciais!");
-          } else if (profileError) {
-            // For any other error, throw it
-            throw profileError;
-          }
-          
-          setProfile(profileData);
-        }
-      } catch (error) {
-        console.error("Error setting up session and profile:", error);
-        toast.error("Erro ao carregar os dados do seu perfil.");
-      } finally {
-        setIsLoading(false);
+      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+        throw error;
       }
-    };
 
-    setupSessionAndProfile();
+      if (data) {
+        return data;
+      }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      // If no data and the error is PGRST116, it means the profile doesn't exist.
+      // This is the fix for existing users without a profile.
+      if (error && error.code === 'PGRST116') {
+        console.warn("No profile found for user, creating one now.");
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: user.id }) // The DB default will set coins to 100
+          .select()
+          .single();
+
+        if (insertError) {
+          throw new Error(`Failed to create profile: ${insertError.message}`);
+        }
+        
+        toast.info("Seu perfil foi criado com 100 coins de bônus!");
+        return newProfile;
+      }
+
+      return null;
+
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+      console.error("Error fetching or creating profile:", message);
+      toast.error("Erro ao carregar seu perfil.", { description: message });
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       if (session?.user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        setProfile(profileData);
+        const userProfile = await getProfile(session.user);
+        setProfile(userProfile);
       } else {
         setProfile(null);
+      }
+      
+      // The 'INITIAL_SESSION' event fires on page load. 
+      // We stop loading after this first event is handled.
+      if (event === 'INITIAL_SESSION') {
+        setIsLoading(false);
+      }
+    });
+
+    // Initial check in case onAuthStateChange doesn't fire immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        setIsLoading(false);
       }
     });
 
