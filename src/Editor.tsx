@@ -5,7 +5,6 @@ import { Scene, useFFmpeg } from "@/hooks/useFFmpeg";
 import { ImageGenerationModal } from "@/components/editor/ImageGenerationModal";
 import { StoryPromptForm } from "@/components/editor/StoryPromptForm";
 import { SceneCard } from "@/components/editor/SceneCard";
-import { EditorSidebar } from "@/components/editor/EditorSidebar";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Bug } from "lucide-react";
 import { DebugLogModal } from "@/components/editor/DebugLogModal";
@@ -14,6 +13,8 @@ import { useGlobalSettings } from "./hooks/useGlobalSettings";
 import { useProjectLoader } from "./hooks/useProjectLoader";
 import { useProjectPersistence } from "./hooks/useProjectPersistence";
 import { VideoProject } from "./types/video";
+import { ProjectActions } from "./components/editor/ProjectActions";
+import { RenderModal } from "./components/editor/RenderModal";
 
 const Editor = () => {
   const location = useLocation();
@@ -75,6 +76,7 @@ const Editor = () => {
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
+  const [isRenderModalOpen, setIsRenderModalOpen] = useState(false);
 
   useEffect(() => {
     if (!location.state?.project) {
@@ -103,6 +105,8 @@ const Editor = () => {
       toast.warning("Aviso", { description: "Todas as cenas precisam de uma imagem para renderizar." });
       return;
     }
+
+    setIsRenderModalOpen(false);
 
     try {
       setLocalVideoUrl(null);
@@ -148,6 +152,8 @@ const Editor = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    } else {
+      toast.error("Nenhum vídeo para baixar.");
     }
   };
 
@@ -198,7 +204,7 @@ const Editor = () => {
 
   return (
     <>
-      <main className="container max-w-screen-xl mx-auto px-4 py-8">
+      <main className="container max-w-screen-lg mx-auto px-4 py-8">
         {scenes.length === 0 ? (
           <div className="max-w-3xl mx-auto space-y-8">
             <StoryPromptForm 
@@ -207,71 +213,36 @@ const Editor = () => {
             />
           </div>
         ) : (
-          <div className="grid lg:grid-cols-12 gap-8 mt-8">
-            <div className="lg:col-span-8">
-              <div className="space-y-6">
-                {scenes.map((scene, index) => (
-                  <SceneCard
-                    key={scene.id}
-                    scene={scene}
-                    index={index}
-                    totalScenes={scenes.length}
-                    onUpdate={updateScene}
-                    onDelete={deleteScene}
-                    onMoveUp={moveSceneUp}
-                    onMoveDown={moveSceneDown}
-                    onNarrationGenerated={handleNarrationUpload}
-                    onEditImage={setEditingImageScene}
-                    addDebugLog={addDebugLog}
-                  />
-                ))}
-              </div>
-              <div className="text-center pt-8">
-                <Button onClick={addNewScene}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Nova Cena
-                </Button>
-              </div>
-            </div>
-
-            <EditorSidebar
-              projectTitle={projectTitle}
-              onProjectTitleChange={setProjectTitle}
-              videoQuality={videoQuality}
-              onVideoQualityChange={setVideoQuality}
-              backgroundMusic={backgroundMusic}
-              backgroundMusicVolume={backgroundMusicVolume}
-              onBackgroundMusicUpload={handleBackgroundMusicUpload}
-              onBackgroundMusicRemove={() => setBackgroundMusic(null)}
-              onBackgroundMusicVolumeChange={setBackgroundMusicVolume}
-              logoFile={logoFile}
-              logoPreview={logoPreview}
-              logoPosition={logoPosition}
-              onLogoUpload={handleLogoUpload}
-              onLogoRemove={() => {
-                setLogoFile(null);
-                setLogoPreview(null);
-              }}
-              onLogoPositionChange={setLogoPosition}
-              globalSrtFile={globalSrtFile}
-              subtitleStyle={subtitleStyle}
-              onSrtUpload={handleSrtUpload}
-              onSrtRemove={() => setGlobalSrtFile(null)}
-              onSubtitleStyleChange={(update) => setSubtitleStyle(prev => ({ ...prev, ...update }))}
-              isProcessing={isProcessing}
-              progress={progress}
+          <div className="mt-8">
+            <ProjectActions 
+              scenes={scenes}
+              onRenderClick={() => setIsRenderModalOpen(true)}
+              onDownloadClick={downloadVideo}
               videoUrl={localVideoUrl || persistedVideoUrl}
-              onDownloadVideo={downloadVideo}
-              onRender={handleRenderVideo}
-              sceneCount={scenes.length}
-              isEditing={!!currentProjectId}
-              zoomEffect={zoomEffect}
-              onZoomEffectChange={setZoomEffect}
-              zoomIntensity={zoomIntensity}
-              onZoomIntensityChange={setZoomIntensity}
-              addFade={addFade}
-              onAddFadeChange={setAddFade}
             />
+            <div className="space-y-6">
+              {scenes.map((scene, index) => (
+                <SceneCard
+                  key={scene.id}
+                  scene={scene}
+                  index={index}
+                  totalScenes={scenes.length}
+                  onUpdate={updateScene}
+                  onDelete={deleteScene}
+                  onMoveUp={moveSceneUp}
+                  onMoveDown={moveSceneDown}
+                  onNarrationGenerated={handleNarrationUpload}
+                  onEditImage={setEditingImageScene}
+                  addDebugLog={addDebugLog}
+                />
+              ))}
+            </div>
+            <div className="text-center pt-8">
+              <Button onClick={addNewScene}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Nova Cena
+              </Button>
+            </div>
           </div>
         )}
       </main>
@@ -302,6 +273,42 @@ const Editor = () => {
         characterImage={characterImage}
         characterImagePreview={characterImagePreview}
         addDebugLog={addDebugLog}
+      />
+
+      <RenderModal
+        isOpen={isRenderModalOpen}
+        onClose={() => setIsRenderModalOpen(false)}
+        onRender={handleRenderVideo}
+        isProcessing={isProcessing}
+        projectTitle={projectTitle}
+        onProjectTitleChange={setProjectTitle}
+        videoQuality={videoQuality}
+        onVideoQualityChange={setVideoQuality}
+        backgroundMusic={backgroundMusic}
+        backgroundMusicVolume={backgroundMusicVolume}
+        onBackgroundMusicUpload={handleBackgroundMusicUpload}
+        onBackgroundMusicRemove={() => setBackgroundMusic(null)}
+        onBackgroundMusicVolumeChange={setBackgroundMusicVolume}
+        logoFile={logoFile}
+        logoPreview={logoPreview}
+        logoPosition={logoPosition}
+        onLogoUpload={handleLogoUpload}
+        onLogoRemove={() => {
+          setLogoFile(null);
+          setLogoPreview(null);
+        }}
+        onLogoPositionChange={setLogoPosition}
+        globalSrtFile={globalSrtFile}
+        subtitleStyle={subtitleStyle}
+        onSrtUpload={handleSrtUpload}
+        onSrtRemove={() => setGlobalSrtFile(null)}
+        onSubtitleStyleChange={(update) => setSubtitleStyle(prev => ({ ...prev, ...update }))}
+        zoomEffect={zoomEffect}
+        onZoomEffectChange={setZoomEffect}
+        zoomIntensity={zoomIntensity}
+        onZoomIntensityChange={setZoomIntensity}
+        addFade={addFade}
+        onAddFadeChange={setAddFade}
       />
     </>
   );
