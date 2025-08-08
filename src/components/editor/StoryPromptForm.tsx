@@ -213,6 +213,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
           narrationText: sceneData.narration,
           image: imageFile,
           imagePreview: imagePreview,
+          imagePrompt: sceneData.image_prompt,
           audio: audioFile,
           audioDataUrl: audioDataUrl,
           duration: audioDuration,

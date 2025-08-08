@@ -1,24 +1,20 @@
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Trash2, Wand2, ImagePlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scene } from "@/hooks/useFFmpeg";
-import { ImageUploader } from "./ImageUploader";
 import { NarrationGenerator } from "./NarrationGenerator";
 
 interface SceneCardProps {
   scene: Scene;
   index: number;
   totalScenes: number;
-  characterImage?: File | null;
-  characterImagePreview?: string | null;
   onUpdate: (id: string, updates: Partial<Scene>) => void;
   onDelete: (id: string) => void;
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
-  onImageUpload: (sceneId: string, file: File) => void;
   onNarrationGenerated: (sceneId: string, file: File, dataUrl: string) => void;
-  onViewImage: (imageUrl: string | null) => void;
+  onEditImage: (scene: Scene) => void;
   addDebugLog: (message: string) => void;
 }
 
@@ -26,15 +22,12 @@ export const SceneCard = ({
   scene,
   index,
   totalScenes,
-  characterImage,
-  characterImagePreview,
   onUpdate,
   onDelete,
   onMoveUp,
   onMoveDown,
-  onImageUpload,
   onNarrationGenerated,
-  onViewImage,
+  onEditImage,
   addDebugLog,
 }: SceneCardProps) => {
   return (
@@ -89,16 +82,33 @@ export const SceneCard = ({
             />
           </div>
           <div className="md:col-span-2">
-            <ImageUploader
-              sceneId={scene.id}
-              imagePreview={scene.imagePreview}
-              onImageUpload={(file) => onImageUpload(scene.id, file)}
-              onImageRemove={() => onUpdate(scene.id, { image: undefined, imagePreview: undefined })}
-              onViewImage={() => onViewImage(scene.imagePreview || null)}
-              characterImage={characterImage}
-              characterImagePreview={characterImagePreview}
-              addDebugLog={addDebugLog}
-            />
+            <div className="relative aspect-video w-full bg-muted/50 rounded-lg overflow-hidden group border">
+              {!scene.imagePreview ? (
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 gap-3">
+                  <ImagePlus className="w-10 h-10 text-muted-foreground" />
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => onEditImage(scene)}
+                  >
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    Gerar com IA
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <img src={scene.imagePreview} alt="Preview da cena" className="w-full h-full object-cover" crossOrigin="anonymous" />
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+                    onClick={() => onEditImage(scene)}
+                  >
+                    <Wand2 className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

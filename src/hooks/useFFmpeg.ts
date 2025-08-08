@@ -49,6 +49,7 @@ export interface Scene {
   id: string;
   image?: File;
   imagePreview?: string;
+  imagePrompt?: string;
   audio?: File;
   audioDataUrl?: string;
   narrationText?: string;

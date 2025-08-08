@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
 import { resizeImage, dataURLtoFile, urlToFile } from "@/lib/imageUtils";
-import { ViewImageModal } from "@/components/editor/ViewImageModal";
+import { ImageGenerationModal } from "@/components/editor/ImageGenerationModal";
 import { StoryPromptForm } from "@/components/editor/StoryPromptForm";
 import { SceneCard } from "@/components/editor/SceneCard";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
@@ -68,7 +68,7 @@ const Editor = () => {
   } = useFFmpeg();
   
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { session } = useSession();
   const queryClient = useQueryClient();
@@ -126,6 +126,7 @@ const Editor = () => {
                         zoomDirection: sceneData.zoomDirection,
                         fadeInDuration: sceneData.fadeInDuration,
                         fadeOutDuration: sceneData.fadeOutDuration,
+                        imagePrompt: "", // Will be populated if we save prompts in DB
                     };
                 })
             );
@@ -254,17 +255,26 @@ const Editor = () => {
     setScenes(newScenes);
   };
 
-  const handleImageUpload = (sceneId: string, file: File) => {
+  const handleImageGenerated = (sceneId: string, file: File, prompt: string) => {
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
         updateScene(sceneId, { 
           image: file, 
-          imagePreview: e.target?.result as string 
+          imagePreview: e.target?.result as string,
+          imagePrompt: prompt
         });
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleImageRemove = (sceneId: string) => {
+    updateScene(sceneId, {
+      image: undefined,
+      imagePreview: undefined,
+      imagePrompt: undefined
+    });
   };
 
   const handleNarrationUpload = async (sceneId: string, file: File, dataUrl: string) => {
@@ -440,15 +450,12 @@ const Editor = () => {
                     scene={scene}
                     index={index}
                     totalScenes={scenes.length}
-                    characterImage={characterImage}
-                    characterImagePreview={characterImagePreview}
                     onUpdate={updateScene}
                     onDelete={deleteScene}
                     onMoveUp={moveSceneUp}
                     onMoveDown={moveSceneDown}
-                    onImageUpload={handleImageUpload}
                     onNarrationGenerated={handleNarrationUpload}
-                    onViewImage={setViewingImage}
+                    onEditImage={setEditingImageScene}
                     addDebugLog={addDebugLog}
                   />
                 ))}
@@ -504,10 +511,14 @@ const Editor = () => {
         )}
       </main>
 
-      <ViewImageModal
-        isOpen={!!viewingImage}
-        onClose={() => setViewingImage(null)}
-        imageUrl={viewingImage}
+      <ImageGenerationModal
+        scene={editingImageScene}
+        onClose={() => setEditingImageScene(null)}
+        onImageGenerated={handleImageGenerated}
+        onImageRemove={handleImageRemove}
+        characterImage={characterImage}
+        characterImagePreview={characterImagePreview}
+        addDebugLog={addDebugLog}
       />
     </>
   );
