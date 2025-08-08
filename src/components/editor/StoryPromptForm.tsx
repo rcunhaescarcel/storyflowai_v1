@@ -6,10 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Loader2, ArrowUp, Wand2, Clock, Mic, Camera, Film } from 'lucide-react';
+import { Loader2, ArrowUp, Wand2, Clock, Mic, Camera, Film, UserSquare, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/integrations/supabase/client';
+import { resizeImage, dataURLtoFile } from '@/lib/imageUtils';
+import { Input } from '@/components/ui/input';
 
 const blobToDataURL = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -41,7 +44,7 @@ const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 const openAIVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 
 interface StoryPromptFormProps {
-  onStoryGenerated: (scenes: Scene[]) => void;
+  onStoryGenerated: (scenes: Scene[], characterFile?: File, characterPreview?: string) => void;
   addDebugLog: (message: string) => void;
 }
 
@@ -56,6 +59,23 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gerando...');
   const [progress, setProgress] = useState(0);
+  const [characterImage, setCharacterImage] = useState<File | null>(null);
+  const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
+
+  const handleCharacterImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const resizedPreview = await resizeImage(file, 256, 256);
+        const resizedFile = dataURLtoFile(resizedPreview, file.name);
+        setCharacterImage(resizedFile);
+        setCharacterImagePreview(resizedPreview);
+        toast.success("Imagem do personagem carregada!");
+      } catch (error) {
+        toast.error("Falha ao processar a imagem do personagem.");
+      }
+    }
+  };
 
   const handleGenerateStory = async () => {
     if (!prompt.trim()) {
@@ -69,8 +89,12 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
     try {
       const numParagraphs = parseInt(duration) / 5;
-      const storyPrompt = `Gere um roteiro para um vídeo de aproximadamente ${duration} segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de ${numParagraphs} parágrafos. Para cada parágrafo (cena), forneça a narração em português e um prompt de imagem em inglês para gerar uma imagem no estilo de animação 3D. Use o formato: "Texto da narração. ||| English image prompt in 3D animation style." Não inclua títulos como "Cena 1".`;
+      let storyPrompt = `Gere um roteiro para um vídeo de aproximadamente ${duration} segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de ${numParagraphs} parágrafos. Para cada parágrafo (cena), forneça a narração em português e um prompt de imagem em inglês para gerar uma imagem no estilo de animação 3D. Use o formato: "Texto da narração. ||| English image prompt in 3D animation style." Não inclua títulos como "Cena 1".`;
       
+      if (characterImage) {
+        storyPrompt = `Gere um roteiro para um vídeo de aproximadamente ${duration} segundos sobre o tema: "${prompt}". O roteiro deve ser dividido em cerca de ${numParagraphs} parágrafos. Para cada parágrafo (cena), forneça a narração em português e um prompt de imagem em inglês para gerar uma imagem no estilo de animação 3D. O prompt de imagem DEVE começar com "o personagem" para descrever a ação do personagem principal. Use o formato: "Texto da narração. ||| o personagem [descrição da ação e cenário]." Não inclua títulos como "Cena 1".`;
+      }
+
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
       const referrer = "https://vidflow.com.br/";
@@ -89,21 +113,25 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
       setProgress(5);
 
-      const lines = storyText.trim().split('\n').filter(p => p.includes('|||'));
-      
-      if (lines.length === 0) {
-        addDebugLog(`[História IA] ⚠️ A IA não retornou um roteiro no formato esperado.`);
-        toast.warning("A IA não conseguiu gerar um roteiro válido. Tente um prompt diferente.");
-        setIsLoading(false);
-        return;
+      let characterPublicUrl: string | null = null;
+      if (characterImage) {
+        setLoadingMessage('Preparando imagem do personagem...');
+        const fileExt = characterImage.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('image-references').upload(fileName, characterImage);
+        if (uploadError) throw new Error(`Falha no upload do personagem: ${uploadError.message}`);
+        const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(fileName);
+        if (!urlData?.publicUrl) throw new Error('Não foi possível obter a URL pública do personagem.');
+        characterPublicUrl = urlData.publicUrl;
+        addDebugLog(`[História IA] ✅ Personagem carregado para: ${characterPublicUrl}`);
       }
+
+      const lines = storyText.trim().split('\n').filter(p => p.includes('|||'));
+      if (lines.length === 0) throw new Error("A IA não retornou um roteiro no formato esperado.");
 
       const scenesData = lines.map(line => {
         const parts = line.split('|||');
-        return {
-          narration: parts[0]?.trim() || '',
-          imagePrompt: parts[1]?.trim() || ''
-        };
+        return { narration: parts[0]?.trim() || '', imagePrompt: parts[1]?.trim() || '' };
       }).filter(data => data.narration && data.imagePrompt);
 
       const newScenes: Scene[] = [];
@@ -118,10 +146,14 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         addDebugLog(`[Imagem IA] Gerando para o prompt: "${sceneData.imagePrompt}"`);
 
         const encodedImagePrompt = encodeURIComponent(sceneData.imagePrompt);
-        const imageModel = 'flux';
-        const width = 1920;
-        const height = 1080;
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=${width}&height=${height}&model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
+        let imageModel = 'flux';
+        let imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1920&height=1080&model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
+
+        if (characterPublicUrl) {
+          imageModel = 'kontext';
+          const encodedImageURL = encodeURIComponent(characterPublicUrl);
+          imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1920&height=1080&model=${imageModel}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}&nologo=true`;
+        }
 
         const imageResponse = await fetch(imageUrl);
         if (!imageResponse.ok) throw new Error(`Falha ao gerar imagem para a cena ${i + 1}`);
@@ -146,11 +178,9 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
         let zoomEnabled = false;
         let zoomDirection: 'in' | 'out' = 'in';
-        switch (zoomEffect) {
-          case 'in': zoomEnabled = true; zoomDirection = 'in'; break;
-          case 'out': zoomEnabled = true; zoomDirection = 'out'; break;
-          case 'alternate': zoomEnabled = true; zoomDirection = i % 2 === 0 ? 'in' : 'out'; break;
-          case 'none': default: zoomEnabled = false; break;
+        if (zoomEffect !== 'none') {
+          zoomEnabled = true;
+          zoomDirection = zoomEffect === 'alternate' ? (i % 2 === 0 ? 'in' : 'out') : zoomEffect;
         }
 
         newScenes.push({
@@ -172,7 +202,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         await delay(500);
       }
 
-      onStoryGenerated(newScenes);
+      onStoryGenerated(newScenes, characterImage, characterImagePreview);
       toast.success("História, imagens e narrações geradas com sucesso!");
 
     } catch (error) {
@@ -243,6 +273,31 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80"><div className="space-y-4"><div><Label>Efeito de Zoom</Label><Select value={zoomEffect} onValueChange={(value: any) => setZoomEffect(value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="alternate">Intercalar</SelectItem><SelectItem value="in">Zoom In</SelectItem><SelectItem value="out">Zoom Out</SelectItem><SelectItem value="none">Nenhum</SelectItem></SelectContent></Select></div><div><div className="flex items-center justify-between"><Label htmlFor="fade-switch-popover" className="flex items-center gap-2"><Film className="w-4 h-4" />Transições de Fade</Label><Switch id="fade-switch-popover" checked={addFade} onCheckedChange={setAddFade} /></div>{addFade && (<div className="mt-4 space-y-4 pl-4 border-l-2 ml-2"><div><Label className="text-xs text-muted-foreground">Fade In ({fadeInDuration.toFixed(1)}s)</Label><Slider value={[fadeInDuration]} onValueChange={(v) => setFadeInDuration(v[0])} max={3} step={0.1} /></div><div><Label className="text-xs text-muted-foreground">Fade Out ({fadeOutDuration.toFixed(1)}s)</Label><Slider value={[fadeOutDuration]} onValueChange={(v) => setFadeOutDuration(v[0])} max={3} step={0.1} /></div></div>)}</div></div></PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <UserSquare className="w-4 h-4 mr-2" /> Personagem
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <Label>Personagem de Referência</Label>
+                  <Input id="character-upload-popover" type="file" accept="image/*" onChange={handleCharacterImageUpload} className="text-xs" />
+                  {characterImagePreview && (
+                    <div className="flex items-center gap-4 p-2 bg-muted/50 rounded-lg">
+                      <img src={characterImagePreview} alt="Preview" className="w-12 h-12 rounded-md object-cover" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium truncate">{characterImage?.name}</p>
+                        <p className="text-xs text-muted-foreground">Personagem carregado</p>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => { setCharacterImage(null); setCharacterImagePreview(null); }}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
             </Popover>
           </div>
           <Button size="icon" className="rounded-full bg-primary hover:bg-primary/90" onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading}>

@@ -195,39 +195,6 @@ const Editor = () => {
     }
   };
 
-  const handleSceneCharacterUpload = async (sceneId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const originalFile = e.target.files?.[0];
-    if (originalFile && originalFile.type.startsWith('image/')) {
-      try {
-        const resizedImagePreview = await resizeImage(originalFile, 512, 512);
-        const resizedFile = dataURLtoFile(resizedImagePreview, originalFile.name);
-        
-        updateScene(sceneId, {
-          sceneCharacterImage: resizedFile,
-          sceneCharacterImagePreview: resizedImagePreview,
-        });
-        
-        toast({
-          title: "Personagem da Cena Carregado",
-          description: "A imagem de referência foi adicionada a esta cena.",
-        });
-      } catch (error) {
-        toast({
-          title: "Erro ao processar imagem",
-          description: "Não foi possível redimensionar a imagem.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleSceneCharacterRemove = (sceneId: string) => {
-    updateScene(sceneId, {
-      sceneCharacterImage: undefined,
-      sceneCharacterImagePreview: undefined,
-    });
-  };
-
   const handleRenderVideo = async () => {
     if (scenes.length === 0) {
       toast({ title: "Erro", description: "Adicione pelo menos uma cena para renderizar", variant: "destructive" });
@@ -278,8 +245,12 @@ const Editor = () => {
     });
   };
 
-  const handleStoryGenerated = (newScenes: Scene[]) => {
+  const handleStoryGenerated = (newScenes: Scene[], characterFile?: File, characterPreview?: string) => {
     setScenes(newScenes);
+    if (characterFile && characterPreview) {
+      setCharacterImage(characterFile);
+      setCharacterImagePreview(characterPreview);
+    }
     addDebugLog(`[Editor] História gerada com ${newScenes.length} cenas.`);
     toast({
       title: "Cenas Criadas!",
@@ -319,8 +290,6 @@ const Editor = () => {
                     onNarrationGenerated={handleNarrationUpload}
                     onViewImage={setViewingImage}
                     addDebugLog={addDebugLog}
-                    onSceneCharacterUpload={handleSceneCharacterUpload}
-                    onSceneCharacterRemove={handleSceneCharacterRemove}
                   />
                 ))}
               </div>
