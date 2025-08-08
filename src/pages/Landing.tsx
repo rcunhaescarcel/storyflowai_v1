@@ -115,7 +115,7 @@ const Landing = () => {
               </Button>
             </div>
           </div>
-          <div className="relative w-full max-w-lg group">
+          <div className="relative w-full max-w-lg">
             <div className="absolute -top-8 -left-8 w-72 h-72 bg-primary/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
             <div className="absolute -bottom-8 -right-8 w-72 h-72 bg-primary/5 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-200"></div>
             <div className="relative shadow-2xl rounded-2xl overflow-hidden">
@@ -125,9 +125,6 @@ const Landing = () => {
                 className="w-full object-cover object-center"
                 crossOrigin="anonymous"
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Play className="w-16 h-16 text-white/80 fill-white/80" />
-              </div>
             </div>
           </div>
         </section>
