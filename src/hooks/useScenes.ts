@@ -1,23 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Scene } from '@/hooks/useFFmpeg';
 import { toast } from 'sonner';
-
-const getAudioDuration = (file: File): Promise<number> => {
-  return new Promise((resolve, reject) => {
-    if (!file) return reject("No file provided");
-    const audio = document.createElement('audio');
-    const objectUrl = URL.createObjectURL(file);
-    audio.src = objectUrl;
-    audio.onloadedmetadata = () => {
-      resolve(audio.duration);
-      URL.revokeObjectURL(objectUrl);
-    };
-    audio.onerror = (e) => {
-      reject(`Error loading audio file: ${e}`);
-      URL.revokeObjectURL(objectUrl);
-    };
-  });
-};
+import { getAudioDuration } from '@/lib/utils';
 
 export const useScenes = (initialScenes: Scene[] = []) => {
   const [scenes, setScenes] = useState<Scene[]>(initialScenes);

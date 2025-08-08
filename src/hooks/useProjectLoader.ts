@@ -3,24 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { urlToFile } from '@/lib/imageUtils';
+import { getAudioDuration } from '@/lib/utils';
 import { VideoProject, SceneData } from '@/types/video';
-
-const getAudioDuration = (file: File): Promise<number> => {
-  return new Promise((resolve, reject) => {
-    if (!file) return reject("No file provided");
-    const audio = document.createElement('audio');
-    const objectUrl = URL.createObjectURL(file);
-    audio.src = objectUrl;
-    audio.onloadedmetadata = () => {
-      resolve(audio.duration);
-      URL.revokeObjectURL(objectUrl);
-    };
-    audio.onerror = (e) => {
-      reject(`Error loading audio file: ${e}`);
-      URL.revokeObjectURL(objectUrl);
-    };
-  });
-};
 
 interface UseProjectLoaderProps {
   onLoad: (project: VideoProject, scenes: Scene[]) => void;
