@@ -42,14 +42,12 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
     addDebugLog(`[Narração IA] Iniciando geração para o texto: "${narrationText.slice(0, 50)}..."`);
     try {
       const selectedVoice = profile?.default_voice || 'nova';
-      const languageKey = profile?.default_language || 'pt-br';
       addDebugLog(`[Narração IA] Usando a voz: ${selectedVoice}`);
 
       const { data: audioBlob, error: audioError } = await supabase.functions.invoke('generate-emotional-voice', {
         body: {
           text: narrationText,
           voice: selectedVoice,
-          language: languageKey,
         },
       });
 
