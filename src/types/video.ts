@@ -1,0 +1,30 @@
+export interface SceneData {
+  id: string;
+  image_url: string;
+  imagePreview?: string;
+  audio_url?: string;
+  narration_text?: string;
+  duration?: number;
+  effect: string;
+  zoomEnabled: boolean;
+  zoomIntensity: number;
+  zoomDirection: 'in' | 'out';
+  fadeInDuration: number;
+  fadeOutDuration: number;
+}
+
+export interface VideoProject {
+  id: string;
+  user_id: string | null;
+  title: string;
+  description: string | null;
+  input_type: string;
+  input_content: string;
+  scenes: SceneData[] | null;
+  video_duration: number | null;
+  status: string;
+  final_video_url: string | null;
+  created_at: string;
+  updated_at: string;
+  style?: string;
+}

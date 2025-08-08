@@ -1,13 +1,127 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { VideoProject } from "../types/video.ts";
+import { VideoCard } from "../components/videos/VideoCard.tsx";
+import { VideoCardSkeleton } from "../components/videos/VideoCardSkeleton.tsx";
+import { Sparkles, Video as VideoIcon } from "lucide-react";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+
+const fetchVideoProjects = async (): Promise<VideoProject[]> => {
+  const { data, error } = await supabase
+    .from('video_projects')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error(error.message);
+  }
+  return data as VideoProject[];
+};
+
 const Videos = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const { data: projects, isLoading, isError, error } = useQuery<VideoProject[]>({
+    queryKey: ['video_projects'],
+    queryFn: fetchVideoProjects,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('video_projects').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Vídeo deletado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ['video_projects'] });
+    },
+    onError: (err: Error) => {
+      toast.error(`Falha ao deletar o vídeo: ${err.message}`);
+    },
+  });
+
+  const handleEdit = (id: string) => {
+    toast.info("Função de edição em breve!", {
+      description: `Você poderá editar o projeto ${id}.`,
+    });
+  };
+
+  const handleDownload = (id: string) => {
+    const project = projects?.find(p => p.id === id);
+    if (project?.final_video_url) {
+      window.open(project.final_video_url, '_blank');
+    } else {
+      toast.error("URL de download não encontrada.");
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {Array.from({ length: 3 }).map((_, i) => <VideoCardSkeleton key={i} />)}
+        </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <div className="text-center py-16 border rounded-lg bg-background">
+          <p className="text-destructive">Erro ao carregar vídeos: {error?.message}</p>
+        </div>
+      );
+    }
+
+    if (!projects || projects.length === 0) {
+      return (
+        <div className="text-center py-16 border-2 border-dashed rounded-lg bg-background/50">
+          <VideoIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-semibold">Nenhum vídeo encontrado</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Comece a criar seu primeiro vídeo para vê-lo aqui.
+          </p>
+          <Button className="mt-6" onClick={() => navigate('/editor')}>
+            <Sparkles className="w-4 h-4 mr-2" />
+            Criar Primeiro Vídeo
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {projects.map(project => (
+          <VideoCard 
+            key={project.id} 
+            project={project}
+            onEdit={handleEdit}
+            onDownload={handleDownload}
+            onDelete={handleDelete}
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <main className="container max-w-screen-xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold">Meus Vídeos</h1>
-      <p className="text-muted-foreground mt-2">
-        Aqui você encontrará todos os vídeos que você criou.
-      </p>
-      <div className="mt-8 border rounded-lg p-16 text-center bg-background">
-        <p className="text-muted-foreground">Nenhum vídeo encontrado. Em breve, você poderá ver seus projetos salvos aqui.</p>
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
+          Seus Vídeos Mágicos <Sparkles className="w-8 h-8 text-primary" />
+        </h1>
+        <p className="text-muted-foreground mt-2 max-w-xl mx-auto">
+          Gerencie e edite seus vídeos criados com IA. Aqui você pode revisitar, baixar ou remover seus projetos.
+        </p>
       </div>
+      {renderContent()}
     </main>
   );
 };
