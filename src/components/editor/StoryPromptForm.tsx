@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Wand2, Clock, Mic, UserSquare, Trash2, Palette, Languages } from 'lucide-react';
 import { toast } from 'sonner';
@@ -346,62 +344,62 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
           <div className="flex items-center justify-between p-2 mt-2 border-t">
             <div className="flex items-center gap-1">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                    <Languages className="w-4 h-4 mr-2" /> Idioma
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64">
-                  <div className="space-y-2">
-                    <Label>Idioma da Narração</Label>
-                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(languages).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              <Select value={selectedLanguage} onValueChange={setSelectedLanguage} disabled={isLoading || isSessionLoading}>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0">
+                  <div className="flex items-center gap-2">
+                    <Languages className="w-4 h-4" />
+                    <SelectValue />
                   </div>
-                </PopoverContent>
-              </Popover>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                    <Palette className="w-4 h-4 mr-2" /> Estilo
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64">
-                  <div className="space-y-2">
-                    <Label>Estilo Visual</Label>
-                    <Select value={selectedStyle} onValueChange={setSelectedStyle}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(storyStyles).map(([key, { label }]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(languages).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isLoading || isSessionLoading}>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0">
+                  <div className="flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    <SelectValue />
                   </div>
-                </PopoverContent>
-              </Popover>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                    <Clock className="w-4 h-4 mr-2" /> Duração
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64"><div className="space-y-2"><Label>Duração (Aproximada)</Label><Select value={duration} onValueChange={setDuration}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="30">30s (~6 cenas)</SelectItem><SelectItem value="60">1m (~12 cenas)</SelectItem><SelectItem value="90">1m 30s (~18 cenas)</SelectItem></SelectContent></Select></div></PopoverContent>
-              </Popover>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
-                    <Mic className="w-4 h-4 mr-2" /> Voz
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64"><div className="space-y-2"><Label>Voz da Narração</Label><Select value={selectedVoice} onValueChange={setSelectedVoice}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{openAIVoices.map(voice => (<SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>))}</SelectContent></Select></div></PopoverContent>
-              </Popover>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(storyStyles).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={duration} onValueChange={setDuration} disabled={isLoading || isSessionLoading}>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30s (~6 cenas)</SelectItem>
+                  <SelectItem value="60">1m (~12 cenas)</SelectItem>
+                  <SelectItem value="90">1m 30s (~18 cenas)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedVoice} onValueChange={setSelectedVoice} disabled={isLoading || isSessionLoading}>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0">
+                  <div className="flex items-center gap-2">
+                    <Mic className="w-4 h-4" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {openAIVoices.map(voice => (
+                    <SelectItem key={voice} value={voice} className="capitalize">{voice}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
               <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setIsCharacterModalOpen(true)} disabled={isLoading || isSessionLoading}>
                 <UserSquare className="w-4 h-4 mr-2" /> Personagem
               </Button>
