@@ -49,13 +49,18 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: 
           </Badge>
         )}
       </div>
-      <CardContent className="p-4 space-y-3 bg-background">
-        <h3 className="font-bold text-lg truncate">{project.title}</h3>
+      <CardContent className="p-3 space-y-2 bg-background">
+        <h3 className="font-bold text-base truncate">{project.title}</h3>
         <p className="text-sm text-muted-foreground">
           {project.scene_count || 0} cenas • {project.style || 'Animação 3D'}
         </p>
-        <div className="flex items-center gap-2 pt-2">
-          <Button variant="default" onClick={() => onEdit(project.id)} className="flex-1" disabled={isEditing}>
+        <div className="flex items-center gap-2 pt-1">
+          <Button 
+            onClick={() => onEdit(project.id)} 
+            className="flex-1 bg-gradient-primary text-primary-foreground hover:opacity-90 transition-opacity" 
+            size="sm"
+            disabled={isEditing}
+          >
             {isEditing ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
@@ -69,6 +74,7 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: 
               size="icon" 
               onClick={() => onDownload(project.id)}
               aria-label="Baixar vídeo"
+              className="h-9 w-9"
             >
               <Download className="w-4 h-4" />
             </Button>
@@ -77,7 +83,7 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: 
             variant="outline" 
             size="icon" 
             onClick={() => onDelete(project.id)}
-            className="hover:bg-destructive/10 hover:text-destructive"
+            className="hover:bg-destructive/10 hover:text-destructive h-9 w-9"
             aria-label="Deletar vídeo"
           >
             <Trash2 className="w-4 h-4" />
