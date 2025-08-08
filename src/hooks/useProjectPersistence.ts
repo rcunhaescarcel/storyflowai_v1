@@ -64,6 +64,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       const projectFolder = `projects/${session.user.id}/${projectId}`;
       
       const sceneDataForDb = await uploadSceneAssets(scenesToSave, projectFolder);
+      const thumbnailUrl = sceneDataForDb.length > 0 ? sceneDataForDb[0].image_url : null;
 
       const projectToInsert = {
         id: projectId,
@@ -76,6 +77,8 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
         video_duration: totalDuration,
         status: 'draft',
         style: projectStyle,
+        thumbnail_url: thumbnailUrl,
+        scene_count: scenesToSave.length,
       };
 
       addDebugLog('[DB] Inserindo registro do projeto no banco de dados...');
@@ -113,12 +116,15 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       const projectFolder = `projects/${session.user.id}/${projectId}`;
       const sceneDataForDb = await uploadSceneAssets(scenesToUpdate, projectFolder);
       const totalDuration = scenesToUpdate.reduce((acc, scene) => acc + (scene.duration || 0), 0);
+      const thumbnailUrl = sceneDataForDb.length > 0 ? sceneDataForDb[0].image_url : null;
 
       const projectToUpdate = {
         title,
         scenes: sceneDataForDb,
         video_duration: totalDuration,
         updated_at: new Date().toISOString(),
+        thumbnail_url: thumbnailUrl,
+        scene_count: scenesToUpdate.length,
       };
 
       const { error: updateError } = await supabase

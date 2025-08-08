@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoProject } from "../types/video.ts";
 import { VideoCard } from "../components/videos/VideoCard.tsx";
 import { VideoCardSkeleton } from "../components/videos/VideoCardSkeleton.tsx";
-import { Sparkles, Video as VideoIcon } from "lucide-react";
+import { Sparkles, Video as VideoIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { useSession } from "@/contexts/SessionContext.tsx";
 const fetchVideoProjects = async (userId: string): Promise<VideoProject[]> => {
   const { data, error } = await supabase
     .from('video_projects')
-    .select('*')
+    .select('id, title, video_duration, status, final_video_url, created_at, style, thumbnail_url, scene_count')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -23,10 +24,21 @@ const fetchVideoProjects = async (userId: string): Promise<VideoProject[]> => {
   return data as VideoProject[];
 };
 
+const fetchFullProject = async (id: string) => {
+  const { data, error } = await supabase
+    .from('video_projects')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
 const Videos = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { session, isLoading: isSessionLoading } = useSession();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const { data: projects, isLoading: isProjectsLoading, isError, error } = useQuery<VideoProject[]>({
     queryKey: ['video_projects', session?.user?.id],
@@ -48,13 +60,25 @@ const Videos = () => {
     },
   });
 
-  const handleEdit = (id: string) => {
-    const project = projects?.find(p => p.id === id);
-    if (project) {
-      navigate('/editor', { state: { project } });
-    } else {
-      toast.error("Projeto não encontrado para edição.");
+  const editMutation = useMutation({
+    mutationFn: fetchFullProject,
+    onSuccess: (project) => {
+      if (project) {
+        navigate('/editor', { state: { project } });
+      } else {
+        toast.error("Projeto não encontrado para edição.");
+      }
+      setEditingId(null);
+    },
+    onError: (err: Error) => {
+      toast.error(`Falha ao carregar projeto: ${err.message}`);
+      setEditingId(null);
     }
+  });
+
+  const handleEdit = (id: string) => {
+    setEditingId(id);
+    editMutation.mutate(id);
   };
 
   const handleDownload = (id: string) => {
@@ -114,6 +138,7 @@ const Videos = () => {
             onEdit={handleEdit}
             onDownload={handleDownload}
             onDelete={handleDelete}
+            isEditing={editingId === project.id}
           />
         ))}
       </div>

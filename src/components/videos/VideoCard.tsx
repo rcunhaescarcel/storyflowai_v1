@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Download, Pencil, Trash2, Play } from "lucide-react";
+import { Download, Pencil, Trash2, Play, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { VideoProject } from "../../types/video.ts";
 
@@ -10,11 +10,12 @@ interface VideoCardProps {
   onEdit: (id: string) => void;
   onDownload: (id: string) => void;
   onDelete: (id: string) => void;
+  isEditing: boolean;
 }
 
-export const VideoCard = ({ project, onEdit, onDownload, onDelete }: VideoCardProps) => {
+export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: VideoCardProps) => {
   const isRendered = !!project.final_video_url;
-  const thumbnailUrl = project.scenes?.[0]?.image_url || `https://placehold.co/1600x900/2a2a2a/ffffff?text=${encodeURI(project.title)}`;
+  const thumbnailUrl = project.thumbnail_url || `https://placehold.co/1600x900/2a2a2a/ffffff?text=${encodeURI(project.title)}`;
   
   const formatDuration = (seconds: number | null | undefined) => {
     if (seconds === null || seconds === undefined) return '0:00';
@@ -51,12 +52,16 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete }: VideoCardPr
       <CardContent className="p-4 space-y-3 bg-background">
         <h3 className="font-bold text-lg truncate">{project.title}</h3>
         <p className="text-sm text-muted-foreground">
-          {project.scenes?.length || 0} cenas • {project.style || 'Animação 3D'}
+          {project.scene_count || 0} cenas • {project.style || 'Animação 3D'}
         </p>
         <div className="flex items-center gap-2 pt-2">
-          <Button onClick={() => onEdit(project.id)} className="flex-1 bg-primary hover:bg-primary/90">
-            <Pencil className="w-4 h-4 mr-2" />
-            Editar
+          <Button onClick={() => onEdit(project.id)} className="flex-1 bg-primary hover:bg-primary/90" disabled={isEditing}>
+            {isEditing ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Pencil className="w-4 h-4 mr-2" />
+            )}
+            {isEditing ? 'Carregando...' : 'Editar'}
           </Button>
           {isRendered && (
             <Button 

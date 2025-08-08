@@ -21,4 +21,6 @@ export interface VideoProject {
   created_at: string;
   updated_at: string;
   style?: string;
+  thumbnail_url?: string | null;
+  scene_count?: number | null;
 }
