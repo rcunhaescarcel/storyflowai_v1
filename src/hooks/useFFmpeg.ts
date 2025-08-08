@@ -196,7 +196,11 @@ export const useFFmpeg = () => {
         }
         
         cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-pix_fmt', 'yuv420p');
-        if (scene.audio) cmd.push('-c:a', 'aac', '-shortest'); else cmd.push('-an');
+        if (scene.audio) {
+          cmd.push('-c:a', 'aac');
+        } else {
+          cmd.push('-an');
+        }
         cmd.push('-y', outputName);
         addDebugLog(`🔧 Comando FFmpeg cena ${i + 1}: ${cmd.join(' ')}`);
         await ffmpeg.exec(cmd);
