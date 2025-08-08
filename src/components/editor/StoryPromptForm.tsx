@@ -197,7 +197,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         const audioResponse = await fetch(audioUrl);
         if (!audioResponse.ok) throw new Error(`Falha ao gerar áudio para a cena ${i + 1}`);
         const audioBlob = await audioResponse.blob();
-        const audioFile = new File([audioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mpeg' });
+        const audioFile = new File([audioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
         const audioDuration = await getAudioDuration(audioFile);
 
         let zoomEnabled = false;

@@ -61,7 +61,7 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
 
       const blob = await response.blob();
       const fileName = `narration_nova.mp3`;
-      const file = new File([blob], fileName, { type: 'audio/mpeg' });
+      const file = new File([blob], fileName, { type: 'audio/mp3' });
 
       onAudioGenerated(file);
       addDebugLog(`[Narração IA] ✅ Áudio gerado e carregado com sucesso!`);
