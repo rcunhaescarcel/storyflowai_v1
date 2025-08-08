@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface NarrationGeneratorProps {
@@ -10,10 +10,28 @@ interface NarrationGeneratorProps {
   onTextChange: (text: string) => void;
   onAudioGenerated: (file: File) => void;
   addDebugLog: (message: string) => void;
+  audio?: File;
+  duration?: number;
+  onAudioRemove: () => void;
 }
 
-export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerated, addDebugLog }: NarrationGeneratorProps) => {
+export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerated, addDebugLog, audio, duration, onAudioRemove }: NarrationGeneratorProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (audio) {
+      const url = URL.createObjectURL(audio);
+      setAudioUrl(url);
+
+      return () => {
+        URL.revokeObjectURL(url);
+        setAudioUrl(null);
+      };
+    } else {
+      setAudioUrl(null);
+    }
+  }, [audio]);
 
   const handleGenerateNarration = async () => {
     if (!narrationText || !narrationText.trim()) {
@@ -71,21 +89,34 @@ export const NarrationGenerator = ({ narrationText, onTextChange, onAudioGenerat
           rows={4}
         />
       </div>
-      <div className="flex justify-end">
-        <Button onClick={handleGenerateNarration} disabled={isLoading || !narrationText?.trim()} className="w-full sm:w-auto">
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Gerando...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Gerar Narração
-            </>
-          )}
-        </Button>
-      </div>
+      
+      {audio && audioUrl ? (
+        <div className="space-y-2 pt-2">
+          <Label className="text-xs text-muted-foreground">Narração Gerada ({duration?.toFixed(1)}s)</Label>
+          <div className="flex items-center gap-2">
+            <audio src={audioUrl} controls className="h-10 w-full"></audio>
+            <Button variant="ghost" size="icon" onClick={onAudioRemove} className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-end">
+          <Button onClick={handleGenerateNarration} disabled={isLoading || !narrationText?.trim()} className="w-full sm:w-auto">
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Gerar Narração
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

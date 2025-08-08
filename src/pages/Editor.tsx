@@ -35,7 +35,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Scene, useFFmpeg, SubtitleStyle, LogoPosition } from "@/hooks/useFFmpeg";
 import { ImageUploader } from "@/components/editor/ImageUploader";
-import { AudioUploader } from "@/components/editor/AudioUploader";
 import { NarrationGenerator } from "@/components/editor/NarrationGenerator";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -369,16 +368,10 @@ const Editor = () => {
                           onTextChange={(text) => updateScene(scene.id, { narrationText: text })}
                           onAudioGenerated={(file) => handleNarrationUpload(scene.id, file)}
                           addDebugLog={addDebugLog}
+                          audio={scene.audio}
+                          duration={scene.duration}
+                          onAudioRemove={() => updateScene(scene.id, { audio: undefined, duration: undefined })}
                         />
-                        <div className="border-t pt-4">
-                          <AudioUploader
-                            sceneId={scene.id}
-                            audio={scene.audio}
-                            duration={scene.duration}
-                            onAudioUpload={(file) => handleNarrationUpload(scene.id, file)}
-                            onAudioRemove={() => updateScene(scene.id, { audio: undefined, duration: undefined })}
-                          />
-                        </div>
                       </div>
                       <div className="md:col-span-2">
                         <ImageUploader
