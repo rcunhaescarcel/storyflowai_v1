@@ -70,12 +70,17 @@ const fetchWithRetry = async (url: string, { retries = 3, delayMs = 2000, addDeb
       if (response.status >= 400 && response.status < 500 && response.status !== 429) {
         throw new Error(`Erro da API (${response.status}): ${errorText}`);
       }
+      addDebugLog(`[${apiName}] Aguardando ${delayMs * (i + 1)}ms para tentar novamente...`);
       await delay(delayMs * (i + 1));
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      addDebugLog(`[${apiName} Tentativa ${i + 1}/${retries}] Falha na requisição: ${errorMessage}`);
       if (i === retries - 1) {
         addDebugLog(`[${apiName}] Todas as ${retries} tentativas falharam.`);
         throw error;
       }
+      addDebugLog(`[${apiName}] Aguardando ${delayMs * (i + 1)}ms para tentar novamente...`);
+      await delay(delayMs * (i + 1));
     }
   }
   throw new Error('Todas as tentativas de requisição falharam.');
