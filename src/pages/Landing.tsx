@@ -1,27 +1,96 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Play, Zap, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
+import { Play, ArrowRight, UploadCloud, Palette, FileText, Video, Quote } from "lucide-react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+import { StyleCard } from "@/components/landing/StyleCard";
+import { PricingCard } from "@/components/landing/PricingCard";
+import { TestimonialCard } from "@/components/landing/TestimonialCard";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const Landing = () => {
   const navigate = useNavigate();
 
-  const features = [
+  const howItWorksSteps = [
     {
-      icon: <Sparkles className="w-8 h-8 text-primary" />,
-      title: "Animações Mágicas com IA",
-      description: "Nossa IA analisa suas imagens e cria movimentos de câmera e efeitos que dão vida à sua história."
+      icon: <UploadCloud className="w-10 h-10 text-primary" />,
+      title: "Envie seu personagem",
+      description: "Use uma imagem sua, de um mascote ou crie um novo."
     },
     {
-      icon: <Zap className="w-8 h-8 text-primary" />,
-      title: "Renderização Ultra-Rápida",
-      description: "Processe vídeos diretamente no seu navegador em tempo recorde, sem filas de espera ou uploads demorados."
+      icon: <Palette className="w-10 h-10 text-primary" />,
+      title: "Escolha um estilo visual",
+      description: "Pixar 3D, Ghibli 2D, Livro Ilustrado ou HQ Colorida."
     },
     {
-      icon: <ShieldCheck className="w-8 h-8 text-primary" />,
-      title: "Privacidade Total",
-      description: "Seus arquivos nunca saem do seu computador. Todo o processamento é feito localmente para sua segurança."
+      icon: <FileText className="w-10 h-10 text-primary" />,
+      title: "Escreva sua ideia",
+      description: "Conte o que vai acontecer na história ou use um dos prompts prontos."
+    },
+    {
+      icon: <Video className="w-10 h-10 text-primary" />,
+      title: "Receba seu vídeo pronto",
+      description: "Com narração, imagens consistentes, legendas e efeitos."
+    }
+  ];
+
+  const styles = [
+    {
+      image: "https://placehold.co/600x400/a78bfa/ffffff?text=Pixar+3D",
+      title: "Pixar 3D Cinemático",
+      description: "Realismo mágico e detalhes dignos de cinema."
+    },
+    {
+      image: "https://placehold.co/600x400/f9a8d4/ffffff?text=Ghibli+2D",
+      title: "Ghibli 2D Poético",
+      description: "Cores suaves e atmosfera encantada."
+    },
+    {
+      image: "https://placehold.co/600x400/fde047/ffffff?text=Livro+Infantil",
+      title: "Livro Infantil Ilustrado",
+      description: "Aquarela calorosa e traço orgânico."
+    },
+    {
+      image: "https://placehold.co/600x400/93c5fd/ffffff?text=HQ/Cartoon",
+      title: "HQ/Cartoon Colorido",
+      description: "Energia, humor e ação vibrante."
+    }
+  ];
+
+  const testimonials = [
+    {
+      quote: "Em minutos criei uma série inteira com meu mascote. As crianças adoraram!",
+      author: "Lucas M.",
+      role: "Criador Infantil"
+    },
+    {
+      quote: "Meus alunos ficaram vidrados nas histórias ilustradas. Muito fácil de usar.",
+      author: "Ana P.",
+      role: "Professora"
+    },
+    {
+      quote: "Economizei horas de produção. O StoryFlow faz tudo.",
+      author: "Marcelo F.",
+      role: "Youtuber"
+    }
+  ];
+
+  const faqItems = [
+    {
+      question: "Como funcionam os créditos?",
+      answer: "Cada geração de cena consome 1 crédito. No final, o vídeo completo é renderizado. Planos pagos oferecem mais créditos para histórias mais longas e complexas."
+    },
+    {
+      question: "Posso usar meus vídeos comercialmente?",
+      answer: "Sim, todos os vídeos criados na plataforma, inclusive no plano gratuito, podem ser usados para fins comerciais, como monetização no YouTube, Instagram e outras plataformas."
+    },
+    {
+      question: "Posso cancelar a qualquer momento?",
+      answer: "Sim, nossos planos são sem fidelidade. Você pode cancelar sua assinatura a qualquer momento, sem taxas ou burocracia."
+    },
+    {
+      question: "Meu personagem fica salvo?",
+      answer: "Sim, ao fazer o upload de um personagem, ele fica salvo na sua biblioteca pessoal para ser reutilizado em quantas histórias você quiser, mantendo a consistência visual."
     }
   ];
 
@@ -30,135 +99,161 @@ const Landing = () => {
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container grid lg:grid-cols-2 place-items-center py-20 md:py-32 gap-10 px-6 sm:px-8 md:px-12 lg:px-24">
+        <section className="container grid lg:grid-cols-2 place-items-center py-20 md:py-32 gap-10">
           <div className="text-center lg:text-start space-y-6">
-            <main className="text-5xl md:text-6xl font-bold">
-              <h1 className="inline">
-                <span className="inline bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
-                  Crie vídeos
-                </span>{" "}
-                no estilo Pixar
-              </h1>{" "}
-              com a magia da{" "}
-              <h2 className="inline">
-                <span className="inline bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
-                  Inteligência Artificial
-                </span>
-              </h2>
-            </main>
-
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+              Crie Histórias Animadas com{" "}
+              <span className="inline bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+                IA em Minutos
+              </span>
+            </h1>
             <p className="text-xl text-muted-foreground md:w-10/12 mx-auto lg:mx-0">
-              Transforme suas imagens, áudios e legendas em animações encantadoras em minutos, diretamente no seu navegador.
+              Faça upload do seu personagem, escolha um estilo mágico e veja sua ideia ganhar vida com imagens, voz, legendas e efeitos — tudo pronto para compartilhar.
             </p>
-
             <div className="space-y-4 md:space-y-0 md:space-x-4">
-              <Button 
-                className="w-full md:w-1/3"
-                onClick={() => navigate('/editor')}
-              >
-                Criar Meu Vídeo Grátis
-                <ArrowRight className="w-5 h-5 ml-2" />
+              <Button className="w-full md:w-auto" size="lg" onClick={() => navigate('/editor')}>
+                Comece Grátis Agora <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <Button className="w-full md:w-auto" size="lg" variant="outline">
+                Veja Histórias Criadas <Play className="w-5 h-5 ml-2" />
               </Button>
             </div>
           </div>
-
-          {/* Hero visual */}
-          <div className="z-10">
-            <div className="relative w-full max-w-lg">
-              <div className="absolute -top-8 -left-8 w-72 h-72 bg-primary/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-              <div className="absolute -bottom-8 -right-8 w-72 h-72 bg-primary/5 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-200"></div>
-              <div className="relative shadow-2xl rounded-2xl overflow-hidden">
-                <div className="px-4 py-2 bg-muted/40 border-b">
-                  <div className="flex gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  </div>
-                </div>
-                <img
-                  src="https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1754575804125x446543522981079230/ChatGPT%20Image%205%20de%20ago.%20de%202025%2C%2018_10_34.png"
-                  alt="Personagem 3D em um ambiente criativo, no estilo Pixar"
-                  className="w-full object-cover object-center"
-                  crossOrigin="anonymous"
-                />
+          <div className="relative w-full max-w-lg group">
+            <div className="absolute -top-8 -left-8 w-72 h-72 bg-primary/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+            <div className="absolute -bottom-8 -right-8 w-72 h-72 bg-primary/5 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-200"></div>
+            <div className="relative shadow-2xl rounded-2xl overflow-hidden">
+              <img
+                src="https://0eeb6b826f9e83756195697eae0f522e.cdn.bubble.io/f1754575804125x446543522981079230/ChatGPT%20Image%205%20de%20ago.%20de%202025%2C%2018_10_34.png"
+                alt="Personagem 3D em um ambiente criativo, no estilo Pixar"
+                className="w-full object-cover object-center"
+                crossOrigin="anonymous"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <Play className="w-16 h-16 text-white/80 fill-white/80" />
               </div>
             </div>
           </div>
         </section>
 
-        {/* Features Section */}
-        <section id="features" className="container py-24 sm:py-32 space-y-8 px-6 sm:px-8 md:px-12 lg:px-24">
-          <h2 className="text-3xl lg:text-4xl font-bold md:text-center">
-            Tudo que você precisa para{" "}
+        {/* How It Works Section */}
+        <section id="how-it-works" className="container text-center py-24 sm:py-32">
+          <h2 className="text-3xl md:text-4xl font-bold">
+            Sua história pronta em{" "}
             <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
-              criar vídeos incríveis
+              4 passos
             </span>
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map(({ icon, title, description }) => (
-              <div key={title} className="bg-muted/50 border rounded-lg p-8 group transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:-translate-y-2">
-                <div className="mb-4">{icon}</div>
-                <h3 className="text-xl font-bold mb-2">{title}</h3>
-                <p className="text-muted-foreground">{description}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mt-16">
+            {howItWorksSteps.map((step, index) => (
+              <div key={step.title} className="flex flex-col items-center gap-4">
+                <div className="flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full text-3xl font-bold mb-4">
+                  {step.icon}
+                </div>
+                <h3 className="text-2xl font-bold">{step.title}</h3>
+                <p className="text-muted-foreground">{step.description}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* How It Works Section */}
-        <section id="how-it-works" className="container text-center py-24 sm:py-32 px-6 sm:px-8 md:px-12 lg:px-24">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            Como Funciona em{" "}
+        {/* Styles Section */}
+        <section id="styles" className="container py-24 sm:py-32">
+          <h2 className="text-3xl md:text-4xl font-bold text-center">
+            Quatro estilos para dar{" "}
             <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
-              3 Passos Simples
+              vida ao seu mundo
             </span>
           </h2>
-          <p className="md:w-3/4 mx-auto mt-4 mb-16 text-xl text-muted-foreground">
-            Nosso processo intuitivo permite que você crie vídeos com aparência profissional sem nenhuma experiência em edição.
-          </p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
+            {styles.map(style => <StyleCard key={style.title} {...style} />)}
+          </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center justify-center w-16 h-16 bg-primary/10 text-primary rounded-full text-2xl font-bold">1</div>
-              <h3 className="text-2xl font-bold">Upload</h3>
-              <p className="text-muted-foreground">
-                Envie suas imagens, narrações e arquivos de legenda. Organize tudo cena por cena.
-              </p>
-            </div>
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center justify-center w-16 h-16 bg-primary/10 text-primary rounded-full text-2xl font-bold">2</div>
-              <h3 className="text-2xl font-bold">Magia da IA</h3>
-              <p className="text-muted-foreground">
-                Nossa IA aplica zoom, panorâmica e transições para dar vida ao seu conteúdo de forma inteligente.
-              </p>
-            </div>
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center justify-center w-16 h-16 bg-primary/10 text-primary rounded-full text-2xl font-bold">3</div>
-              <h3 className="text-2xl font-bold">Renderize e Exporte</h3>
-              <p className="text-muted-foreground">
-                Renderize o vídeo final em alta velocidade e faça o download em MP4 para compartilhar onde quiser.
-              </p>
+        {/* Examples Section */}
+        <section id="examples" className="container py-24 sm:py-32">
+          <h2 className="text-3xl md:text-4xl font-bold text-center">
+            Veja o que já foi criado no{" "}
+            <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+              StoryFlow
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="relative rounded-lg overflow-hidden group cursor-pointer aspect-video">
+                <img src={`https://placehold.co/1600x900/334155/ffffff?text=Exemplo+${index + 1}`} alt={`Exemplo ${index + 1}`} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Play className="w-12 h-12 text-white fill-white" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="container py-24 sm:py-32">
+          <h2 className="text-3xl md:text-4xl font-bold text-center">
+            Escolha o plano que{" "}
+            <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+              combina com você
+            </span>
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16 max-w-5xl mx-auto">
+            <PricingCard 
+              planName="Free"
+              price="R$ 0"
+              description="Para começar a criar"
+              features={["10 créditos/mês", "Vídeos até 30 segundos", "2 estilos lúdicos disponíveis", "1 personagem da biblioteca", "Renderização direta (sem edição)"]}
+              ctaText="Criar Conta Grátis"
+            />
+            <PricingCard 
+              planName="Pro"
+              price="R$ 49,90"
+              description="Para criadores dedicados"
+              features={["100 créditos/mês", "Vídeos até 2 minutos", "Todos os 4 estilos lúdicos", "Upload de personagem próprio", "Edição de cenas antes da renderização", "Logo personalizado"]}
+              ctaText="Assinar Pro"
+              isPopular
+            />
+            <PricingCard 
+              planName="Premium"
+              price="R$ 99,90"
+              description="Para poder ilimitado"
+              features={["300 créditos/mês", "Vídeos até 5 minutos", "Biblioteca ilimitada de personagens", "Efeitos avançados: zoom dinâmico", "Exportação 4K", "Suporte prioritário via chat"]}
+              ctaText="Assinar Premium"
+            />
+          </div>
+        </section>
+
+        {/* Social Proof Section */}
+        <section id="social-proof" className="bg-muted/50">
+          <div className="container py-24 sm:py-32">
+            <h2 className="text-3xl md:text-4xl font-bold text-center">
+              Criadores do mundo todo já estão encantando com o{" "}
+              <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
+                StoryFlow
+              </span>
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8 mt-16">
+              {testimonials.map(testimonial => <TestimonialCard key={testimonial.author} {...testimonial} />)}
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section id="cta" className="bg-muted/50">
-          <div className="container py-24 sm:py-32 text-center px-6 sm:px-8 md:px-12 lg:px-24">
-            <h2 className="text-3xl md:text-4xl font-bold">
-              Pronto para dar vida às suas ideias?
-            </h2>
-            <p className="text-xl text-muted-foreground mt-4 mb-8">
-              Comece a criar seu primeiro vídeo animado agora mesmo. É grátis e não precisa de cadastro.
-            </p>
-            <Button 
-              className="w-full md:w-auto"
-              onClick={() => navigate('/editor')}
-            >
-              Começar a Criar
-              <Play className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
+        {/* FAQ Section */}
+        <section id="faq" className="container py-24 sm:py-32 max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+            Perguntas Frequentes
+          </h2>
+          <Accordion type="single" collapsible className="w-full">
+            {faqItems.map((item, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-lg">{item.question}</AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </section>
       </main>
       <Footer />
