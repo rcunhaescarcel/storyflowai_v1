@@ -240,7 +240,7 @@ const Render = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {status === 'completed' && (
                 <>
-                  <Button variant="neon" onClick={downloadVideo} className="flex-1 sm:flex-none">
+                  <Button variant="default" onClick={downloadVideo} className="flex-1 sm:flex-none">
                     <Download className="w-4 h-4 mr-2" />
                     Baixar Vídeo MP4
                   </Button>
@@ -252,7 +252,7 @@ const Render = () => {
               )}
               
               {status === 'error' && (
-                <Button variant="neon" onClick={renderAgain}>
+                <Button variant="default" onClick={renderAgain}>
                   <Play className="w-4 h-4 mr-2" />
                   Tentar Novamente
                 </Button>

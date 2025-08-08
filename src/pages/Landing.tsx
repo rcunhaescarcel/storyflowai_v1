@@ -34,14 +34,14 @@ const Landing = () => {
           <div className="text-center lg:text-start space-y-6">
             <main className="text-5xl md:text-6xl font-bold">
               <h1 className="inline">
-                <span className="inline bg-gradient-to-r from-primary to-primary/80 text-transparent bg-clip-text">
+                <span className="inline bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
                   Crie vídeos
                 </span>{" "}
                 no estilo Pixar
               </h1>{" "}
               com a magia da{" "}
               <h2 className="inline">
-                <span className="inline bg-gradient-to-r from-primary to-primary/80 text-transparent bg-clip-text">
+                <span className="inline bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
                   Inteligência Artificial
                 </span>
               </h2>
@@ -90,7 +90,7 @@ const Landing = () => {
         <section id="features" className="container py-24 sm:py-32 space-y-8 px-6 sm:px-8 md:px-12 lg:px-24">
           <h2 className="text-3xl lg:text-4xl font-bold md:text-center">
             Tudo que você precisa para{" "}
-            <span className="bg-gradient-to-r from-primary to-primary/80 text-transparent bg-clip-text">
+            <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
               criar vídeos incríveis
             </span>
           </h2>
@@ -109,7 +109,7 @@ const Landing = () => {
         <section id="how-it-works" className="container text-center py-24 sm:py-32 px-6 sm:px-8 md:px-12 lg:px-24">
           <h2 className="text-3xl md:text-4xl font-bold">
             Como Funciona em{" "}
-            <span className="bg-gradient-to-r from-primary to-primary/80 text-transparent bg-clip-text">
+            <span className="bg-gradient-to-r from-gradient-from to-gradient-to text-transparent bg-clip-text">
               3 Passos Simples
             </span>
           </h2>

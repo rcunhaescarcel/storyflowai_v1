@@ -22,6 +22,8 @@ export default {
 				sans: ['Poppins', 'sans-serif'],
 			},
 			colors: {
+				'gradient-from': 'hsl(var(--gradient-from))',
+				'gradient-to': 'hsl(var(--gradient-to))',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

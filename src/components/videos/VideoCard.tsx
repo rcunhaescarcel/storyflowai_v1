@@ -55,7 +55,7 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: 
           {project.scene_count || 0} cenas • {project.style || 'Animação 3D'}
         </p>
         <div className="flex items-center gap-2 pt-2">
-          <Button onClick={() => onEdit(project.id)} className="flex-1 bg-primary hover:bg-primary/90" disabled={isEditing}>
+          <Button variant="default" onClick={() => onEdit(project.id)} className="flex-1" disabled={isEditing}>
             {isEditing ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (

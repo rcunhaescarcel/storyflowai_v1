@@ -109,7 +109,7 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
                             crossOrigin="anonymous"
                           />
                           {selected.source === 'gallery' && selected.preview?.includes(char.name) && (
-                            <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
+                            <div className="absolute top-2 right-2 w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center text-primary-foreground">
                               <CheckCircle className="w-4 h-4" />
                             </div>
                           )}
@@ -138,7 +138,7 @@ export const CharacterModal = ({ isOpen, onClose, onConfirm }: CharacterModalPro
                 ) : selected.source === 'upload' && selected.preview ? (
                   <>
                     <img src={selected.preview} alt="Preview" className="w-full h-full object-contain" crossOrigin="anonymous" />
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground">
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center text-primary-foreground">
                         <CheckCircle className="w-4 h-4" />
                     </div>
                   </>

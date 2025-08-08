@@ -19,6 +19,11 @@
     --primary-foreground: 0 0% 100%;
     --primary-glow: 262 80% 68%;
 
+    /* Gradient Colors */
+    --gradient-from: 291 96% 61%; /* Pinkish Purple */
+    --gradient-to: 264 100% 62%; /* Vibrant Purple */
+    --gradient-primary: linear-gradient(to right, hsl(var(--gradient-from)), hsl(var(--gradient-to)));
+
     /* Secondary & Muted Grays with a hint of purple */
     --secondary: 260 15% 96%;
     --secondary-foreground: 260 8% 10%;
