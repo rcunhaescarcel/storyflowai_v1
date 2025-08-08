@@ -21,7 +21,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
-        <ThemeProvider defaultTheme="light" storageKey="storyflow-theme">
+        <ThemeProvider storageKey="storyflow-theme">
           <TooltipProvider>
             <SvgGradients />
             <Sonner />
