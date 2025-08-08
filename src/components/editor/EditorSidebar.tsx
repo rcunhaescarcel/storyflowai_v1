@@ -13,14 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Clock,
-  Copy,
   CornerDownLeft,
   CornerDownRight,
   CornerUpLeft,
@@ -38,6 +36,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { LogoPosition, SubtitleStyle } from "@/hooks/useFFmpeg";
+import { DebugConsole } from "./DebugConsole";
 
 type VideoQuality = "hd" | "fullhd";
 
@@ -458,31 +457,7 @@ export const EditorSidebar = ({
                 )}
               </div>
             )}
-            {debugLogs.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Logs de Debug</Label>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={onCopyLogs}>
-                      <Copy className="w-3 h-3 mr-1.5" />
-                      Copiar
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={onClearLogs}>
-                      Limpar
-                    </Button>
-                  </div>
-                </div>
-                <ScrollArea className="h-40 w-full rounded-md border bg-muted/50 p-3">
-                  <div className="space-y-1">
-                    {debugLogs.map((log, index) => (
-                      <div key={index} className="text-xs font-mono text-muted-foreground">
-                        {log}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-            )}
+            <DebugConsole logs={debugLogs} onCopy={onCopyLogs} onClear={onClearLogs} />
           </CardContent>
         </Card>
       </div>

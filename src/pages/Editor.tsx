@@ -9,6 +9,7 @@ import { SceneCard } from "@/components/editor/SceneCard";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { DebugConsole } from "@/components/editor/DebugConsole";
 
 type VideoQuality = 'hd' | 'fullhd';
 
@@ -266,10 +267,17 @@ const Editor = () => {
 
       <main className="container max-w-screen-xl mx-auto px-4 py-8">
         {scenes.length === 0 ? (
-          <StoryPromptForm 
-            onStoryGenerated={handleStoryGenerated}
-            addDebugLog={addDebugLog}
-          />
+          <div className="max-w-3xl mx-auto space-y-8">
+            <StoryPromptForm 
+              onStoryGenerated={handleStoryGenerated}
+              addDebugLog={addDebugLog}
+            />
+            <DebugConsole 
+              logs={debugLogs} 
+              onCopy={copyLogsToClipboard} 
+              onClear={clearDebugLogs} 
+            />
+          </div>
         ) : (
           <div className="grid lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8">
