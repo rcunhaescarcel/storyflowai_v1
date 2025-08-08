@@ -7,9 +7,11 @@ const AppLayout = () => {
   const [isBuyCoinsModalOpen, setIsBuyCoinsModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-muted/30 flex flex-col">
       <AppHeader onBuyCoinsClick={() => setIsBuyCoinsModalOpen(true)} />
-      <Outlet />
+      <main className="flex-1 flex flex-col">
+        <Outlet />
+      </main>
       <BuyCoinsModal 
         isOpen={isBuyCoinsModalOpen} 
         onClose={() => setIsBuyCoinsModalOpen(false)} 

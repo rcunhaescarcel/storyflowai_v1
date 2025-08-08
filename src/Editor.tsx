@@ -256,38 +256,41 @@ const Editor = () => {
 
   if (isProjectLoading) {
     return (
-      <main className="container max-w-screen-xl mx-auto px-4 py-8">
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-          <Loader2 className="w-12 h-12 text-primary animate-spin" />
-          <p className="mt-4 text-lg text-muted-foreground">Carregando seu projeto...</p>
-        </div>
-      </main>
+      <div className="container max-w-screen-xl mx-auto px-4 h-full flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        <p className="mt-4 text-lg text-muted-foreground">Carregando seu projeto...</p>
+      </div>
     );
   }
 
   return (
     <>
-      <main className="container max-w-screen-lg mx-auto px-4 py-8">
+      <div className="container max-w-screen-lg mx-auto px-4 h-full flex flex-col">
         {scenes.length === 0 ? (
-          <div className="max-w-3xl mx-auto space-y-8">
+          <div className="flex-grow flex items-center justify-center">
             <StoryPromptForm 
               onStoryGenerated={handleStoryGenerated}
               addDebugLog={addDebugLog}
             />
           </div>
         ) : (
-          <div className="mt-8">
-            <div className="flex items-center gap-4 mb-8">
-              <Clapperboard className="w-8 h-8 text-primary" />
-              <EditableProjectTitle initialTitle={projectTitle} onSave={handleSaveTitle} />
+          <>
+            {/* Fixed Header */}
+            <div className="flex-shrink-0 pt-8">
+              <div className="flex items-center gap-4 mb-4">
+                <Clapperboard className="w-8 h-8 text-primary" />
+                <EditableProjectTitle initialTitle={projectTitle} onSave={handleSaveTitle} />
+              </div>
+              <ProjectActions 
+                scenes={scenes}
+                onRenderClick={() => setIsRenderModalOpen(true)}
+                onDownloadClick={() => setIsDownloadModalOpen(true)}
+                videoUrl={localVideoUrl || persistedVideoUrl}
+              />
             </div>
-            <ProjectActions 
-              scenes={scenes}
-              onRenderClick={() => setIsRenderModalOpen(true)}
-              onDownloadClick={() => setIsDownloadModalOpen(true)}
-              videoUrl={localVideoUrl || persistedVideoUrl}
-            />
-            <div className="space-y-6">
+
+            {/* Scrollable Scenes */}
+            <div className="flex-1 overflow-y-auto space-y-6 py-6 pr-2 -mr-2">
               {scenes.map((scene, index) => (
                 <SceneCard
                   key={scene.id}
@@ -304,15 +307,17 @@ const Editor = () => {
                 />
               ))}
             </div>
-            <div className="text-center pt-8">
+
+            {/* Fixed Footer */}
+            <div className="flex-shrink-0 text-center py-4 border-t">
               <Button onClick={addNewScene}>
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Nova Cena
               </Button>
             </div>
-          </div>
+          </>
         )}
-      </main>
+      </div>
 
       <Button
         variant="outline"
