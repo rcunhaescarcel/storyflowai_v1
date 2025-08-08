@@ -1,9 +1,13 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wand2, Video, Settings, History } from "lucide-react";
+import { Wand2, Video, Settings, Coins } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
 
-const AppHeader = () => {
+interface AppHeaderProps {
+  onBuyCoinsClick: () => void;
+}
+
+const AppHeader = ({ onBuyCoinsClick }: AppHeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useSession();
@@ -12,8 +16,6 @@ const AppHeader = () => {
   const isCreating = location.pathname === '/editor' && !isEditingProject;
 
   const handleCreateClick = () => {
-    // Navega para /editor, limpando qualquer estado de projeto.
-    // Substitui o histórico se já estiver na página do editor.
     navigate('/editor', { state: null, replace: location.pathname === '/editor' });
   };
 
@@ -47,8 +49,13 @@ const AppHeader = () => {
             )}
           </NavLink>
           {profile && (
-            <Button variant="ghost" size="sm" className="gap-2 rounded-full px-4 cursor-default hover:bg-transparent">
-              <History className="w-4 h-4" />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2 rounded-full px-4" 
+              onClick={onBuyCoinsClick}
+            >
+              <Coins className="w-4 h-4" />
               {profile.coins ?? 0} Coins
             </Button>
           )}
