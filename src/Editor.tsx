@@ -21,6 +21,7 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { RenderProgress } from "./components/editor/RenderProgress";
 import { cn } from "./lib/utils";
+import { useRender } from "./contexts/RenderContext";
 
 const generateSrtFromScenes = (scenes: Scene[]): string => {
   let srtContent = '';
@@ -53,13 +54,23 @@ const Editor = () => {
   const { 
     renderVideo,
     concatenateAudio,
-    isProcessing, 
-    progress, 
-    renderStage,
-    debugLogs, 
-    clearDebugLogs,
-    addDebugLog
+    addDebugLog: ffmpegAddDebugLog,
   } = useFFmpeg();
+
+  const { 
+    isRendering, 
+    progress, 
+    stage, 
+    debugLogs, 
+    clearLogs, 
+    addLog,
+    startRender,
+    renderingProjectId
+  } = useRender();
+
+  const addDebugLog = useCallback((message: string) => {
+    addLog(`[${new Date().toLocaleTimeString()}] ${message}`);
+  }, [addLog]);
 
   const {
     scenes,
@@ -112,7 +123,8 @@ const Editor = () => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
-    if (!location.state?.project) {
+    const state = location.state as { project?: VideoProject, resumeRender?: boolean } | null;
+    if (!state?.project && !state?.resumeRender) {
       setScenes([]);
       setCurrentProjectId(null);
       setProjectTitle('');
@@ -123,10 +135,10 @@ const Editor = () => {
       setCharacterImagePreview(null);
       setLocalVideoUrl(null);
       setPersistedVideoUrl(null);
-      clearDebugLogs();
+      clearLogs();
       addDebugLog("[Editor] Estado do editor resetado para o modo de criação.");
     }
-  }, [location.state, setScenes, setBackgroundMusic, setLogoFile, setLogoPreview, setCharacterImage, setCharacterImagePreview, clearDebugLogs, addDebugLog]);
+  }, [location.state, setScenes, setBackgroundMusic, setLogoFile, setLogoPreview, setCharacterImage, setCharacterImagePreview, clearLogs, addDebugLog]);
 
   const handleRenderVideo = async () => {
     if (scenes.length === 0) {
@@ -137,8 +149,13 @@ const Editor = () => {
       toast.warning("Aviso", { description: "Todas as cenas precisam de uma imagem para renderizar." });
       return;
     }
+    if (!currentProjectId) {
+      toast.error("Erro", { description: "ID do projeto não encontrado. Salve o projeto primeiro." });
+      return;
+    }
 
     setIsRenderModalOpen(false);
+    startRender(currentProjectId);
 
     let srtFileToRender: File | null = null;
     if (generateSubtitles) {
@@ -153,7 +170,6 @@ const Editor = () => {
 
     try {
       setLocalVideoUrl(null);
-      clearDebugLogs();
       const result = await renderVideo(
         scenes, 
         srtFileToRender, 
@@ -182,7 +198,8 @@ const Editor = () => {
         toast.error("Erro", { description: "Falha ao renderizar o vídeo" });
       }
     } catch (error) {
-      toast.error("Erro na Renderização", { description: `${error}` });
+      const message = error instanceof Error ? error.message : "Erro desconhecido";
+      toast.error("Erro na Renderização", { description: message });
     }
   };
 
@@ -301,18 +318,20 @@ const Editor = () => {
     );
   }
 
+  const showRenderProgress = isRendering && renderingProjectId === currentProjectId;
+
   return (
     <>
       <main className="container max-w-screen-xl mx-auto px-4 py-8">
-        {scenes.length === 0 ? (
+        {scenes.length === 0 && !showRenderProgress ? (
           <div className="max-w-3xl mx-auto space-y-8">
             <StoryPromptForm 
               onStoryGenerated={handleStoryGenerated}
               addDebugLog={addDebugLog}
             />
           </div>
-        ) : isProcessing ? (
-          <RenderProgress stage={renderStage} progress={progress} />
+        ) : showRenderProgress ? (
+          <RenderProgress stage={stage} progress={progress} />
         ) : (
           <div className="mt-8">
             <div className="flex items-center gap-4 mb-4">
@@ -376,7 +395,7 @@ const Editor = () => {
         onClose={() => setIsDebugModalOpen(false)}
         logs={debugLogs}
         onCopy={copyLogsToClipboard}
-        onClear={clearDebugLogs}
+        onClear={clearLogs}
       />
 
       <ImageGenerationModal
@@ -393,7 +412,7 @@ const Editor = () => {
         isOpen={isRenderModalOpen}
         onClose={() => setIsRenderModalOpen(false)}
         onRender={handleRenderVideo}
-        isProcessing={isProcessing}
+        isProcessing={isRendering}
         backgroundMusic={backgroundMusic}
         backgroundMusicVolume={backgroundMusicVolume}
         onBackgroundMusicUpload={handleBackgroundMusicUpload}
@@ -424,7 +443,7 @@ const Editor = () => {
         isOpen={isDownloadModalOpen}
         onClose={() => setIsDownloadModalOpen(false)}
         onDownload={handleDownload}
-        isDownloading={isDownloading || isProcessing}
+        isDownloading={isDownloading || isRendering}
         hasVideo={!!(localVideoUrl || persistedVideoUrl)}
         hasImages={scenes.some(s => s.image)}
         hasAudios={scenes.some(s => s.audio)}

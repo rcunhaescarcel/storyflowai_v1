@@ -14,11 +14,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useFFmpeg, Scene, SubtitleStyle } from "@/hooks/useFFmpeg";
+import { useRender } from "@/contexts/RenderContext";
 
 const Render = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { loadFFmpeg, renderVideo, isLoaded, isProcessing, progress: ffmpegProgress, debugLogs, clearDebugLogs } = useFFmpeg();
+  const { loadFFmpeg, renderVideo, isLoaded } = useFFmpeg();
+  const { isRendering: isProcessing, progress: ffmpegProgress, debugLogs, clearLogs, startRender } = useRender();
   
   const [status, setStatus] = useState<'idle' | 'loading' | 'processing' | 'completed' | 'error'>('idle');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -35,9 +37,11 @@ const Render = () => {
     
     // Start rendering automatically
     startRendering();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startRendering = async () => {
+    startRender('standalone-render');
     setStatus('loading');
     setCurrentStep('Carregando FFmpeg WebAssembly...');
     setLocalProgress(0);
@@ -213,7 +217,7 @@ const Render = () => {
             <div className="bg-muted/50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold">Console de Debug FFmpeg</h3>
-                <Button variant="outline" size="sm" onClick={clearDebugLogs}>
+                <Button variant="outline" size="sm" onClick={clearLogs}>
                   Limpar Logs
                 </Button>
               </div>

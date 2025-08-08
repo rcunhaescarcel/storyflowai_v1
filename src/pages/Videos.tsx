@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/contexts/SessionContext.tsx";
+import { useRender } from "@/contexts/RenderContext.tsx";
 
 const fetchVideoProjects = async (userId: string): Promise<VideoProject[]> => {
   const { data, error } = await supabase
@@ -38,6 +39,7 @@ const Videos = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { session, isLoading: isSessionLoading } = useSession();
+  const { isRendering, renderingProjectId } = useRender();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const { data: projects, isLoading: isProjectsLoading, isError, error } = useQuery<VideoProject[]>({
@@ -64,7 +66,8 @@ const Videos = () => {
     mutationFn: fetchFullProject,
     onSuccess: (project) => {
       if (project) {
-        navigate('/editor', { state: { project } });
+        const isProjectRendering = isRendering && renderingProjectId === project.id;
+        navigate('/editor', { state: { project, resumeRender: isProjectRendering } });
       } else {
         toast.error("Projeto não encontrado para edição.");
       }
@@ -139,6 +142,7 @@ const Videos = () => {
             onDownload={handleDownload}
             onDelete={handleDelete}
             isEditing={editingId === project.id}
+            isCurrentlyRendering={isRendering && renderingProjectId === project.id}
           />
         ))}
       </div>

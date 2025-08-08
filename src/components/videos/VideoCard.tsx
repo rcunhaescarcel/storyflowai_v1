@@ -1,9 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Download, Pencil, Trash2, Play, Loader2 } from "lucide-react";
+import { Download, Pencil, Trash2, Play, Loader2, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { VideoProject } from "../../types/video.ts";
+import { cn } from "@/lib/utils";
 
 interface VideoCardProps {
   project: VideoProject;
@@ -11,9 +12,10 @@ interface VideoCardProps {
   onDownload: (id: string) => void;
   onDelete: (id: string) => void;
   isEditing: boolean;
+  isCurrentlyRendering: boolean;
 }
 
-export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: VideoCardProps) => {
+export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing, isCurrentlyRendering }: VideoCardProps) => {
   const isRendered = !!project.final_video_url;
   const thumbnailUrl = project.thumbnail_url || `https://placehold.co/1600x900/2a2a2a/ffffff?text=${encodeURI(project.title)}`;
   
@@ -25,13 +27,18 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: 
   };
 
   return (
-    <Card className="overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1">
+    <Card className={cn("overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1", isCurrentlyRendering && "ring-2 ring-primary")}>
       <div className="relative">
         <AspectRatio ratio={16 / 9}>
           <img src={thumbnailUrl} alt={project.title} className="object-cover w-full h-full bg-muted" crossOrigin="anonymous" />
         </AspectRatio>
         
-        {isRendered ? (
+        {isCurrentlyRendering ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+            <Loader2 className="w-8 h-8 text-white animate-spin" />
+            <p className="text-white font-semibold mt-2">Renderizando...</p>
+          </div>
+        ) : isRendered ? (
           <a href={project.final_video_url!} target="_blank" rel="noopener noreferrer" aria-label="Play video">
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
               <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
@@ -43,7 +50,7 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: 
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
         )}
 
-        {project.video_duration && (
+        {project.video_duration && !isCurrentlyRendering && (
           <Badge variant="secondary" className="absolute bottom-3 right-3 bg-black/50 text-white border-none">
             {formatDuration(project.video_duration)}
           </Badge>
@@ -63,10 +70,12 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: 
           >
             {isEditing ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : isCurrentlyRendering ? (
+              <Eye className="w-4 h-4 mr-2" />
             ) : (
               <Pencil className="w-4 h-4 mr-2" />
             )}
-            {isEditing ? 'Carregando...' : 'Editar'}
+            {isEditing ? 'Carregando...' : isCurrentlyRendering ? 'Ver Progresso' : 'Editar'}
           </Button>
           {isRendered && (
             <Button 
@@ -75,6 +84,7 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: 
               onClick={() => onDownload(project.id)}
               aria-label="Baixar vídeo"
               className="h-9 w-9"
+              disabled={isCurrentlyRendering}
             >
               <Download className="w-4 h-4" />
             </Button>
@@ -85,6 +95,7 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing }: 
             onClick={() => onDelete(project.id)}
             className="hover:bg-destructive/10 hover:text-destructive h-9 w-9"
             aria-label="Deletar vídeo"
+            disabled={isCurrentlyRendering}
           >
             <Trash2 className="w-4 h-4" />
           </Button>

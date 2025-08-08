@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
+import { useRender } from '@/contexts/RenderContext';
 
 const getCompatibleFont = (font: string): string => {
   return 'Arial';
@@ -14,6 +15,7 @@ export interface SubtitleStyle {
 }
 
 export type LogoPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+export type RenderStage = 'idle' | 'scenes' | 'concat' | 'final';
 
 const convertSRTtoASS = (srtText: string, style: SubtitleStyle): string => {
   const { fontFamily, fontSize, fontColor, shadowColor } = style;
@@ -60,19 +62,16 @@ export const useFFmpeg = () => {
   const [ffmpeg] = useState(() => new FFmpeg());
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFontLoaded, setIsFontLoaded] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [autoLoadAttempted, setAutoLoadAttempted] = useState(false);
-  const [renderStage, setRenderStage] = useState<'idle' | 'scenes' | 'concat' | 'final'>('idle');
-  const renderStageRef = useRef({ stage: 'idle', totalScenes: 0, currentScene: 0 });
+  const renderStageRef = useRef({ stage: 'idle' as RenderStage, totalScenes: 0, currentScene: 0 });
+  const { addLog, updateProgress, endRender } = useRender();
 
   const addDebugLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     const logMessage = `[${timestamp}] ${message}`;
-    setDebugLogs(prev => [...prev, logMessage]);
+    addLog(logMessage);
     console.log(logMessage);
-  }, []);
+  }, [addLog]);
 
   const loadFFmpeg = useCallback(async (silent = false) => {
     if (isLoaded) {
@@ -86,7 +85,7 @@ export const useFFmpeg = () => {
         const { stage, totalScenes, currentScene } = renderStageRef.current;
         
         if (stage === 'idle' || totalScenes === 0) {
-          setProgress(Math.round(p * 100));
+          updateProgress(Math.round(p * 100), stage);
           return;
         }
 
@@ -109,17 +108,18 @@ export const useFFmpeg = () => {
           overallProgress = baseProgress + (p * finalizationWeight);
         }
         
-        setProgress(Math.min(100, Math.round(overallProgress * 100)));
+        updateProgress(Math.min(100, Math.round(overallProgress * 100)), stage);
       });
       await ffmpeg.load();
       setIsLoaded(true);
       addDebugLog('🎉 FFmpeg carregado e configurado com sucesso!');
       return true;
     } catch (error) {
-      addDebugLog(`❌ ERRO CRÍTICO no carregamento: ${error.message}`);
+      const message = error instanceof Error ? error.message : "Erro desconhecido";
+      addDebugLog(`❌ ERRO CRÍTICO no carregamento: ${message}`);
       return false;
     }
-  }, [ffmpeg, isLoaded, addDebugLog]);
+  }, [ffmpeg, isLoaded, addDebugLog, updateProgress]);
 
   const concatenateAudio = useCallback(async (scenes: Scene[]): Promise<File | null> => {
     addDebugLog(`🎵 Iniciando concatenação de áudio para ${scenes.length} cenas...`);
@@ -136,7 +136,6 @@ export const useFFmpeg = () => {
       return null;
     }
 
-    setIsProcessing(true);
     try {
       let concatList = '';
       for (let i = 0; i < audioScenes.length; i++) {
@@ -155,10 +154,9 @@ export const useFFmpeg = () => {
       addDebugLog('✅ Concatenação de áudio concluída!');
       return audioFile;
     } catch (error) {
-      addDebugLog(`❌ ERRO na concatenação de áudio: ${error.message}`);
+      const message = error instanceof Error ? error.message : "Erro desconhecido";
+      addDebugLog(`❌ ERRO na concatenação de áudio: ${message}`);
       throw error;
-    } finally {
-      setIsProcessing(false);
     }
   }, [ffmpeg, isLoaded, loadFFmpeg, addDebugLog]);
 
@@ -191,9 +189,7 @@ export const useFFmpeg = () => {
     }
 
     renderStageRef.current = { stage: 'idle', totalScenes: scenes.length, currentScene: 0 };
-    setRenderStage('idle');
-    setIsProcessing(true);
-    setProgress(0);
+    updateProgress(0, 'idle');
 
     const resolution = quality === 'fullhd' ? { width: 1920, height: 1080 } : { width: 1280, height: 720 };
     addDebugLog(`📹 Qualidade selecionada: ${quality.toUpperCase()} (${resolution.width}x${resolution.height})`);
@@ -218,7 +214,6 @@ export const useFFmpeg = () => {
 
       let concatList = '';
       renderStageRef.current.stage = 'scenes';
-      setRenderStage('scenes');
       for (let i = 0; i < scenes.length; i++) {
         renderStageRef.current.currentScene = i;
         const scene = scenes[i];
@@ -259,7 +254,6 @@ export const useFFmpeg = () => {
       }
 
       renderStageRef.current.stage = 'concat';
-      setRenderStage('concat');
       await ffmpeg.writeFile('concat_list.txt', new TextEncoder().encode(concatList));
       await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'concat_list.txt', '-c', 'copy', '-y', 'concatenated.mp4']);
       addDebugLog('✅ Passagem 1 concluída: Cenas concatenadas em concatenated.mp4');
@@ -267,7 +261,6 @@ export const useFFmpeg = () => {
       // --- PASS 2: Add global audio, subtitles, and logo ---
       addDebugLog('--- PASSAGEM 2: Adicionando trilha sonora, legendas e logotipo ---');
       renderStageRef.current.stage = 'final';
-      setRenderStage('final');
       if (globalSrtFile) {
         const srtText = await globalSrtFile.text();
         const assContent = convertSRTtoASS(srtText, subtitleStyle);
@@ -338,18 +331,18 @@ export const useFFmpeg = () => {
       const data = await ffmpeg.readFile('final_video.mp4');
       const videoUrl = URL.createObjectURL(new Blob([new Uint8Array(data as Uint8Array)], { type: 'video/mp4' }));
       addDebugLog(`🎉 Renderização concluída!`);
-      setProgress(100);
+      updateProgress(100, 'final');
       return videoUrl;
 
     } catch (error) {
-      addDebugLog(`❌ ERRO na renderização: ${error.message}`);
+      const message = error instanceof Error ? error.message : "Erro desconhecido";
+      addDebugLog(`❌ ERRO na renderização: ${message}`);
       throw error;
     } finally {
       renderStageRef.current.stage = 'idle';
-      setRenderStage('idle');
-      setIsProcessing(false);
+      endRender();
     }
-  }, [ffmpeg, isLoaded, isFontLoaded, loadFFmpeg, addDebugLog]);
+  }, [ffmpeg, isLoaded, isFontLoaded, loadFFmpeg, addDebugLog, updateProgress, endRender]);
 
   useEffect(() => {
     if (!autoLoadAttempted && !isLoaded) {
@@ -363,11 +356,6 @@ export const useFFmpeg = () => {
     renderVideo,
     concatenateAudio,
     isLoaded,
-    isProcessing,
-    progress,
-    renderStage,
-    debugLogs,
-    clearDebugLogs: () => setDebugLogs([]),
-    addDebugLog
+    addDebugLog,
   };
 };
