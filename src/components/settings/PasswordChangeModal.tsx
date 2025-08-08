@@ -61,6 +61,7 @@ export const PasswordChangeModal = ({ isOpen, onClose }: PasswordChangeModalProp
     setIsSaving(true);
     try {
       // Etapa 1: Verificar a senha atual.
+      // Este é um passo de segurança do lado do cliente para garantir que o usuário conhece a senha antiga.
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: session.user.email,
         password: values.currentPassword,
@@ -76,21 +77,22 @@ export const PasswordChangeModal = ({ isOpen, onClose }: PasswordChangeModalProp
             description: signInError.message,
           });
         }
-      } else {
-        // Etapa 2: Se a verificação for bem-sucedida, atualize a senha.
-        const { error: updateError } = await supabase.auth.updateUser({
-          password: values.newPassword,
-        });
+        return; // Interrompe a execução se a verificação falhar.
+      }
+      
+      // Etapa 2: Se a verificação for bem-sucedida, atualize para a nova senha.
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: values.newPassword,
+      });
 
-        if (updateError) {
-          toast.error("Falha ao alterar a senha.", {
-            description: `Ocorreu um erro inesperado. Tente novamente. (${updateError.message})`,
-          });
-        } else {
-          toast.success("Senha alterada com sucesso!");
-          form.reset();
-          onClose();
-        }
+      if (updateError) {
+        toast.error("Falha ao alterar a senha.", {
+          description: `Ocorreu um erro inesperado. Tente novamente. (${updateError.message})`,
+        });
+      } else {
+        toast.success("Senha alterada com sucesso!");
+        form.reset();
+        onClose();
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
@@ -98,6 +100,7 @@ export const PasswordChangeModal = ({ isOpen, onClose }: PasswordChangeModalProp
         description: message,
       });
     } finally {
+      // Este bloco é SEMPRE executado, garantindo que o botão de salvar não fique travado.
       setIsSaving(false);
     }
   };
