@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -13,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { resizeImage, dataURLtoFile } from '@/lib/imageUtils';
 import { Input } from '@/components/ui/input';
+import { SceneData } from '@/types/video';
 
 const blobToDataURL = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -61,6 +63,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
   const [progress, setProgress] = useState(0);
   const [characterImage, setCharacterImage] = useState<File | null>(null);
   const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const handleCharacterImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -127,7 +130,6 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         characterPublicUrl = urlData.publicUrl;
         addDebugLog(`[História IA] ✅ Personagem carregado para: ${characterPublicUrl}`);
 
-        // Verification Step
         try {
           addDebugLog(`[História IA] Verificando acessibilidade da URL pública...`);
           const verificationResponse = await fetch(characterPublicUrl);
@@ -152,7 +154,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
 
       const newScenes: Scene[] = [];
       const totalScenes = scenesData.length;
-      const progressPerScene = 95 / totalScenes;
+      const progressPerScene = 85 / totalScenes;
 
       for (let i = 0; i < totalScenes; i++) {
         const sceneData = scenesData[i];
@@ -218,8 +220,52 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
         await delay(500);
       }
 
+      setLoadingMessage('Salvando projeto...');
+      setProgress(90);
+      addDebugLog('[DB] Iniciando salvamento do projeto...');
+
+      const projectTitle = prompt.slice(0, 80) || 'Novo Projeto de Vídeo';
+      const totalDuration = newScenes.reduce((acc, scene) => acc + (scene.duration || 0), 0);
+      const sceneDataForDb: SceneData[] = [];
+      const projectFolder = `projects/${crypto.randomUUID()}`;
+
+      for (let i = 0; i < newScenes.length; i++) {
+        const scene = newScenes[i];
+        if (!scene.image || !scene.audio) throw new Error(`Arquivos da cena ${i + 1} não foram encontrados.`);
+
+        const imagePath = `${projectFolder}/${scene.id}-image.png`;
+        const { error: imageUploadError } = await supabase.storage.from('image-references').upload(imagePath, scene.image);
+        if (imageUploadError) throw new Error(`Upload da imagem falhou: ${imageUploadError.message}`);
+        const { data: { publicUrl: imageUrl } } = supabase.storage.from('image-references').getPublicUrl(imagePath);
+
+        const audioPath = `${projectFolder}/${scene.id}-audio.mp3`;
+        const { error: audioUploadError } = await supabase.storage.from('image-references').upload(audioPath, scene.audio);
+        if (audioUploadError) throw new Error(`Upload do áudio falhou: ${audioUploadError.message}`);
+        const { data: { publicUrl: audioUrl } } = supabase.storage.from('image-references').getPublicUrl(audioPath);
+
+        sceneDataForDb.push({
+          id: scene.id, image_url: imageUrl!, audio_url: audioUrl!, narration_text: scene.narrationText,
+          duration: scene.duration, effect: scene.effect, zoomEnabled: scene.zoomEnabled,
+          zoomIntensity: scene.zoomIntensity, zoomDirection: scene.zoomDirection,
+          fadeInDuration: scene.fadeInDuration, fadeOutDuration: scene.fadeOutDuration,
+        });
+        setProgress(90 + (10 * (i + 1) / totalScenes));
+      }
+
+      const projectToInsert = {
+        title: projectTitle, description: prompt, input_type: 'story_prompt', input_content: prompt,
+        scenes: sceneDataForDb, video_duration: totalDuration, status: 'draft', style: 'Animação 3D',
+      };
+
+      addDebugLog('[DB] Inserindo registro do projeto no banco de dados...');
+      const { error: insertError } = await supabase.from('video_projects').insert(projectToInsert);
+      if (insertError) throw new Error(`Falha ao salvar o projeto: ${insertError.message}`);
+
+      addDebugLog('[DB] ✅ Projeto salvo com sucesso!');
+      await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
+
       onStoryGenerated(newScenes, characterImage, characterImagePreview);
-      toast.success("História, imagens e narrações geradas com sucesso!");
+      toast.success("História gerada e salva com sucesso!");
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
