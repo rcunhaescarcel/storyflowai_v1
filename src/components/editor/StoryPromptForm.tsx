@@ -41,7 +41,7 @@ interface StoryPromptFormProps {
 }
 
 export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFormProps) => {
-  const { session, profile, setProfile } = useSession();
+  const { session, profile, setProfile, isLoading: isSessionLoading } = useSession();
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState('30');
   const [selectedVoice, setSelectedVoice] = useState('nova');
@@ -261,14 +261,14 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isSessionLoading) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 h-[calc(100vh-200px)]">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
         <div className="w-full max-w-md text-center">
-          <p className="text-lg font-medium text-foreground">{loadingMessage}</p>
-          <Progress value={progress} className="w-full mt-4" />
-          <p className="text-sm text-muted-foreground mt-2">{Math.round(progress)}% concluído</p>
+          <p className="text-lg font-medium text-foreground">{isLoading ? loadingMessage : 'Carregando sessão...'}</p>
+          {isLoading && <Progress value={progress} className="w-full mt-4" />}
+          {isLoading && <p className="text-sm text-muted-foreground mt-2">{Math.round(progress)}% concluído</p>}
         </div>
       </div>
     );
@@ -287,10 +287,11 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
           onChange={(e) => setPrompt(e.target.value)}
           rows={3}
           className="w-full border-none focus-visible:ring-0 text-base resize-none p-4 bg-transparent"
+          disabled={isLoading || isSessionLoading}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              handleGenerateStory();
+              if (!isSessionLoading) handleGenerateStory();
             }
           }}
         />
@@ -298,7 +299,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
           <div className="flex items-center gap-1">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
                   <Clock className="w-4 h-4 mr-2" /> Duração
                 </Button>
               </PopoverTrigger>
@@ -306,7 +307,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
             </Popover>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
                   <Mic className="w-4 h-4 mr-2" /> Voz
                 </Button>
               </PopoverTrigger>
@@ -314,7 +315,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
             </Popover>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
                   <Camera className="w-4 h-4 mr-2" /> Efeitos
                 </Button>
               </PopoverTrigger>
@@ -322,7 +323,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
             </Popover>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={isLoading || isSessionLoading}>
                   <UserSquare className="w-4 h-4 mr-2" /> Personagem
                 </Button>
               </PopoverTrigger>
@@ -346,7 +347,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
               </PopoverContent>
             </Popover>
           </div>
-          <Button size="icon" className="rounded-full bg-primary hover:bg-primary/90" onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading}>
+          <Button size="icon" className="rounded-full bg-primary hover:bg-primary/90" onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading || isSessionLoading}>
             <ArrowUp className="w-5 h-5" />
           </Button>
         </div>

@@ -7,6 +7,7 @@ import { Sparkles, Video as VideoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/contexts/SessionContext.tsx";
 
 const fetchVideoProjects = async (): Promise<VideoProject[]> => {
   const { data, error } = await supabase
@@ -24,10 +25,12 @@ const fetchVideoProjects = async (): Promise<VideoProject[]> => {
 const Videos = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { session, isLoading: isSessionLoading } = useSession();
 
-  const { data: projects, isLoading, isError, error } = useQuery<VideoProject[]>({
-    queryKey: ['video_projects'],
+  const { data: projects, isLoading: isProjectsLoading, isError, error } = useQuery<VideoProject[]>({
+    queryKey: ['video_projects', session?.user?.id],
     queryFn: fetchVideoProjects,
+    enabled: !isSessionLoading && !!session,
   });
 
   const deleteMutation = useMutation({
@@ -67,6 +70,8 @@ const Videos = () => {
   };
 
   const renderContent = () => {
+    const isLoading = isSessionLoading || isProjectsLoading;
+
     if (isLoading) {
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
