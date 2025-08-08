@@ -9,10 +9,11 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/contexts/SessionContext.tsx";
 
-const fetchVideoProjects = async (): Promise<VideoProject[]> => {
+const fetchVideoProjects = async (userId: string): Promise<VideoProject[]> => {
   const { data, error } = await supabase
     .from('video_projects')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -29,7 +30,7 @@ const Videos = () => {
 
   const { data: projects, isLoading: isProjectsLoading, isError, error } = useQuery<VideoProject[]>({
     queryKey: ['video_projects', session?.user?.id],
-    queryFn: fetchVideoProjects,
+    queryFn: () => fetchVideoProjects(session!.user.id),
     enabled: !isSessionLoading && !!session,
   });
 
