@@ -1,12 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Clock, Download, Save, Video } from "lucide-react";
+import { Clock, Download, Video } from "lucide-react";
 
 interface ActionPanelProps {
-  isEditing: boolean;
-  onSaveProject: () => void;
-  isSaving: boolean;
   isProcessing: boolean;
   onRender: () => void;
   sceneCount: number;
@@ -16,9 +13,6 @@ interface ActionPanelProps {
 }
 
 export const ActionPanel = ({
-  isEditing,
-  onSaveProject,
-  isSaving,
   isProcessing,
   onRender,
   sceneCount,
@@ -35,14 +29,20 @@ export const ActionPanel = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex flex-col gap-3">
-          {isEditing && (
-            <Button onClick={onSaveProject} disabled={isSaving || isProcessing} className="w-full">
-              <Save className="w-4 h-4 mr-2" />
-              {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+        {videoUrl && (
+          <div className="space-y-3">
+            <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+              <video src={videoUrl} controls className="w-full h-full object-cover" />
+            </div>
+            <Button onClick={onDownloadVideo} className="w-full bg-green-600 hover:bg-green-700 text-white">
+              <Download className="w-4 h-4 mr-2" />
+              Baixar Vídeo
             </Button>
-          )}
-          <Button onClick={onRender} disabled={sceneCount === 0 || isProcessing || isSaving} className="w-full">
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3">
+          <Button onClick={onRender} disabled={sceneCount === 0 || isProcessing} className="w-full">
             <Video className="w-4 h-4 mr-2" />
             {isProcessing ? 'Renderizando...' : 'Renderizar Vídeo'}
           </Button>
@@ -59,17 +59,6 @@ export const ActionPanel = ({
               <Clock className="w-4 h-4 animate-spin" />
               Processando...
             </div>
-          </div>
-        )}
-        {videoUrl && (
-          <div className="space-y-3">
-            <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-              <video src={videoUrl} controls className="w-full h-full object-cover" />
-            </div>
-            <Button onClick={onDownloadVideo} className="w-full bg-green-600 hover:bg-green-700 text-white">
-              <Download className="w-4 h-4 mr-2" />
-              Baixar Vídeo
-            </Button>
           </div>
         )}
       </CardContent>

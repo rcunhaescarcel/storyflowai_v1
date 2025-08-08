@@ -70,7 +70,7 @@ const Editor = () => {
     addDebugLog
   });
 
-  const { saveProject, updateProject, saveRenderedVideo, isSaving } = useProjectPersistence(addDebugLog);
+  const { saveProject, saveRenderedVideo } = useProjectPersistence(addDebugLog);
   
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
@@ -137,14 +137,6 @@ const Editor = () => {
     } catch (error) {
       toast.error("Erro na Renderização", { description: `${error}` });
     }
-  };
-
-  const handleSaveProject = () => {
-    if (!currentProjectId) {
-      toast.error("ID do projeto não encontrado para salvar.");
-      return;
-    }
-    updateProject(currentProjectId, scenes, projectTitle);
   };
 
   const downloadVideo = () => {
@@ -267,12 +259,10 @@ const Editor = () => {
               onSrtRemove={() => setGlobalSrtFile(null)}
               onSubtitleStyleChange={(update) => setSubtitleStyle(prev => ({ ...prev, ...update }))}
               isProcessing={isProcessing}
-              isSaving={isSaving}
               progress={progress}
               videoUrl={localVideoUrl || persistedVideoUrl}
               onDownloadVideo={downloadVideo}
               onRender={handleRenderVideo}
-              onSaveProject={handleSaveProject}
               sceneCount={scenes.length}
               isEditing={!!currentProjectId}
               zoomEffect={zoomEffect}

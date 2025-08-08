@@ -31,12 +31,10 @@ interface EditorSidebarProps {
   onSrtRemove: () => void;
   onSubtitleStyleChange: (style: Partial<SubtitleStyle>) => void;
   isProcessing: boolean;
-  isSaving: boolean;
   progress: number;
   videoUrl: string | null;
   onDownloadVideo: () => void;
   onRender: () => void;
-  onSaveProject: () => void;
   sceneCount: number;
   isEditing: boolean;
   zoomEffect: ZoomEffect;
@@ -51,6 +49,14 @@ export const EditorSidebar = (props: EditorSidebarProps) => {
   return (
     <aside className="lg:col-span-4 space-y-8">
       <div className="sticky top-24 space-y-8">
+        <ActionPanel
+          isProcessing={props.isProcessing}
+          onRender={props.onRender}
+          sceneCount={props.sceneCount}
+          progress={props.progress}
+          videoUrl={props.videoUrl}
+          onDownloadVideo={props.onDownloadVideo}
+        />
         <GeneralSettings
           isEditing={props.isEditing}
           projectTitle={props.projectTitle}
@@ -87,17 +93,6 @@ export const EditorSidebar = (props: EditorSidebarProps) => {
           onZoomEffectChange={props.onZoomEffectChange}
           zoomIntensity={props.zoomIntensity}
           onZoomIntensityChange={props.onZoomIntensityChange}
-        />
-        <ActionPanel
-          isEditing={props.isEditing}
-          onSaveProject={props.onSaveProject}
-          isSaving={props.isSaving}
-          isProcessing={props.isProcessing}
-          onRender={props.onRender}
-          sceneCount={props.sceneCount}
-          progress={props.progress}
-          videoUrl={props.videoUrl}
-          onDownloadVideo={props.onDownloadVideo}
         />
       </div>
     </aside>

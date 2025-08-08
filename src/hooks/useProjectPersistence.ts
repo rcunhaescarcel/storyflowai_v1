@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +9,6 @@ import { urlToFile } from '@/lib/imageUtils';
 export const useProjectPersistence = (addDebugLog: (message: string) => void) => {
   const { session } = useSession();
   const queryClient = useQueryClient();
-  const [isSaving, setIsSaving] = useState(false);
 
   const uploadSceneAssets = async (scenes: Scene[], projectFolder: string): Promise<SceneData[]> => {
     const sceneDataForDb: SceneData[] = [];
@@ -47,7 +45,6 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
     }
 
     const savingToast = toast.loading("Salvando seu projeto...");
-    setIsSaving(true);
     addDebugLog('[DB] Iniciando salvamento de novo projeto...');
 
     try {
@@ -91,55 +88,6 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       addDebugLog(`[DB] ❌ Falha no salvamento: ${errorMessage}`);
       toast.error("Falha ao salvar o projeto", { id: savingToast, description: errorMessage });
       return null;
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const updateProject = async (projectId: string, scenesToUpdate: Scene[], title: string) => {
-    if (!session) {
-      toast.error("Sessão não encontrada. Não foi possível atualizar o projeto.");
-      return;
-    }
-
-    const updatingToast = toast.loading("Salvando alterações...");
-    setIsSaving(true);
-    addDebugLog(`[DB] Iniciando atualização do projeto ID: ${projectId}`);
-
-    try {
-      const projectFolder = `projects/${session.user.id}/${projectId}`;
-      const sceneDataForDb = await uploadSceneAssets(scenesToUpdate, projectFolder);
-      const totalDuration = scenesToUpdate.reduce((acc, scene) => acc + (scene.duration || 0), 0);
-      const thumbnailUrl = sceneDataForDb.length > 0 ? sceneDataForDb[0].image_url : null;
-
-      const projectToUpdate = {
-        title,
-        scenes: sceneDataForDb,
-        video_duration: totalDuration,
-        updated_at: new Date().toISOString(),
-        thumbnail_url: thumbnailUrl,
-        scene_count: scenesToUpdate.length,
-      };
-
-      const { error: updateError } = await supabase
-        .from('video_projects')
-        .update(projectToUpdate)
-        .eq('id', projectId);
-
-      if (updateError) {
-        throw new Error(`Falha ao atualizar o projeto: ${updateError.message}`);
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
-      addDebugLog('[DB] ✅ Projeto atualizado com sucesso!');
-      toast.success("Alterações salvas!", { id: updatingToast });
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
-      addDebugLog(`[DB] ❌ Falha na atualização: ${errorMessage}`);
-      toast.error("Falha ao salvar alterações", { id: updatingToast, description: errorMessage });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -149,7 +97,6 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       return null;
     }
     const savingToast = toast.loading("Salvando vídeo na nuvem...");
-    setIsSaving(true);
     try {
       const videoFile = await urlToFile(videoBlobUrl, `final_video_${projectId}.mp4`, 'video/mp4');
       const filePath = `${session.user.id}/${projectId}/final_video.mp4`;
@@ -183,10 +130,8 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       addDebugLog(`[Storage] ❌ Falha ao salvar vídeo: ${errorMessage}`);
       toast.error("Falha ao salvar o vídeo", { id: savingToast, description: errorMessage });
       return null;
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  return { saveProject, updateProject, saveRenderedVideo, isSaving };
+  return { saveProject, saveRenderedVideo };
 };
