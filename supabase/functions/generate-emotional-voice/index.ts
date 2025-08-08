@@ -53,10 +53,7 @@ serve(async (req) => {
       finalTone = toneData.choices[0].message.content.trim();
     }
 
-    // Preceda o tom ao texto
-    const textToSpeak = `${finalTone}. ${text}`;
-
-    // Gere o áudio
+    // Gere o áudio usando o modelo e a estrutura corretos
     const audioResponse = await fetch("https://api.openai.com/v1/audio/speech", {
       method: 'POST',
       headers: {
@@ -64,16 +61,17 @@ serve(async (req) => {
         'Authorization': `Bearer ${openAIApiKey}`,
       },
       body: JSON.stringify({
-        model: "tts-1-hd",
-        input: textToSpeak,
+        model: "gpt-4o-mini-tts",
+        input: text,
         voice: voice,
+        instructions: finalTone,
       }),
     });
 
     if (!audioResponse.ok) {
       const errorBody = await audioResponse.text();
       console.error("Error generating audio:", errorBody);
-      throw new Error("Failed to generate audio from OpenAI.");
+      throw new Error(`Failed to generate audio from OpenAI: ${errorBody}`);
     }
 
     const audioBlob = await audioResponse.blob();
