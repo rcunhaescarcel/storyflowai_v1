@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
+import { Progress } from '@/components/ui/progress';
 
 interface StoryGeneratorModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Gerando...');
+  const [progress, setProgress] = useState(0);
 
   const handleGenerateStory = async () => {
     if (!prompt.trim()) {
@@ -33,6 +35,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
       return;
     }
     setIsLoading(true);
+    setProgress(0);
     setLoadingMessage('Gerando roteiro da história...');
     addDebugLog(`[História IA] Iniciando geração para o prompt: "${prompt}"`);
 
@@ -55,6 +58,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
 
       const storyText = await response.text();
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
+      setProgress(5);
 
       const lines = storyText.trim().split('\n').filter(p => p.includes('|||'));
       
@@ -107,6 +111,8 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
           fadeInDuration: 0.5,
           fadeOutDuration: 0.5,
         });
+        
+        setProgress(5 + ((i + 1) / totalScenes) * 95);
       }
 
       onStoryGenerated(newScenes);
@@ -119,12 +125,18 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
       toast.error(`Falha ao gerar a história ou imagens: ${errorMessage}`);
     } finally {
       setIsLoading(false);
-      setLoadingMessage('Gerando...');
+      setProgress(0);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open && isLoading) {
+        setIsLoading(false);
+        setProgress(0);
+      }
+      if (!open) onClose();
+    }}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -136,15 +148,26 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <Textarea
-            id="story-prompt"
-            placeholder="Ex: A jornada de um pequeno robô que se perdeu na cidade grande e tenta encontrar o caminho de volta para casa."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            disabled={isLoading}
-            rows={5}
-            className="bg-background"
-          />
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center gap-4 h-[138px]">
+              <Loader2 className="w-12 h-12 text-primary animate-spin" />
+              <div className="w-full text-center">
+                <p className="text-sm font-medium text-foreground">{loadingMessage}</p>
+                <Progress value={progress} className="w-full mt-2" />
+                <p className="text-xs text-muted-foreground mt-1">{Math.round(progress)}% concluído</p>
+              </div>
+            </div>
+          ) : (
+            <Textarea
+              id="story-prompt"
+              placeholder="Ex: A jornada de um pequeno robô que se perdeu na cidade grande e tenta encontrar o caminho de volta para casa."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              disabled={isLoading}
+              rows={5}
+              className="bg-background"
+            />
+          )}
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
@@ -154,7 +177,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, onStoryGenerated, addDebu
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {loadingMessage}
+                Gerando...
               </>
             ) : (
               "Gerar História e Imagens"
