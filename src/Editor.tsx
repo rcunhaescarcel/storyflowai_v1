@@ -322,7 +322,7 @@ const Editor = () => {
 
   return (
     <>
-      <main className="container max-w-screen-xl mx-auto px-4 py-8">
+      <main className="container max-w-screen-lg mx-auto px-4 py-8">
         {scenes.length === 0 && !showRenderProgress ? (
           <div className="max-w-3xl mx-auto space-y-8">
             <StoryPromptForm 
