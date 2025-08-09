@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ArrowDown, ArrowUp, Trash2, Sparkles, ImagePlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ interface SceneCardProps {
   addDebugLog: (message: string) => void;
 }
 
-export const SceneCard = ({
+const SceneCardComponent = ({
   scene,
   index,
   totalScenes,
@@ -114,3 +115,5 @@ export const SceneCard = ({
     </Card>
   );
 };
+
+export const SceneCard = memo(SceneCardComponent);
