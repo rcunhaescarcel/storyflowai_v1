@@ -327,8 +327,12 @@ const Editor = () => {
                       key={finalVideoUrl}
                       src={finalVideoUrl!}
                       controls
+                      poster={currentProject?.thumbnail_url || undefined}
                       crossOrigin="anonymous"
-                      className="w-full rounded-lg shadow-lg aspect-video bg-black"
+                      className={cn(
+                        "w-full rounded-lg shadow-lg bg-black",
+                        videoFormat === 'landscape' ? 'aspect-video' : 'aspect-[9/16]'
+                      )}
                     />
                   )}
                 </div>
