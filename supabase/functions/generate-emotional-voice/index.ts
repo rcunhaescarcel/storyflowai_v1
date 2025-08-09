@@ -51,7 +51,7 @@ serve(async (req) => {
 
     return new Response(response.body, {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
+      headers: { ...corsHeaders, "Content-Type": "application/octet-stream" },
     });
 
   } catch (err) {
