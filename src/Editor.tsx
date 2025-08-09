@@ -163,8 +163,9 @@ const Editor = () => {
       }
     }
 
+    let result: string | null = null;
     try {
-      const result = await renderVideo(
+      result = await renderVideo(
         scenes, 
         srtFileToRender, 
         backgroundMusic, 
@@ -179,27 +180,6 @@ const Editor = () => {
         0.5,
         videoFormat
       );
-      addDebugLog(`[Editor] Renderização FFmpeg concluída. URL temporária (blob): ${result}`);
-
-      if (result) {
-        toast.success("Sucesso!", { description: "Vídeo renderizado com sucesso" });
-        if (currentProject.id) {
-          addDebugLog(`[Editor] Salvando vídeo na nuvem para o projeto ${currentProject.id}...`);
-          const finalUrl = await saveRenderedVideo(currentProject.id, result);
-          addDebugLog(`[Editor] URL permanente recebida: ${finalUrl}`);
-          if (finalUrl) {
-            addDebugLog(`[Editor] Atualizando estado do projeto com a nova URL...`);
-            setCurrentProject(prev => {
-              addDebugLog('[Editor] Estado atualizado.');
-              return prev ? { ...prev, final_video_url: finalUrl } : null;
-            });
-          } else {
-            addDebugLog('[Editor] ❌ URL final não recebida. O player não será atualizado.');
-          }
-        }
-      } else if (!isRendering) { // Only show error if not cancelled
-        toast.error("Erro", { description: "Falha ao renderizar o vídeo" });
-      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro desconhecido";
       if (message.includes('cancelada')) {
@@ -209,6 +189,28 @@ const Editor = () => {
       }
     } finally {
       endRender();
+    }
+
+    if (result) {
+      addDebugLog(`[Editor] Renderização FFmpeg concluída. URL temporária (blob): ${result}`);
+      toast.success("Sucesso!", { description: "Vídeo renderizado com sucesso. Salvando na nuvem..." });
+      
+      if (currentProject.id) {
+        addDebugLog(`[Editor] Salvando vídeo na nuvem para o projeto ${currentProject.id}...`);
+        const finalUrl = await saveRenderedVideo(currentProject.id, result);
+        addDebugLog(`[Editor] URL permanente recebida: ${finalUrl}`);
+        if (finalUrl) {
+          addDebugLog(`[Editor] Atualizando estado do projeto com a nova URL...`);
+          setCurrentProject(prev => {
+            addDebugLog('[Editor] Estado atualizado.');
+            return prev ? { ...prev, final_video_url: finalUrl } : null;
+          });
+        } else {
+          addDebugLog('[Editor] ❌ URL final não recebida. O player não será atualizado.');
+        }
+      }
+    } else if (!isRendering) {
+      toast.error("Erro", { description: "Falha ao renderizar o vídeo. O resultado da renderização estava vazio." });
     }
   };
 
