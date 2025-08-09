@@ -77,10 +77,8 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
       const referrer = "https://storyflow.app/";
-      const model = "gpt-5-nano";
-      const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?model=${model}&token=${apiToken}&referrer=${referrer}`;
+      const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?token=${apiToken}&referrer=${referrer}`;
 
-      addDebugLog(`[História IA] Usando o modelo de texto: ${model}`);
       addDebugLog(`[História IA] URL da API de texto: ${targetUrl.substring(0, 100)}...`);
       const response = await fetchWithRetry(targetUrl, { addDebugLog, apiName: 'História IA' });
 
