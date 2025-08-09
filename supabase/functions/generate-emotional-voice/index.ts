@@ -34,7 +34,7 @@ serve(async (req) => {
     }
 
     const sanitizedText = text.replace(/"/g, "");
-    const payload = { model: "tts-1-hd", input: sanitizedText, voice, response_format: "mp3" };
+    const payload = { model: "tts-1", input: sanitizedText, voice, response_format: "mp3" };
 
     if (instructions) {
       payload.instructions = instructions;
