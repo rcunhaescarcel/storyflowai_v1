@@ -48,52 +48,29 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
       const selectedVoice = profile?.default_voice || 'nova';
       addDebugLog(`[Narração IA] Usando a voz: ${selectedVoice}`);
 
-      // --- START OF DEBUG MODIFICATION ---
-      const functionUrl = `${(supabase.functions as any).url}/generate-emotional-voice?debug=1`;
-      addDebugLog(`[Debug] Chamando a função em modo de depuração: ${functionUrl}`);
-
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-          'apikey': (supabase.functions as any).headers.apikey,
-        },
-        body: JSON.stringify({
+      const { data: responseBlob, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
+        body: {
           text: narrationText,
           voice: selectedVoice,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorString = JSON.stringify(errorData, null, 2);
-        addDebugLog(`[Debug] ❌ Resposta de erro da função: ${errorString}`);
-        console.error("DEBUG RESPONSE:", errorData);
-        toast.error("Falha na Depuração da Narração", {
-          description: "A função retornou um erro. Verifique os logs de debug para detalhes.",
-          duration: 10000,
-        });
-        throw new Error(`A depuração da função falhou. Veja os logs.`);
+      if (invokeError) {
+        throw new Error(`Falha ao gerar áudio: ${invokeError.message}`);
       }
       
-      const responseBlob = await response.blob();
-      // --- END OF DEBUG MODIFICATION ---
-
       const fileName = `narration_${selectedVoice}.mp3`;
       const file = new File([responseBlob], fileName, { type: 'audio/mp3' });
       const dataUrl = await blobToDataURL(responseBlob);
 
       onAudioGenerated(file, dataUrl);
-      addDebugLog(`[Narração IA] ✅ Áudio gerado com sucesso no modo de depuração!`);
+      addDebugLog(`[Narração IA] ✅ Áudio gerado com sucesso!`);
       toast.success("Narração gerada com sucesso!");
     } catch (error) {
       console.error("Audio generation failed:", error);
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
       addDebugLog(`[Narração IA] ❌ Falha na geração: ${errorMessage}`);
-      if (!errorMessage.includes('depuração')) {
-        toast.error(`Falha ao gerar a narração: ${errorMessage}`);
-      }
+      toast.error(`Falha ao gerar a narração: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
