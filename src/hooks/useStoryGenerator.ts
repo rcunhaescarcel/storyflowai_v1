@@ -72,13 +72,15 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       const languageKey = profile.default_language || 'pt-br';
       const languageName = languages[languageKey as keyof typeof languages];
       
-      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um único objeto JSON válido com EXATAMENTE duas chaves: "title" e "scenes". A chave "scenes" deve ser um array de objetos, onde cada objeto representa uma cena e deve ter EXATAMENTE TRÊS chaves: "narration", "image_prompt", e "emotion". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". A chave "emotion" deve conter uma frase curta em INGLÊS descrevendo o tom da narração (ex: "Calm and inspiring tone", "Excited and energetic voice"). Exemplo: {"title": "As Aventuras do Robô Perdido", "scenes": [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}", "emotion": "A gentle and magical tone"}]}`;
+      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um único objeto JSON válido com EXATAMENTE duas chaves: "title" e "scenes". A chave "scenes" deve ser um array de objetos, onde cada objeto representa uma cena e deve ter EXATAMENTE TRÊS chaves: "narration", "image_prompt", e "emotion". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". A chave "emotion" deve conter uma frase curta em INGLÊS descrevendo o tom da narração, e DEVE terminar com a palavra "tone" (ex: "A calm and inspiring tone", "An excited and energetic tone"). Exemplo: {"title": "As Aventuras do Robô Perdido", "scenes": [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}", "emotion": "A gentle and magical tone"}]}`;
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
       const referrer = "https://storyflow.app/";
-      const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?token=${apiToken}&referrer=${referrer}`;
+      const model = "gpt-5-nano";
+      const targetUrl = `https://text.pollinations.ai/${encodedPrompt}?model=${model}&token=${apiToken}&referrer=${referrer}`;
 
+      addDebugLog(`[História IA] Usando o modelo de texto: ${model}`);
       addDebugLog(`[História IA] URL da API de texto: ${targetUrl.substring(0, 100)}...`);
       const response = await fetchWithRetry(targetUrl, { addDebugLog, apiName: 'História IA' });
 
