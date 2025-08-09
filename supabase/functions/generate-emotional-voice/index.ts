@@ -14,14 +14,15 @@ serve(async (req) => {
   try {
     const { text, voice } = await req.json();
     if (!text || !voice) {
-      throw new Error("Missing 'text' or 'voice' in request body.");
+      throw new Error("Parâmetros 'text' ou 'voice' ausentes no corpo da requisição.");
     }
 
     const sanitizedText = text.replace(/"/g, '');
 
+    // Usando a chave exata que o usuário mencionou.
     const openAIApiKey = Deno.env.get("ChatGPT_ vozes");
     if (!openAIApiKey) {
-      throw new Error("Server configuration error: OpenAI API key not found.");
+      throw new Error("Erro de configuração do servidor: Chave da API da OpenAI ('ChatGPT_ vozes') não encontrada. Verifique o nome e o valor da chave nas configurações do Supabase.");
     }
 
     const openAIResponse = await fetch("https://api.openai.com/v1/audio/speech", {
@@ -39,12 +40,10 @@ serve(async (req) => {
 
     if (!openAIResponse.ok) {
       const errorBody = await openAIResponse.text();
-      console.error("OpenAI API Error:", errorBody);
-      // Throw an error that will be caught and returned as a JSON error object
-      throw new Error(`OpenAI API Error (${openAIResponse.status}): ${errorBody}`);
+      console.error("Erro da API OpenAI:", errorBody);
+      throw new Error(`Erro da API OpenAI (${openAIResponse.status}): ${errorBody}`);
     }
 
-    // On success, return the audio blob
     const audioBlob = await openAIResponse.blob();
     return new Response(audioBlob, {
       headers: { ...corsHeaders, 'Content-Type': 'audio/mpeg' },
@@ -52,15 +51,14 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error("Edge Function Error:", error.message);
-    // On failure, return a JSON error object with a 200 status
-    // to bypass the Supabase client's generic error handling.
+    console.error("Erro na Edge Function:", error);
     return new Response(JSON.stringify({ 
-      error: "An error occurred in the edge function.",
-      details: error.message 
+      error: "Ocorreu um erro na edge function.",
+      details: error.message,
+      stack: error.stack,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200, // IMPORTANT: Always return 200
+      status: 200,
     });
   }
 })

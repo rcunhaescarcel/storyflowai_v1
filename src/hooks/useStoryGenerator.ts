@@ -145,7 +145,6 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
 
       const totalScenes = scenesData.length;
       
-      // --- Stage 1: Generate all images ---
       const imageGenerationProgress = 40;
       const progressPerImage = imageGenerationProgress / totalScenes;
       const imageResults: { imageFile: File, imagePreview: string }[] = [];
@@ -179,7 +178,6 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       }
       addDebugLog(`[História IA] ✅ Todas as ${totalScenes} imagens foram geradas.`);
 
-      // --- Stage 2: Generate all audios ---
       const audioGenerationProgress = 40;
       const progressPerAudio = audioGenerationProgress / totalScenes;
       const audioResults: { audioFile: File, audioDataUrl: string, audioDuration: number }[] = [];
@@ -204,6 +202,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
 
         if (responseBlob.type === 'application/json') {
           const errorData = JSON.parse(await responseBlob.text());
+          addDebugLog(`[Áudio IA] ❌ Erro detalhado recebido da Edge Function: ${JSON.stringify(errorData)}`);
           throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${errorData.details || errorData.error}`);
         }
 
@@ -216,7 +215,6 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       }
       addDebugLog(`[História IA] ✅ Todas as ${totalScenes} narrações foram geradas.`);
 
-      // --- Stage 3: Combine and finalize ---
       setLoadingMessage('Finalizando...');
       setProgress(95);
 

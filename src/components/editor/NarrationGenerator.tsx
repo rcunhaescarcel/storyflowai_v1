@@ -57,6 +57,7 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
 
       if (responseBlob.type === 'application/json') {
         const errorData = JSON.parse(await responseBlob.text());
+        addDebugLog(`[Narração IA] ❌ Erro detalhado recebido da Edge Function: ${JSON.stringify(errorData)}`);
         throw new Error(`A geração de áudio falhou: ${errorData.details || errorData.error}`);
       }
 
