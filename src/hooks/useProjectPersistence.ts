@@ -127,23 +127,23 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
         throw new Error(`Falha no upload do vídeo: ${uploadError.message}`);
       }
       
-      addDebugLog(`[Storage] ✅ Vídeo salvo. Criando URL assinada...`);
+      addDebugLog(`[Storage] ✅ Vídeo salvo. Obtendo URL pública...`);
 
-      const { data, error: signedUrlError } = await supabase.storage
+      const { data } = supabase.storage
         .from('final_videos')
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10); // 10 anos de validade
+        .getPublicUrl(filePath);
 
-      if (signedUrlError) {
-        throw new Error(`Falha ao criar URL do vídeo: ${signedUrlError.message}`);
+      if (!data?.publicUrl) {
+        throw new Error('Não foi possível obter a URL pública do vídeo.');
       }
 
-      const signedUrl = data.signedUrl;
-      addDebugLog(`[Storage] ✅ URL assinada criada com sucesso.`);
+      const publicUrl = data.publicUrl;
+      addDebugLog(`[Storage] ✅ URL pública obtida com sucesso.`);
 
       addDebugLog(`[DB] Atualizando projeto ${projectId} com a URL do vídeo...`);
       const { error: dbError } = await supabase
         .from('video_projects')
-        .update({ final_video_url: signedUrl, status: 'completed', updated_at: new Date().toISOString() })
+        .update({ final_video_url: publicUrl, status: 'completed', updated_at: new Date().toISOString() })
         .eq('id', projectId);
 
       if (dbError) {
@@ -154,7 +154,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
 
       await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
       toast.success("Vídeo salvo na nuvem!", { id: savingToast });
-      return signedUrl;
+      return publicUrl;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
       addDebugLog(`[Storage] ❌ Falha ao salvar vídeo: ${errorMessage}`);
