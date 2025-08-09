@@ -34,7 +34,8 @@ serve(async (req) => {
     }
 
     const sanitizedText = text.replace(/"/g, "");
-    const payload = { model: "tts-1", input: sanitizedText, voice, response_format: "mp3" };
+    // Alterado conforme solicitado para usar o novo modelo de áudio.
+    const payload = { model: "gpt-4o-mini-tts", input: sanitizedText, voice, response_format: "mp3" };
 
     if (instructions) {
       payload.instructions = instructions;
