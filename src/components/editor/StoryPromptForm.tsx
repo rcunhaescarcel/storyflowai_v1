@@ -10,7 +10,6 @@ import { storyStyles, openAIVoices } from '@/lib/constants';
 import { CharacterModal } from './CharacterModal';
 import { useStoryGenerator } from '@/hooks/useStoryGenerator';
 import { StoryGenerationStatus } from './StoryGenerationStatus';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface StoryPromptFormProps {
   onStoryGenerated: (scenes: Scene[], title: string, characterFile?: File, characterPreview?: string, prompt?: string, style?: string, videoFormat?: 'landscape' | 'portrait') => void;
@@ -165,22 +164,31 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog, videoFormat, on
                 <UserSquare className="w-4 h-4 mr-2" /> Personagem
               </Button>
 
-              <ToggleGroup
-                type="single"
+              <Select
                 value={videoFormat}
                 onValueChange={(value) => {
                   if (value) onVideoFormatChange(value as 'landscape' | 'portrait');
                 }}
-                className="h-9 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-1"
                 disabled={isLoading || isSessionLoading}
               >
-                <ToggleGroupItem value="landscape" aria-label="Paisagem" className="rounded-md data-[state=on]:bg-background data-[state=on]:text-foreground">
-                  <RectangleHorizontal className="w-4 h-4" />
-                </ToggleGroupItem>
-                <ToggleGroupItem value="portrait" aria-label="Retrato" className="rounded-md data-[state=on]:bg-background data-[state=on]:text-foreground">
-                  <RectangleVertical className="w-4 h-4" />
-                </ToggleGroupItem>
-              </ToggleGroup>
+                <SelectTrigger className="w-auto h-9 px-3 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-2">
+                  {videoFormat === 'landscape' ? <RectangleHorizontal className="w-4 h-4" /> : <RectangleVertical className="w-4 h-4" />}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="landscape">
+                    <div className="flex items-center gap-2">
+                      <RectangleHorizontal className="w-4 h-4" />
+                      <span>Horizontal</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="portrait">
+                    <div className="flex items-center gap-2">
+                      <RectangleVertical className="w-4 h-4" />
+                      <span>Vertical</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <Button onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading || isSessionLoading}>
               <Sparkles className="w-4 h-4 mr-2" />
