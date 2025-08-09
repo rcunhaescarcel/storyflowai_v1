@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
@@ -12,8 +12,15 @@ interface UseProjectLoaderProps {
 export const useProjectLoader = ({ onLoad, addDebugLog }: UseProjectLoaderProps) => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(!!location.state?.project);
+  const loadedProjectIdRef = useRef<string | null>(null);
 
   const loadProject = useCallback((project: VideoProject) => {
+    // Prevent re-loading the same project if the effect re-runs
+    if (loadedProjectIdRef.current === project.id) {
+      return;
+    }
+    loadedProjectIdRef.current = project.id;
+
     if (!project.scenes) {
       addDebugLog(`[Editor] Projeto "${project.title}" não possui cenas para carregar.`);
       onLoad(project, []);
@@ -44,6 +51,7 @@ export const useProjectLoader = ({ onLoad, addDebugLog }: UseProjectLoaderProps)
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
       addDebugLog(`[Editor] ❌ Falha ao carregar metadados do projeto: ${errorMessage}`);
       toast.error("Falha ao carregar o projeto", { description: errorMessage });
+      loadedProjectIdRef.current = null; // Reset on error to allow retrying
     } finally {
       setIsLoading(false);
       window.history.replaceState({}, document.title);
@@ -57,6 +65,8 @@ export const useProjectLoader = ({ onLoad, addDebugLog }: UseProjectLoaderProps)
       loadProject(projectToLoad);
     } else {
       setIsLoading(false);
+      // Reset the ref if we navigate away or to a new project creation
+      loadedProjectIdRef.current = null;
     }
   }, [location.state, loadProject]);
 
