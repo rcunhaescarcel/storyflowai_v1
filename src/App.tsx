@@ -24,12 +24,12 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <ThemeProvider storageKey="storyflow-theme">
-          <RenderProvider>
-            <EditorProvider>
-              <TooltipProvider>
-                <SvgGradients />
-                <Sonner />
-                <BrowserRouter>
+          <BrowserRouter>
+            <RenderProvider>
+              <EditorProvider>
+                <TooltipProvider>
+                  <SvgGradients />
+                  <Sonner />
                   <Routes>
                     <Route path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />
@@ -46,10 +46,10 @@ const App = () => {
 
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                </BrowserRouter>
-              </TooltipProvider>
-            </EditorProvider>
-          </RenderProvider>
+                </TooltipProvider>
+              </EditorProvider>
+            </RenderProvider>
+          </BrowserRouter>
         </ThemeProvider>
       </SessionProvider>
     </QueryClientProvider>
