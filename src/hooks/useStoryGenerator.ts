@@ -7,6 +7,7 @@ import { storyStyles, languages } from '@/lib/constants';
 import { getAudioDuration, fetchWithRetry } from '@/lib/utils';
 import { blobToDataURL } from '@/lib/imageUtils';
 import { Profile } from '@/contexts/SessionContext';
+import { generateImage } from '@/lib/api';
 
 interface UseStoryGeneratorProps {
   onStoryGenerated: (scenes: Scene[], title: string, characterFile?: File, characterPreview?: string, prompt?: string, style?: string, videoFormat?: 'landscape' | 'portrait') => void;
@@ -118,35 +119,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       if (!storyTitle || !Array.isArray(scenesData) || scenesData.length === 0) {
         throw new Error("A IA não retornou um título ou roteiro com cenas válidas.");
       }
-
-      let characterPublicUrl: string | null = null;
-      if (characterImage) {
-        setLoadingMessage('Preparando imagem do personagem...');
-        const fileExt = characterImage.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('image-references').upload(fileName, characterImage);
-        if (uploadError) throw new Error(`Falha no upload do personagem: ${uploadError.message}`);
-        
-        const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(fileName);
-        if (!urlData?.publicUrl) throw new Error('Não foi possível obter a URL pública do personagem.');
-        
-        characterPublicUrl = urlData.publicUrl;
-        addDebugLog(`[História IA] ✅ Personagem carregado para: ${characterPublicUrl}`);
-
-        try {
-          addDebugLog(`[História IA] Verificando acessibilidade da URL pública...`);
-          const verificationResponse = await fetch(characterPublicUrl);
-          if (!verificationResponse.ok) {
-            addDebugLog(`[História IA] ❌ ERRO: A URL pública do personagem não está acessível (Status: ${verificationResponse.status}). Verifique as políticas do bucket 'image-references' no Supabase para permitir leitura pública.`);
-            throw new Error('A URL da imagem de referência não está publicamente acessível.');
-          }
-          addDebugLog(`[História IA] ✅ URL pública acessível.`);
-        } catch (e) {
-          const errorMessage = e instanceof Error ? e.message : String(e);
-          addDebugLog(`[História IA] ❌ ERRO ao verificar a URL pública: ${errorMessage}`);
-          throw new Error(`Falha ao verificar a URL da imagem de referência: ${errorMessage}`);
-        }
-      }
+      
       setProgress(15);
 
       const totalScenes = scenesData.length;
@@ -155,35 +128,23 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       const progressPerImage = imageGenerationProgress / totalScenes;
       const imageResults: { imageFile: File, imagePreview: string }[] = [];
 
-      const isPortrait = videoFormat === 'portrait';
-      const width = isPortrait ? 1080 : 1920;
-      const height = isPortrait ? 1920 : 1080;
-
       for (let i = 0; i < totalScenes; i++) {
         const sceneData = scenesData[i];
         const baseProgress = 15 + (i * progressPerImage);
         setLoadingMessage(`Gerando imagem ${i + 1}/${totalScenes}...`);
         
-        const imagePromptForApi = sceneData.image_prompt;
-        addDebugLog(`[Imagem IA] Gerando para o prompt: "${imagePromptForApi}"`);
+        const imageResult = await generateImage({
+          prompt: sceneData.image_prompt,
+          characterImage,
+          videoFormat,
+          useCharacter: true,
+          addDebugLog,
+        });
 
-        const encodedImagePrompt = encodeURIComponent(imagePromptForApi);
-        let imageModel = 'flux';
-        let imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=${width}&height=${height}&model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
-
-        if (characterPublicUrl) {
-          imageModel = 'kontext';
-          const encodedImageURL = encodeURIComponent(characterPublicUrl);
-          imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=${width}&height=${height}&model=${imageModel}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}&nologo=true`;
-        }
-
-        const imageResponse = await fetchWithRetry(imageUrl, { addDebugLog, apiName: 'Imagem IA' });
-        if (!imageResponse.ok) throw new Error(`Falha ao gerar imagem para a cena ${i + 1}`);
-        const imageBlob = await imageResponse.blob();
-        const imageFile = new File([imageBlob], `scene_${i + 1}.png`, { type: 'image/png' });
-        const imagePreview = await blobToDataURL(imageBlob);
-
-        imageResults.push({ imageFile, imagePreview });
+        if (!imageResult) throw new Error(`Falha ao gerar imagem para a cena ${i + 1}`);
+        
+        const imagePreview = await blobToDataURL(imageResult.file);
+        imageResults.push({ imageFile: imageResult.file, imagePreview });
         setProgress(Math.round(baseProgress + progressPerImage));
       }
       addDebugLog(`[História IA] ✅ Todas as ${totalScenes} imagens foram geradas.`);

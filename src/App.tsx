@@ -15,6 +15,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { SvgGradients } from "@/components/ui/SvgGradients";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { RenderProvider } from "./contexts/RenderContext";
+import { EditorProvider } from "./contexts/EditorContext";
 
 const queryClient = new QueryClient();
 
@@ -24,28 +25,30 @@ const App = () => {
       <SessionProvider>
         <ThemeProvider storageKey="storyflow-theme">
           <RenderProvider>
-            <TooltipProvider>
-              <SvgGradients />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/render" element={<Render />} />
+            <EditorProvider>
+              <TooltipProvider>
+                <SvgGradients />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/render" element={<Render />} />
 
-                  {/* Protected App Routes */}
-                  <Route element={<ProtectedRoute />}>
-                    <Route element={<AppLayout />}>
-                      <Route path="/editor" element={<Editor />} />
-                      <Route path="/videos" element={<Videos />} />
-                      <Route path="/settings" element={<Settings />} />
+                    {/* Protected App Routes */}
+                    <Route element={<ProtectedRoute />}>
+                      <Route element={<AppLayout />}>
+                        <Route path="/editor" element={<Editor />} />
+                        <Route path="/videos" element={<Videos />} />
+                        <Route path="/settings" element={<Settings />} />
+                      </Route>
                     </Route>
-                  </Route>
 
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </EditorProvider>
           </RenderProvider>
         </ThemeProvider>
       </SessionProvider>

@@ -8,11 +8,6 @@ import { SceneCard } from "@/components/editor/SceneCard";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Bug, Clapperboard } from "lucide-react";
 import { DebugLogModal } from "@/components/editor/DebugLogModal";
-import { useScenes } from "./hooks/useScenes";
-import { useGlobalSettings } from "./hooks/useGlobalSettings";
-import { useProjectLoader } from "./hooks/useProjectLoader";
-import { useProjectPersistence } from "./hooks/useProjectPersistence";
-import { VideoProject } from "./types/video";
 import { ProjectActions } from "./components/editor/ProjectActions";
 import { RenderModal } from "./components/editor/RenderModal";
 import { EditableProjectTitle } from "./components/editor/EditableProjectTitle";
@@ -22,6 +17,7 @@ import { saveAs } from "file-saver";
 import { RenderProgress } from "./components/editor/RenderProgress";
 import { cn } from "./lib/utils";
 import { useRender } from "./contexts/RenderContext";
+import { useEditor } from "./contexts/EditorContext";
 
 const generateSrtFromScenes = (scenes: Scene[]): string => {
   let srtContent = '';
@@ -51,42 +47,12 @@ const generateSrtFromScenes = (scenes: Scene[]): string => {
 
 const Editor = () => {
   const location = useLocation();
-  const { 
-    renderVideo,
-    concatenateAudio,
-    cancelRender,
-  } = useFFmpeg();
-
-  const { 
-    isRendering, 
-    progress, 
-    stage, 
-    debugLogs, 
-    clearLogs, 
-    addLog,
-    startRender,
-    endRender,
-    renderingProjectId
-  } = useRender();
-
-  const addDebugLog = useCallback((message: string) => {
-    addLog(`[${new Date().toLocaleTimeString()}] ${message}`);
-  }, [addLog]);
-
+  const { renderVideo, concatenateAudio, cancelRender } = useFFmpeg();
+  const { isRendering, progress, stage, debugLogs, clearLogs, addLog, startRender, endRender, renderingProjectId } = useRender();
+  
   const {
-    scenes,
-    setScenes,
-    addNewScene,
-    updateScene,
-    deleteScene,
-    moveSceneUp,
-    moveSceneDown,
-    handleImageGenerated,
-    handleImageRemove,
-    handleNarrationUpload,
-  } = useScenes();
-
-  const {
+    scenes, setScenes, addNewScene, updateScene, deleteScene, moveSceneUp, moveSceneDown,
+    handleImageGenerated, handleImageRemove, handleNarrationUpload,
     backgroundMusic, handleBackgroundMusicUpload, setBackgroundMusic,
     backgroundMusicVolume, setBackgroundMusicVolume,
     logoFile, logoPreview, handleLogoUpload, setLogoFile, setLogoPreview,
@@ -95,24 +61,18 @@ const Editor = () => {
     addFade, setAddFade,
     generateSubtitles, setGenerateSubtitles,
     zoomEffect, setZoomEffect,
-  } = useGlobalSettings();
+    currentProject, setCurrentProject,
+    characterImage, setCharacterImage,
+    characterImagePreview, setCharacterImagePreview,
+    videoFormat, setVideoFormat,
+    isProjectLoading,
+    saveProject, updateProject, saveRenderedVideo
+  } = useEditor();
 
-  const [currentProject, setCurrentProject] = useState<VideoProject | null>(null);
-  const [characterImage, setCharacterImage] = useState<File | null>(null);
-  const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
-  const [videoFormat, setVideoFormat] = useState<VideoFormat>('landscape');
+  const addDebugLog = useCallback((message: string) => {
+    addLog(`[${new Date().toLocaleTimeString()}] ${message}`);
+  }, [addLog]);
 
-  const { isProjectLoading } = useProjectLoader({
-    onLoad: (project: VideoProject, loadedScenes: Scene[], format: VideoFormat) => {
-      setScenes(loadedScenes);
-      setCurrentProject(project);
-      setVideoFormat(format);
-    },
-    addDebugLog
-  });
-
-  const { saveProject, updateProject, saveRenderedVideo } = useProjectPersistence(addDebugLog);
-  
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
   const [isRenderModalOpen, setIsRenderModalOpen] = useState(false);
@@ -120,7 +80,7 @@ const Editor = () => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
-    const state = location.state as { project?: VideoProject, resumeRender?: boolean } | null;
+    const state = location.state as { project?: any, resumeRender?: boolean } | null;
     if (!state?.project && !state?.resumeRender) {
       setScenes([]);
       setCurrentProject(null);
@@ -133,7 +93,7 @@ const Editor = () => {
       clearLogs();
       addDebugLog("[Editor] Estado do editor resetado para o modo de criação.");
     }
-  }, [location.state, setScenes, setBackgroundMusic, setLogoFile, setLogoPreview, setCharacterImage, setCharacterImagePreview, clearLogs, addDebugLog]);
+  }, [location.state, setScenes, setCurrentProject, setBackgroundMusic, setLogoFile, setLogoPreview, setCharacterImage, setCharacterImagePreview, setVideoFormat, clearLogs, addDebugLog]);
 
   const handleRenderVideo = async () => {
     if (scenes.length === 0) {
@@ -166,19 +126,8 @@ const Editor = () => {
     let result: string | null = null;
     try {
       result = await renderVideo(
-        scenes, 
-        srtFileToRender, 
-        backgroundMusic, 
-        subtitleStyle, 
-        backgroundMusicVolume, 
-        'fullhd',
-        logoFile, 
-        logoPosition,
-        zoomEffect,
-        addFade,
-        0.5,
-        0.5,
-        videoFormat
+        scenes, srtFileToRender, backgroundMusic, subtitleStyle, backgroundMusicVolume, 
+        'fullhd', logoFile, logoPosition, zoomEffect, addFade, 0.5, 0.5, videoFormat
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro desconhecido";
@@ -196,17 +145,9 @@ const Editor = () => {
       toast.success("Sucesso!", { description: "Vídeo renderizado com sucesso. Salvando na nuvem..." });
       
       if (currentProject.id) {
-        addDebugLog(`[Editor] Salvando vídeo na nuvem para o projeto ${currentProject.id}...`);
         const finalUrl = await saveRenderedVideo(currentProject.id, result);
-        addDebugLog(`[Editor] URL permanente recebida: ${finalUrl}`);
         if (finalUrl) {
-          addDebugLog(`[Editor] Atualizando estado do projeto com a nova URL...`);
-          setCurrentProject(prev => {
-            addDebugLog('[Editor] Estado atualizado.');
-            return prev ? { ...prev, final_video_url: finalUrl } : null;
-          });
-        } else {
-          addDebugLog('[Editor] ❌ URL final não recebida. O player não será atualizado.');
+          setCurrentProject(prev => prev ? { ...prev, final_video_url: finalUrl } : null);
         }
       }
     } else if (!isRendering) {
@@ -227,7 +168,6 @@ const Editor = () => {
         zip.file(`${currentProject?.title || 'video'}.mp4`, blob);
         filesToZip++;
       }
-
       if (selection.images) {
         const imagesFolder = zip.folder("images");
         for (let i = 0; i < scenes.length; i++) {
@@ -236,7 +176,6 @@ const Editor = () => {
           }
         }
       }
-
       if (selection.audio) {
         const fullAudio = await concatenateAudio(scenes);
         if (fullAudio) {
@@ -244,12 +183,10 @@ const Editor = () => {
           filesToZip++;
         }
       }
-
       if (filesToZip > 1) {
         const content = await zip.generateAsync({ type: "blob" });
         saveAs(content, `${currentProject?.title || 'projeto'}_assets.zip`);
       } else if (filesToZip === 1) {
-        // If only one thing was selected, download it directly
         if (selection.video && finalVideoUrl) saveAs(finalVideoUrl, `${currentProject?.title || 'video'}.mp4`);
         if (selection.images) {
           const content = await zip.generateAsync({ type: "blob" });
@@ -262,13 +199,8 @@ const Editor = () => {
       } else {
         toast.info("Nenhum arquivo para baixar", { description: "Nenhum arquivo correspondente à sua seleção foi encontrado." });
       }
-
-      if (filesToZip > 0) {
-        toast.success("Download iniciado!");
-      }
-      
+      if (filesToZip > 0) toast.success("Download iniciado!");
     } catch (error) {
-      console.error("Download failed:", error);
       toast.error("Falha no Download", { description: "Ocorreu um erro ao preparar os arquivos." });
     } finally {
       setIsDownloading(false);
@@ -281,12 +213,8 @@ const Editor = () => {
       toast.info("Nada para copiar", { description: "Não há logs no console de debug." });
       return;
     }
-    const logText = debugLogs.join('\n');
-    navigator.clipboard.writeText(logText).then(() => {
+    navigator.clipboard.writeText(debugLogs.join('\n')).then(() => {
       toast.success("Copiado!", { description: "Os logs de debug foram copiados para a área de transferência." });
-    }).catch(err => {
-      console.error('Failed to copy logs: ', err);
-      toast.error("Erro ao copiar", { description: "Não foi possível copiar os logs." });
     });
   };
 
@@ -296,21 +224,15 @@ const Editor = () => {
       setCharacterImage(characterFile);
       setCharacterImagePreview(characterPreview);
     }
-    if (format) {
-      setVideoFormat(format);
-    }
+    if (format) setVideoFormat(format);
     addDebugLog(`[Editor] História gerada com ${newScenes.length} cenas.`);
-    toast.success("Cenas Criadas!", {
-      description: `Sua história foi dividida em ${newScenes.length} cenas.`,
-    });
+    toast.success("Cenas Criadas!", { description: `Sua história foi dividida em ${newScenes.length} cenas.` });
   
     if (projectPrompt) {
       const newProject = await saveProject(newScenes, generatedTitle, projectPrompt, projectStyle, format);
-      if (newProject) {
-        setCurrentProject(newProject);
-      }
+      if (newProject) setCurrentProject(newProject);
     }
-  }, [setScenes, setCharacterImage, setCharacterImagePreview, addDebugLog, saveProject]);
+  }, [setScenes, setCharacterImage, setCharacterImagePreview, setVideoFormat, addDebugLog, saveProject, setCurrentProject]);
 
   const handleSaveTitle = (newTitle: string) => {
     if (currentProject) {
@@ -426,7 +348,6 @@ const Editor = () => {
         onImageGenerated={handleImageGenerated}
         onImageRemove={handleImageRemove}
         characterImage={characterImage}
-        characterImagePreview={characterImagePreview}
         addDebugLog={addDebugLog}
         videoFormat={videoFormat}
       />
@@ -442,10 +363,7 @@ const Editor = () => {
         onBackgroundMusicRemove={() => setBackgroundMusic(null)}
         onBackgroundMusicVolumeChange={setBackgroundMusicVolume}
         onLogoUpload={handleLogoUpload}
-        onLogoRemove={() => {
-          setLogoFile(null);
-          setLogoPreview(null);
-        }}
+        onLogoRemove={() => { setLogoFile(null); setLogoPreview(null); }}
         logoFile={logoFile}
         logoPreview={logoPreview}
         logoPosition={logoPosition}

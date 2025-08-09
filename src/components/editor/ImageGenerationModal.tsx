@@ -6,9 +6,9 @@ import { Loader2, Sparkles, UserSquare, Trash2, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
 import { Scene, VideoFormat } from '@/hooks/useFFmpeg';
 import { cn } from '@/lib/utils';
+import { generateImage } from '@/lib/api';
 
 interface ImageGenerationModalProps {
   scene: Scene | null;
@@ -21,7 +21,7 @@ interface ImageGenerationModalProps {
   videoFormat: VideoFormat;
 }
 
-export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImageRemove, characterImage, characterImagePreview, addDebugLog, videoFormat }: ImageGenerationModalProps) => {
+export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImageRemove, characterImage, addDebugLog, videoFormat }: ImageGenerationModalProps) => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [useCharacter, setUseCharacter] = useState(true);
@@ -35,100 +35,21 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
   if (!scene) return null;
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      toast.error("Por favor, insira uma descrição para a imagem.");
-      return;
-    }
     setIsLoading(true);
-
-    let targetUrl = '';
-    const apiToken = "76b4jfL5SsXI48nS";
-    const referrer = "https://storyflow.app/";
-    const isPortrait = videoFormat === 'portrait';
-    const width = isPortrait ? 1080 : 1920;
-    const height = isPortrait ? 1920 : 1080;
-
     try {
-      const finalPrompt = (characterImage && useCharacter)
-        ? `o personagem ${prompt}`
-        : prompt;
-      const encodedPrompt = encodeURIComponent(finalPrompt);
-      
-      if (characterImage && useCharacter) {
-        addDebugLog('[IA] Fazendo upload da imagem de referência para o Supabase Storage...');
-        
-        const fileExt = characterImage.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = fileName;
+      const result = await generateImage({
+        prompt,
+        characterImage,
+        videoFormat,
+        useCharacter,
+        addDebugLog,
+      });
 
-        const { error: uploadError } = await supabase.storage
-          .from('image-references')
-          .upload(filePath, characterImage);
-
-        if (uploadError) {
-          addDebugLog(`[IA] ERRO no upload para o Supabase: ${uploadError.message}`);
-          throw new Error(`Falha ao fazer upload da imagem de referência: ${uploadError.message}`);
-        }
-        addDebugLog('[IA] Upload concluído com sucesso.');
-
-        const { data: urlData } = supabase.storage
-          .from('image-references')
-          .getPublicUrl(filePath);
-
-        if (!urlData?.publicUrl) {
-            addDebugLog('[IA] ERRO: Não foi possível obter a URL pública da imagem.');
-            throw new Error('Não foi possível obter a URL pública da imagem.');
-        }
-        
-        const publicUrl = urlData.publicUrl;
-        addDebugLog(`[IA] URL pública obtida: ${publicUrl}`);
-
-        try {
-          addDebugLog(`[IA] Verificando acessibilidade da URL pública...`);
-          const verificationResponse = await fetch(publicUrl);
-          if (!verificationResponse.ok) {
-            addDebugLog(`[IA] ❌ ERRO: A URL pública do personagem não está acessível (Status: ${verificationResponse.status}). Verifique as políticas do bucket 'image-references' no Supabase para permitir leitura pública.`);
-            throw new Error('A URL da imagem de referência não está publicamente acessível.');
-          }
-          addDebugLog(`[IA] ✅ URL pública acessível.`);
-        } catch (e) {
-          const errorMessage = e instanceof Error ? e.message : "Erro desconhecido";
-          addDebugLog(`[IA] ❌ ERRO ao verificar a URL pública: ${errorMessage}`);
-          throw new Error(`Falha ao verificar a URL da imagem de referência: ${errorMessage}`);
-        }
-
-        const model = 'kontext';
-        const encodedImageURL = encodeURIComponent(publicUrl);
-        
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&model=${model}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}&nologo=true`;
-        
-      } else {
-        const model = 'flux';
-        targetUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&model=${model}&token=${apiToken}&referrer=${referrer}&nologo=true`;
+      if (result) {
+        onImageGenerated(scene.id, result.file, result.prompt);
+        toast.success("Imagem gerada com sucesso!");
+        onClose();
       }
-
-      addDebugLog(`[IA] Gerando imagem com a URL: ${targetUrl.substring(0, 200)}...`);
-
-      const response = await fetch(targetUrl);
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        addDebugLog(`[IA] ERRO na API de imagem: ${errorBody}`);
-        throw new Error(`A geração da imagem falhou com o status: ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const fileName = `${prompt.slice(0, 30).replace(/\s/g, '_')}.png`;
-      const file = new File([blob], fileName, { type: 'image/png' });
-
-      onImageGenerated(scene.id, file, prompt);
-      toast.success("Imagem gerada com sucesso!");
-      onClose();
-    } catch (error) {
-      console.error("Image generation failed:", error);
-      const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
-      toast.error(`Falha ao gerar a imagem: ${errorMessage}`);
-      addDebugLog(`[IA] Falha na requisição: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -177,7 +98,7 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
           </div>
 
           <div className="space-y-4 flex flex-col">
-            {characterImage && characterImagePreview && (
+            {characterImage && (
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <Label htmlFor="use-character" className="flex flex-col space-y-1">
                   <span className="font-medium flex items-center gap-2">

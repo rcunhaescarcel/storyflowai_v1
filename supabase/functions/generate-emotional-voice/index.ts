@@ -7,16 +7,28 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-serve(async (req) => {
+interface RequestBody {
+  text: string;
+  voice: string;
+  instructions?: string;
+}
+
+interface OpenAI_Payload {
+  model: string;
+  input: string;
+  voice: string;
+  response_format: "mp3";
+  instructions?: string;
+}
+
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const text = String(body?.text ?? "");
-    const voice = String(body?.voice ?? "alloy");
-    const instructions = String(body?.instructions ?? "");
+    const body: RequestBody = await req.json();
+    const { text, voice, instructions } = body;
 
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
@@ -34,8 +46,12 @@ serve(async (req) => {
     }
 
     const sanitizedText = text.replace(/"/g, "");
-    // Alterado conforme solicitado para usar o novo modelo de áudio.
-    const payload = { model: "gpt-4o-mini-tts", input: sanitizedText, voice, response_format: "mp3" };
+    const payload: OpenAI_Payload = {
+      model: "gpt-4o-mini-tts",
+      input: sanitizedText,
+      voice,
+      response_format: "mp3",
+    };
 
     if (instructions) {
       payload.instructions = instructions;
@@ -61,7 +77,8 @@ serve(async (req) => {
     });
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Falha interna", details: String(err?.message ?? err) }), {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    return new Response(JSON.stringify({ error: "Falha interna", details: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
