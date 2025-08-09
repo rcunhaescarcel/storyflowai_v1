@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { Scene, VideoFormat } from '@/hooks/useFFmpeg';
+import { cn } from '@/lib/utils';
 
 interface ImageGenerationModalProps {
   scene: Scene | null;
@@ -91,8 +92,9 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
           }
           addDebugLog(`[IA] ✅ URL pública acessível.`);
         } catch (e) {
-          addDebugLog(`[IA] ❌ ERRO ao verificar a URL pública: ${e.message}`);
-          throw new Error(`Falha ao verificar a URL da imagem de referência: ${e.message}`);
+          const errorMessage = e instanceof Error ? e.message : "Erro desconhecido";
+          addDebugLog(`[IA] ❌ ERRO ao verificar a URL pública: ${errorMessage}`);
+          throw new Error(`Falha ao verificar a URL da imagem de referência: ${errorMessage}`);
         }
 
         const model = 'kontext';
@@ -138,9 +140,14 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
     onClose();
   };
 
+  const isPortrait = videoFormat === 'portrait';
+
   return (
     <Dialog open={!!scene} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-5xl">
+      <DialogContent className={cn(
+        "sm:max-w-5xl",
+        isPortrait && "sm:max-w-md"
+      )}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -151,11 +158,19 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid md:grid-cols-3 gap-8 py-4">
-          {/* Left Column: Image Preview */}
-          <div className="md:col-span-2 space-y-2">
+        <div className={cn(
+          "grid md:grid-cols-3 gap-8 py-4",
+          isPortrait && "grid-cols-1"
+        )}>
+          <div className={cn(
+            "md:col-span-2 space-y-2",
+            isPortrait && "md:col-span-1"
+          )}>
             <Label>Pré-visualização</Label>
-            <div className="rounded-lg overflow-hidden border aspect-video bg-muted flex items-center justify-center">
+            <div className={cn(
+              "rounded-lg overflow-hidden border bg-muted flex items-center justify-center",
+              isPortrait ? "aspect-[9/16]" : "aspect-video"
+            )}>
               {scene.imagePreview ? (
                 <img src={scene.imagePreview} alt="Imagem atual da cena" className="w-full h-full object-cover" crossOrigin="anonymous" />
               ) : (
@@ -167,8 +182,10 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
             </div>
           </div>
 
-          {/* Right Column: Controls */}
-          <div className="md:col-span-1 space-y-4">
+          <div className={cn(
+            "md:col-span-1 space-y-4",
+            isPortrait && "md:col-span-1"
+          )}>
             {characterImage && characterImagePreview && (
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <Label htmlFor="use-character" className="flex flex-col space-y-1">
