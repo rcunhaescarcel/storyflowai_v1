@@ -99,7 +99,11 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         if (jsonStart === -1 || jsonEnd === -1) {
           throw new Error("Nenhum objeto JSON encontrado na resposta da IA.");
         }
-        const jsonString = storyText.substring(jsonStart, jsonEnd + 1);
+        let jsonString = storyText.substring(jsonStart, jsonEnd + 1);
+        
+        // Adiciona vírgulas faltando entre as propriedades da cena para corrigir o JSON malformado da IA
+        jsonString = jsonString.replace(/"\s*("image_prompt")/g, '",\n$1');
+
         storyData = JSON.parse(jsonString);
       } catch (e) {
         addDebugLog(`[História IA] ❌ ERRO: Falha ao parsear o JSON do roteiro. Resposta recebida: ${storyText}`);
