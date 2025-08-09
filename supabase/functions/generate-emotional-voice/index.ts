@@ -16,6 +16,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const text = String(body?.text ?? "");
     const voice = String(body?.voice ?? "alloy");
+    const instructions = String(body?.instructions ?? "");
 
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
@@ -34,6 +35,10 @@ serve(async (req) => {
 
     const sanitizedText = text.replace(/"/g, "");
     const payload = { model: "tts-1", input: sanitizedText, voice, response_format: "mp3" };
+
+    if (instructions) {
+      payload.instructions = instructions;
+    }
 
     const response = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",

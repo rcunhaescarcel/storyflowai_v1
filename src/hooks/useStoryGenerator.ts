@@ -190,13 +190,13 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         const baseProgress = 15 + imageGenerationProgress + (i * progressPerAudio);
         setLoadingMessage(`Gerando narração ${i + 1}/${totalScenes}...`);
         
-        const narrationWithEmotion = `(${sceneData.emotion}) ${sceneData.narration}`;
-        addDebugLog(`[Áudio IA] Gerando para o texto com emoção: "${narrationWithEmotion.slice(0, 50)}..."`);
+        addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..." com instrução: "${sceneData.emotion}"`);
 
         const { data: audioBlob, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
           body: {
-            text: narrationWithEmotion,
+            text: sceneData.narration,
             voice: selectedVoice,
+            instructions: sceneData.emotion,
           },
         });
 
