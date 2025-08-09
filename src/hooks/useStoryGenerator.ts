@@ -189,22 +189,45 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         
         addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
 
-        const { data: responseBlob, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
+        const isFirstAudio = i === 0;
+        const { data: responseData, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
           body: {
             text: sceneData.narration,
             voice: selectedVoice,
+            debug: isFirstAudio, // Ativa o modo de depuração apenas para a primeira cena
           },
         });
 
         if (invokeError) {
-          throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${invokeError.message}`);
+          throw new Error(`Falha ao invocar a Edge Function para a cena ${i + 1}: ${invokeError.message}`);
         }
 
-        const audioFile = new File([responseBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
-        const audioDuration = await getAudioDuration(audioFile);
-        const audioDataUrl = await blobToDataURL(responseBlob);
+        if (isFirstAudio && responseData.debug_logs) {
+          addDebugLog("[Áudio IA] --- INÍCIO DO RELATÓRIO DE DEPURAÇÃO DE ÁUDIO ---");
+          responseData.debug_logs.forEach((log: string) => addDebugLog(`[Áudio IA DEBUG] ${log}`));
+          addDebugLog("[Áudio IA] --- FIM DO RELATÓRIO DE DEPURAÇÃO DE ÁUDIO ---");
+          if (!responseData.success) {
+            throw new Error("O teste de depuração de áudio falhou. Verifique os logs para detalhes.");
+          }
+          // Se o debug foi bem-sucedido, precisamos chamar a função novamente sem o modo de depuração para obter o áudio real.
+          addDebugLog("[Áudio IA] Teste de depuração bem-sucedido. Gerando áudio real para a primeira cena...");
+          const { data: actualAudioBlob, error: actualAudioError } = await supabase.functions.invoke('generate-emotional-voice', {
+            body: { text: sceneData.narration, voice: selectedVoice },
+          });
+          if (actualAudioError) throw new Error(`Falha ao gerar áudio real para a cena 1: ${actualAudioError.message}`);
+          
+          const audioFile = new File([actualAudioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
+          const audioDuration = await getAudioDuration(audioFile);
+          const audioDataUrl = await blobToDataURL(actualAudioBlob);
+          audioResults.push({ audioFile, audioDataUrl, audioDuration });
 
-        audioResults.push({ audioFile, audioDataUrl, audioDuration });
+        } else {
+          const audioFile = new File([responseData], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
+          const audioDuration = await getAudioDuration(audioFile);
+          const audioDataUrl = await blobToDataURL(responseData);
+          audioResults.push({ audioFile, audioDataUrl, audioDuration });
+        }
+
         setProgress(Math.round(baseProgress + progressPerAudio));
       }
       addDebugLog(`[História IA] ✅ Todas as ${totalScenes} narrações foram geradas.`);
