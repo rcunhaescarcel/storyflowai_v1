@@ -56,6 +56,7 @@ export interface Scene {
   audioDataUrl?: string;
   narrationText?: string;
   duration?: number;
+  emotion?: string;
 }
 
 export const useFFmpeg = () => {
