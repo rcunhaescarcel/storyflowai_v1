@@ -30,6 +30,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
         id: scene.id,
         image_url: imageUrl,
         imagePreview: scene.imagePreview,
+        image_prompt: scene.imagePrompt,
         audio_data_url: scene.audioDataUrl,
         narration_text: scene.narrationText,
         duration: scene.duration,

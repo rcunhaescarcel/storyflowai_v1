@@ -2,6 +2,7 @@ export interface SceneData {
   id: string;
   image_url: string;
   imagePreview?: string;
+  image_prompt?: string;
   audio_data_url?: string;
   narration_text?: string;
   duration?: number;

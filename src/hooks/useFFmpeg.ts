@@ -143,7 +143,7 @@ export const useFFmpeg = () => {
         return null;
       }
     }
-    const audioScenes = scenes.filter(s => s.audio);
+    const audioScenes = scenes.filter(s => s.audio || s.audioDataUrl);
     if (audioScenes.length === 0) {
       addDebugLog('⚠️ Nenhum áudio para concatenar.');
       return null;
@@ -154,8 +154,11 @@ export const useFFmpeg = () => {
       for (let i = 0; i < audioScenes.length; i++) {
         const scene = audioScenes[i];
         const fileName = `audio_${i}.mp3`;
-        await ffmpeg.writeFile(fileName, await fetchFile(scene.audio!));
-        concatList += `file '${fileName}'\n`;
+        const audioSource = scene.audio || scene.audioDataUrl;
+        if (audioSource) {
+          await ffmpeg.writeFile(fileName, await fetchFile(audioSource));
+          concatList += `file '${fileName}'\n`;
+        }
       }
 
       await ffmpeg.writeFile('concat_audio_list.txt', new TextEncoder().encode(concatList));
@@ -220,8 +223,18 @@ export const useFFmpeg = () => {
       for (let i = 0; i < scenes.length; i++) {
         const scene = scenes[i];
         addDebugLog(`📝 Processando cena ${i + 1}/${scenes.length}`);
-        if (scene.image) await ffmpeg.writeFile(`image_${i}.jpg`, await fetchFile(scene.image));
-        if (scene.audio) await ffmpeg.writeFile(`audio_${i}.mp3`, await fetchFile(scene.audio));
+        
+        const imageSource = scene.image || scene.imagePreview;
+        if (imageSource) {
+          await ffmpeg.writeFile(`image_${i}.jpg`, await fetchFile(imageSource));
+        } else {
+          throw new Error(`Cena ${i + 1} não tem imagem para renderizar.`);
+        }
+
+        const audioSource = scene.audio || scene.audioDataUrl;
+        if (audioSource) {
+          await ffmpeg.writeFile(`audio_${i}.mp3`, await fetchFile(audioSource));
+        }
       }
 
       let concatList = '';
@@ -233,7 +246,7 @@ export const useFFmpeg = () => {
         addDebugLog(`  -> Duração da cena ${i + 1}: ${sceneDuration.toFixed(2)}s`);
         const outputName = `scene_${i}.mp4`;
         let cmd = ['-loop', '1', '-i', `image_${i}.jpg`];
-        if (scene.audio) cmd.push('-i', `audio_${i}.mp3`);
+        if (scene.audio || scene.audioDataUrl) cmd.push('-i', `audio_${i}.mp3`);
         cmd.push('-t', sceneDuration.toString());
         
         let videoFilter = `scale=${resolution.width}:${resolution.height}:force_original_aspect_ratio=increase,crop=${resolution.width}:${resolution.height},fps=30`;
@@ -255,7 +268,7 @@ export const useFFmpeg = () => {
         }
         
         cmd.push('-vf', videoFilter, '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-pix_fmt', 'yuv420p');
-        if (scene.audio) {
+        if (scene.audio || scene.audioDataUrl) {
           cmd.push('-c:a', 'aac');
         } else {
           cmd.push('-an');
