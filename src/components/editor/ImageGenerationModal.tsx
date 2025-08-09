@@ -146,7 +146,7 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
     <Dialog open={!!scene} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className={cn(
         "sm:max-w-5xl",
-        isPortrait && "sm:max-w-md"
+        isPortrait && "sm:max-w-3xl"
       )}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -158,102 +158,56 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
           </DialogDescription>
         </DialogHeader>
         
-        {isPortrait ? (
-          // Vertical Layout for Portrait
-          <div className="py-4 space-y-6">
-            <div className="space-y-2">
-              <Label>Pré-visualização</Label>
-              <div className="rounded-lg overflow-hidden border bg-muted flex items-center justify-center aspect-[9/16]">
-                {scene.imagePreview ? (
-                  <img src={scene.imagePreview} alt="Imagem atual da cena" className="w-full h-full object-cover" crossOrigin="anonymous" />
-                ) : (
-                  <div className="text-center text-muted-foreground p-4">
-                    <ImagePlus className="w-10 h-10 mx-auto mb-2" />
-                    <p className="text-sm">A imagem gerada aparecerá aqui.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="space-y-4">
-              {characterImage && characterImagePreview && (
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <Label htmlFor="use-character" className="flex flex-col space-y-1">
-                    <span className="font-medium flex items-center gap-2">
-                      <UserSquare className="w-4 h-4" />
-                      Usar Personagem
-                    </span>
-                  </Label>
-                  <Switch
-                    id="use-character"
-                    checked={useCharacter}
-                    onCheckedChange={setUseCharacter}
-                  />
+        <div className="grid md:grid-cols-2 gap-8 py-4">
+          <div className="space-y-2">
+            <Label>Pré-visualização</Label>
+            <div className={cn(
+              "rounded-lg overflow-hidden border bg-muted flex items-center justify-center",
+              isPortrait ? "aspect-[9/16]" : "aspect-video"
+            )}>
+              {scene.imagePreview ? (
+                <img src={scene.imagePreview} alt="Imagem atual da cena" className="w-full h-full object-cover" crossOrigin="anonymous" />
+              ) : (
+                <div className="text-center text-muted-foreground p-4">
+                  <ImagePlus className="w-10 h-10 mx-auto mb-2" />
+                  <p className="text-sm">A imagem gerada aparecerá aqui.</p>
                 </div>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="prompt-v">Prompt da Imagem</Label>
-                <Textarea
-                  id="prompt-v"
-                  placeholder="Ex: uma floresta mágica à noite, com uma lua brilhante, em estilo de animação 3D..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  disabled={isLoading}
-                  rows={5}
-                  className="resize-none"
-                />
-              </div>
             </div>
           </div>
-        ) : (
-          // Horizontal Layout for Landscape
-          <div className="grid md:grid-cols-3 gap-8 py-4">
-            <div className="md:col-span-2 space-y-2">
-              <Label>Pré-visualização</Label>
-              <div className="rounded-lg overflow-hidden border bg-muted flex items-center justify-center aspect-video">
-                {scene.imagePreview ? (
-                  <img src={scene.imagePreview} alt="Imagem atual da cena" className="w-full h-full object-cover" crossOrigin="anonymous" />
-                ) : (
-                  <div className="text-center text-muted-foreground p-4">
-                    <ImagePlus className="w-10 h-10 mx-auto mb-2" />
-                    <p className="text-sm">A imagem gerada aparecerá aqui.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="md:col-span-1 space-y-4">
-              {characterImage && characterImagePreview && (
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <Label htmlFor="use-character-h" className="flex flex-col space-y-1">
-                    <span className="font-medium flex items-center gap-2">
-                      <UserSquare className="w-4 h-4" />
-                      Usar Personagem de Referência
-                    </span>
-                    <span className="font-normal leading-snug text-muted-foreground text-xs">
-                      Usa a imagem do personagem como base.
-                    </span>
-                  </Label>
-                  <Switch
-                    id="use-character-h"
-                    checked={useCharacter}
-                    onCheckedChange={setUseCharacter}
-                  />
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="prompt-h">Prompt da Imagem</Label>
-                <Textarea
-                  id="prompt-h"
-                  placeholder="Ex: uma floresta mágica à noite, com uma lua brilhante, em estilo de animação 3D..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  disabled={isLoading}
-                  rows={5}
-                  className="resize-none"
+
+          <div className="space-y-4 flex flex-col">
+            {characterImage && characterImagePreview && (
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <Label htmlFor="use-character" className="flex flex-col space-y-1">
+                  <span className="font-medium flex items-center gap-2">
+                    <UserSquare className="w-4 h-4" />
+                    Usar Personagem de Referência
+                  </span>
+                  <span className="font-normal leading-snug text-muted-foreground text-xs">
+                    Usa a imagem do personagem como base.
+                  </span>
+                </Label>
+                <Switch
+                  id="use-character"
+                  checked={useCharacter}
+                  onCheckedChange={setUseCharacter}
                 />
               </div>
+            )}
+            <div className="space-y-2 flex-1 flex flex-col">
+              <Label htmlFor="prompt">Prompt da Imagem</Label>
+              <Textarea
+                id="prompt"
+                placeholder="Ex: uma floresta mágica à noite, com uma lua brilhante, em estilo de animação 3D..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                disabled={isLoading}
+                className="resize-none flex-1"
+              />
             </div>
           </div>
-        )}
+        </div>
 
         <DialogFooter className="sm:justify-between items-center pt-4 border-t">
           <div>

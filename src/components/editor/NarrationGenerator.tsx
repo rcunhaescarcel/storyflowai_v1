@@ -12,9 +12,10 @@ interface NarrationGeneratorProps {
   onAudioGenerated: (file: File, dataUrl: string) => void;
   addDebugLog: (message: string) => void;
   audio?: File;
+  emotion?: string;
 }
 
-export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLog, audio }: NarrationGeneratorProps) => {
+export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLog, audio, emotion }: NarrationGeneratorProps) => {
   const { profile, session } = useSession();
   const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -43,16 +44,22 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
       return;
     }
     setIsGenerating(true);
-    addDebugLog(`[Narração IA] Iniciando geração para o texto: "${narrationText.slice(0, 50)}..."`);
+    addDebugLog(`[Narração IA] Iniciando geração para o texto: "${narrationText.slice(0, 50)}..." com emoção: ${emotion}`);
     try {
       const selectedVoice = profile?.default_voice || 'nova';
       addDebugLog(`[Narração IA] Usando a voz: ${selectedVoice}`);
 
+      const body: { text: string; voice: string; instructions?: string } = {
+        text: narrationText,
+        voice: selectedVoice,
+      };
+
+      if (emotion) {
+        body.instructions = emotion;
+      }
+
       const { data: responseBlob, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
-        body: {
-          text: narrationText,
-          voice: selectedVoice,
-        },
+        body,
       });
 
       if (invokeError) {

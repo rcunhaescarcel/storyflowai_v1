@@ -88,6 +88,7 @@ const SceneCardComponent = ({
               onAudioGenerated={(file, dataUrl) => onNarrationGenerated(scene.id, file, dataUrl)}
               addDebugLog={addDebugLog}
               audio={scene.audio}
+              emotion={scene.emotion}
             />
           </div>
           <div className="w-1/3 max-w-[250px] flex-shrink-0">
