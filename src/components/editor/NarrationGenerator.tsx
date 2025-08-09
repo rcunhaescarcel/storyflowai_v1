@@ -52,13 +52,7 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
       });
 
       if (invokeError) {
-        throw new Error(`Falha na comunicação com a Edge Function: ${invokeError.message}`);
-      }
-
-      if (responseBlob.type === 'application/json') {
-        const errorData = JSON.parse(await responseBlob.text());
-        addDebugLog(`[Narração IA] ❌ Erro detalhado recebido da Edge Function: ${JSON.stringify(errorData)}`);
-        throw new Error(`A geração de áudio falhou: ${errorData.details || errorData.error}`);
+        throw new Error(`A geração de áudio falhou: ${invokeError.message}`);
       }
 
       const fileName = `narration_${selectedVoice}.mp3`;

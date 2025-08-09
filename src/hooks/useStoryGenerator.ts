@@ -197,13 +197,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         });
 
         if (invokeError) {
-          throw new Error(`Falha na comunicação com a Edge Function: ${invokeError.message}`);
-        }
-
-        if (responseBlob.type === 'application/json') {
-          const errorData = JSON.parse(await responseBlob.text());
-          addDebugLog(`[Áudio IA] ❌ Erro detalhado recebido da Edge Function: ${JSON.stringify(errorData)}`);
-          throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${errorData.details || errorData.error}`);
+          throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${invokeError.message}`);
         }
 
         const audioFile = new File([responseBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
