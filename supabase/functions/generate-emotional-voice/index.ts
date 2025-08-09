@@ -17,6 +17,9 @@ serve(async (req) => {
       throw new Error("Missing 'text' or 'voice' in request body.");
     }
 
+    // Sanitize the text to remove double quotes, which can cause issues with the OpenAI API
+    const sanitizedText = text.replace(/"/g, '');
+
     const openAIApiKey = Deno.env.get("ChatGPT_ vozes");
     if (!openAIApiKey) {
       throw new Error("Server configuration error: OpenAI API key not found.");
@@ -30,7 +33,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "tts-1",
-        input: text,
+        input: sanitizedText, // Use the sanitized text
         voice: voice,
       }),
     });
