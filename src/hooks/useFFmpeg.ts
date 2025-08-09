@@ -16,6 +16,7 @@ export interface SubtitleStyle {
 
 export type LogoPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 export type RenderStage = 'idle' | 'scenes' | 'concat' | 'final';
+export type VideoFormat = 'landscape' | 'portrait';
 
 const convertSRTtoASS = (srtText: string, style: SubtitleStyle): string => {
   const { fontFamily, fontSize, fontColor, shadowColor } = style;
@@ -188,7 +189,8 @@ export const useFFmpeg = () => {
     zoomEffect: 'none' | 'in' | 'out' | 'alternate',
     addFade: boolean,
     fadeInDuration: number,
-    fadeOutDuration: number
+    fadeOutDuration: number,
+    videoFormat: VideoFormat
   ): Promise<string | null> => {
     addDebugLog(`🎬 Iniciando renderização de vídeo com ${scenes.length} cenas...`);
     if (!isLoaded) {
@@ -206,8 +208,11 @@ export const useFFmpeg = () => {
     renderStageRef.current = { stage: 'idle', totalScenes: scenes.length, currentScene: 0 };
     updateProgress(0, 'idle');
 
-    const resolution = quality === 'fullhd' ? { width: 1920, height: 1080 } : { width: 1280, height: 720 };
-    addDebugLog(`📹 Qualidade selecionada: ${quality.toUpperCase()} (${resolution.width}x${resolution.height})`);
+    const isPortrait = videoFormat === 'portrait';
+    const resolution = quality === 'fullhd' 
+        ? { width: isPortrait ? 1080 : 1920, height: isPortrait ? 1920 : 1080 } 
+        : { width: isPortrait ? 720 : 1280, height: isPortrait ? 1280 : 720 };
+    addDebugLog(`📹 Qualidade selecionada: ${quality.toUpperCase()} (${resolution.width}x${resolution.height}) - Formato: ${videoFormat}`);
 
     try {
       // --- PASS 1: Create individual scene clips ---

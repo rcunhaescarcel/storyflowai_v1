@@ -3,9 +3,10 @@ import { ArrowDown, ArrowUp, Trash2, Sparkles, ImagePlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Scene } from "@/hooks/useFFmpeg";
+import { Scene, VideoFormat } from "@/hooks/useFFmpeg";
 import { NarrationGenerator } from "./NarrationGenerator";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface SceneCardProps {
   scene: Scene;
@@ -18,6 +19,7 @@ interface SceneCardProps {
   onNarrationGenerated: (sceneId: string, file: File, dataUrl: string) => void;
   onEditImage: (scene: Scene) => void;
   addDebugLog: (message: string) => void;
+  videoFormat: VideoFormat;
 }
 
 const SceneCardComponent = ({
@@ -31,6 +33,7 @@ const SceneCardComponent = ({
   onNarrationGenerated,
   onEditImage,
   addDebugLog,
+  videoFormat,
 }: SceneCardProps) => {
   return (
     <Card key={scene.id} className="bg-background">
@@ -89,7 +92,10 @@ const SceneCardComponent = ({
           </div>
           <div className="w-1/3 max-w-[250px] flex-shrink-0">
             <div 
-              className="relative aspect-video w-full bg-muted/50 rounded-lg overflow-hidden group border cursor-pointer"
+              className={cn(
+                "relative w-full bg-muted/50 rounded-lg overflow-hidden group border cursor-pointer",
+                videoFormat === 'landscape' ? 'aspect-video' : 'aspect-[9/16]'
+              )}
               onClick={() => onEditImage(scene)}
             >
               {!scene.imagePreview ? (

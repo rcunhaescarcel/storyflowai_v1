@@ -54,6 +54,10 @@ export type Database = {
           created_at: string
           updated_at: string
           style: string | null
+          thumbnail_url: string | null
+          scene_count: number | null
+          is_featured: boolean | null
+          format: string | null
         }
         Insert: {
           id?: string
@@ -69,6 +73,10 @@ export type Database = {
           created_at?: string
           updated_at?: string
           style?: string | null
+          thumbnail_url?: string | null
+          scene_count?: number | null
+          is_featured?: boolean | null
+          format?: string | null
         }
         Update: {
           id?: string
@@ -84,6 +92,10 @@ export type Database = {
           created_at?: string
           updated_at?: string
           style?: string | null
+          thumbnail_url?: string | null
+          scene_count?: number | null
+          is_featured?: boolean | null
+          format?: string | null
         }
         Relationships: [
           {

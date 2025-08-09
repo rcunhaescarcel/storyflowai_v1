@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/contexts/SessionContext';
-import { Scene } from '@/hooks/useFFmpeg';
+import { Scene, VideoFormat } from '@/hooks/useFFmpeg';
 import { SceneData, VideoProject } from '@/types/video';
 import { urlToFile } from '@/lib/imageUtils';
 
@@ -39,7 +39,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
     return sceneDataForDb;
   };
 
-  const saveProject = async (scenesToSave: Scene[], projectTitle: string, projectDescription: string, projectStyle?: string): Promise<VideoProject | null> => {
+  const saveProject = async (scenesToSave: Scene[], projectTitle: string, projectDescription: string, projectStyle?: string, videoFormat: VideoFormat = 'landscape'): Promise<VideoProject | null> => {
     if (!session) {
       toast.error("Sessão não encontrada. Não foi possível salvar o projeto.");
       return null;
@@ -56,7 +56,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       const sceneDataForDb = await uploadSceneAssets(scenesToSave, projectFolder);
       const thumbnailUrl = sceneDataForDb.length > 0 ? sceneDataForDb[0].image_url : null;
 
-      const projectToInsert: Omit<VideoProject, 'user_id' | 'created_at' | 'updated_at'> & { user_id: string } = {
+      const projectToInsert: Omit<VideoProject, 'user_id' | 'created_at' | 'updated_at' | 'is_featured'> & { user_id: string } = {
         id: projectId,
         user_id: session.user.id,
         title: projectTitle,
@@ -70,6 +70,7 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
         thumbnail_url: thumbnailUrl,
         scene_count: scenesToSave.length,
         final_video_url: null,
+        format: videoFormat,
       };
 
       addDebugLog('[DB] Inserindo registro do projeto no banco de dados...');

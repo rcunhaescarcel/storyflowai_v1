@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import { Scene, useFFmpeg } from "@/hooks/useFFmpeg";
+import { Scene, useFFmpeg, VideoFormat } from "@/hooks/useFFmpeg";
 import { ImageGenerationModal } from "@/components/editor/ImageGenerationModal";
 import { StoryPromptForm } from "@/components/editor/StoryPromptForm";
 import { SceneCard } from "@/components/editor/SceneCard";
@@ -100,11 +100,13 @@ const Editor = () => {
   const [currentProject, setCurrentProject] = useState<VideoProject | null>(null);
   const [characterImage, setCharacterImage] = useState<File | null>(null);
   const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
+  const [videoFormat, setVideoFormat] = useState<VideoFormat>('landscape');
 
   const { isProjectLoading } = useProjectLoader({
-    onLoad: (project: VideoProject, loadedScenes: Scene[]) => {
+    onLoad: (project: VideoProject, loadedScenes: Scene[], format: VideoFormat) => {
       setScenes(loadedScenes);
       setCurrentProject(project);
+      setVideoFormat(format);
     },
     addDebugLog
   });
@@ -127,6 +129,7 @@ const Editor = () => {
       setLogoPreview(null);
       setCharacterImage(null);
       setCharacterImagePreview(null);
+      setVideoFormat('landscape');
       clearLogs();
       addDebugLog("[Editor] Estado do editor resetado para o modo de criação.");
     }
@@ -173,7 +176,8 @@ const Editor = () => {
         zoomEffect,
         addFade,
         0.5,
-        0.5
+        0.5,
+        videoFormat
       );
       addDebugLog(`[Editor] Renderização FFmpeg concluída. URL temporária (blob): ${result}`);
 
@@ -284,11 +288,14 @@ const Editor = () => {
     });
   };
 
-  const handleStoryGenerated = useCallback(async (newScenes: Scene[], generatedTitle: string, characterFile?: File, characterPreview?: string, projectPrompt?: string, projectStyle?: string) => {
+  const handleStoryGenerated = useCallback(async (newScenes: Scene[], generatedTitle: string, characterFile?: File, characterPreview?: string, projectPrompt?: string, projectStyle?: string, format?: VideoFormat) => {
     setScenes(newScenes);
     if (characterFile && characterPreview) {
       setCharacterImage(characterFile);
       setCharacterImagePreview(characterPreview);
+    }
+    if (format) {
+      setVideoFormat(format);
     }
     addDebugLog(`[Editor] História gerada com ${newScenes.length} cenas.`);
     toast.success("Cenas Criadas!", {
@@ -296,7 +303,7 @@ const Editor = () => {
     });
   
     if (projectPrompt) {
-      const newProject = await saveProject(newScenes, generatedTitle, projectPrompt, projectStyle);
+      const newProject = await saveProject(newScenes, generatedTitle, projectPrompt, projectStyle, format);
       if (newProject) {
         setCurrentProject(newProject);
       }
@@ -332,6 +339,8 @@ const Editor = () => {
             <StoryPromptForm 
               onStoryGenerated={handleStoryGenerated}
               addDebugLog={addDebugLog}
+              videoFormat={videoFormat}
+              onVideoFormatChange={setVideoFormat}
             />
           </div>
         ) : showRenderProgress ? (
@@ -365,6 +374,7 @@ const Editor = () => {
                     onNarrationGenerated={handleNarrationUpload}
                     onEditImage={setEditingImageScene}
                     addDebugLog={addDebugLog}
+                    videoFormat={videoFormat}
                   />
                 ))}
                 <div className="text-center pt-2">
@@ -416,6 +426,7 @@ const Editor = () => {
         characterImage={characterImage}
         characterImagePreview={characterImagePreview}
         addDebugLog={addDebugLog}
+        videoFormat={videoFormat}
       />
 
       <RenderModal

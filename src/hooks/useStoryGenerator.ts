@@ -9,7 +9,7 @@ import { blobToDataURL } from '@/lib/imageUtils';
 import { Profile } from '@/contexts/SessionContext';
 
 interface UseStoryGeneratorProps {
-  onStoryGenerated: (scenes: Scene[], title: string, characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
+  onStoryGenerated: (scenes: Scene[], title: string, characterFile?: File, characterPreview?: string, prompt?: string, style?: string, videoFormat?: 'landscape' | 'portrait') => void;
   addDebugLog: (message: string) => void;
 }
 
@@ -20,6 +20,7 @@ interface GenerateStoryOptions {
   selectedStyle: string;
   characterImage: File | null;
   characterImagePreview: string | null;
+  videoFormat: 'landscape' | 'portrait';
 }
 
 export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGeneratorProps) => {
@@ -29,7 +30,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
   const [progress, setProgress] = useState(0);
 
   const generateStory = async (options: GenerateStoryOptions) => {
-    const { prompt, duration, selectedVoice, selectedStyle, characterImage, characterImagePreview } = options;
+    const { prompt, duration, selectedVoice, selectedStyle, characterImage, characterImagePreview, videoFormat } = options;
 
     if (!prompt.trim()) {
       toast.error("Por favor, insira um tema para a história.");
@@ -154,6 +155,10 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       const progressPerImage = imageGenerationProgress / totalScenes;
       const imageResults: { imageFile: File, imagePreview: string }[] = [];
 
+      const isPortrait = videoFormat === 'portrait';
+      const width = isPortrait ? 1080 : 1920;
+      const height = isPortrait ? 1920 : 1080;
+
       for (let i = 0; i < totalScenes; i++) {
         const sceneData = scenesData[i];
         const baseProgress = 15 + (i * progressPerImage);
@@ -164,12 +169,12 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
 
         const encodedImagePrompt = encodeURIComponent(imagePromptForApi);
         let imageModel = 'flux';
-        let imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1920&height=1080&model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
+        let imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=${width}&height=${height}&model=${imageModel}&token=${apiToken}&referrer=${referrer}&nologo=true`;
 
         if (characterPublicUrl) {
           imageModel = 'kontext';
           const encodedImageURL = encodeURIComponent(characterPublicUrl);
-          imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1920&height=1080&model=${imageModel}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}&nologo=true`;
+          imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=${width}&height=${height}&model=${imageModel}&image=${encodedImageURL}&token=${apiToken}&referrer=${referrer}&nologo=true`;
         }
 
         const imageResponse = await fetchWithRetry(imageUrl, { addDebugLog, apiName: 'Imagem IA' });
@@ -244,7 +249,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       }
 
       setProgress(100);
-      onStoryGenerated(newScenes, storyTitle, characterImage, characterImagePreview, prompt, styleInfo.label);
+      onStoryGenerated(newScenes, storyTitle, characterImage, characterImagePreview, prompt, styleInfo.label, videoFormat);
 
     } catch (error) {
       console.error("STORY GENERATION FAILED", error);

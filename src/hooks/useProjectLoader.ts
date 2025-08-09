@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Scene } from '@/hooks/useFFmpeg';
+import { Scene, VideoFormat } from '@/hooks/useFFmpeg';
 import { VideoProject, SceneData } from '@/types/video';
 
 interface UseProjectLoaderProps {
-  onLoad: (project: VideoProject, scenes: Scene[]) => void;
+  onLoad: (project: VideoProject, scenes: Scene[], format: VideoFormat) => void;
   addDebugLog: (message: string) => void;
 }
 
@@ -23,7 +23,7 @@ export const useProjectLoader = ({ onLoad, addDebugLog }: UseProjectLoaderProps)
 
     if (!project.scenes) {
       addDebugLog(`[Editor] Projeto "${project.title}" não possui cenas para carregar.`);
-      onLoad(project, []);
+      onLoad(project, [], project.format || 'landscape');
       setIsLoading(false);
       return;
     }
@@ -44,7 +44,7 @@ export const useProjectLoader = ({ onLoad, addDebugLog }: UseProjectLoaderProps)
         };
       });
 
-      onLoad(project, newScenes);
+      onLoad(project, newScenes, project.format || 'landscape');
       toast.success("Projeto carregado!", { description: "Você pode começar a editar." });
       addDebugLog(`[Editor] ✅ Metadados do projeto "${project.title}" carregados com ${newScenes.length} cenas.`);
     } catch (error) {

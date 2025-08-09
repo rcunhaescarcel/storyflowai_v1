@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
-import { Scene } from '@/hooks/useFFmpeg';
+import { Scene, VideoFormat } from '@/hooks/useFFmpeg';
 
 interface ImageGenerationModalProps {
   scene: Scene | null;
@@ -17,9 +17,10 @@ interface ImageGenerationModalProps {
   characterImage?: File | null;
   characterImagePreview?: string | null;
   addDebugLog: (message: string) => void;
+  videoFormat: VideoFormat;
 }
 
-export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImageRemove, characterImage, characterImagePreview, addDebugLog }: ImageGenerationModalProps) => {
+export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImageRemove, characterImage, characterImagePreview, addDebugLog, videoFormat }: ImageGenerationModalProps) => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [useCharacter, setUseCharacter] = useState(true);
@@ -42,8 +43,9 @@ export const ImageGenerationModal = ({ scene, onClose, onImageGenerated, onImage
     let targetUrl = '';
     const apiToken = "76b4jfL5SsXI48nS";
     const referrer = "https://storyflow.app/";
-    const width = 1920;
-    const height = 1080;
+    const isPortrait = videoFormat === 'portrait';
+    const width = isPortrait ? 1080 : 1920;
+    const height = isPortrait ? 1920 : 1080;
 
     try {
       const finalPrompt = (characterImage && useCharacter)

@@ -24,4 +24,6 @@ export interface VideoProject {
   style?: string;
   thumbnail_url?: string | null;
   scene_count?: number | null;
+  is_featured?: boolean;
+  format: 'landscape' | 'portrait';
 }

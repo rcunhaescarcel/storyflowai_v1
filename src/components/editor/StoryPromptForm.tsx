@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Sparkles, Clock, Mic, UserSquare, Trash2, Palette } from 'lucide-react';
+import { Loader2, Sparkles, Clock, Mic, UserSquare, Trash2, Palette, RectangleHorizontal, RectangleVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { Scene } from '@/hooks/useFFmpeg';
 import { useSession } from '@/contexts/SessionContext';
@@ -10,13 +10,16 @@ import { storyStyles, openAIVoices } from '@/lib/constants';
 import { CharacterModal } from './CharacterModal';
 import { useStoryGenerator } from '@/hooks/useStoryGenerator';
 import { StoryGenerationStatus } from './StoryGenerationStatus';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface StoryPromptFormProps {
-  onStoryGenerated: (scenes: Scene[], title: string, characterFile?: File, characterPreview?: string, prompt?: string, style?: string) => void;
+  onStoryGenerated: (scenes: Scene[], title: string, characterFile?: File, characterPreview?: string, prompt?: string, style?: string, videoFormat?: 'landscape' | 'portrait') => void;
   addDebugLog: (message: string) => void;
+  videoFormat: 'landscape' | 'portrait';
+  onVideoFormatChange: (format: 'landscape' | 'portrait') => void;
 }
 
-export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFormProps) => {
+export const StoryPromptForm = ({ onStoryGenerated, addDebugLog, videoFormat, onVideoFormatChange }: StoryPromptFormProps) => {
   const { profile, isLoading: isSessionLoading } = useSession();
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState('30');
@@ -53,6 +56,7 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
       selectedStyle,
       characterImage,
       characterImagePreview,
+      videoFormat,
     });
   };
 
@@ -160,6 +164,23 @@ export const StoryPromptForm = ({ onStoryGenerated, addDebugLog }: StoryPromptFo
               <Button variant="ghost" size="sm" className="h-9 px-3 text-muted-foreground" onClick={() => setIsCharacterModalOpen(true)} disabled={isLoading || isSessionLoading}>
                 <UserSquare className="w-4 h-4 mr-2" /> Personagem
               </Button>
+
+              <ToggleGroup
+                type="single"
+                value={videoFormat}
+                onValueChange={(value) => {
+                  if (value) onVideoFormatChange(value as 'landscape' | 'portrait');
+                }}
+                className="h-9 border-none bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:ring-0 focus:ring-offset-0 gap-1"
+                disabled={isLoading || isSessionLoading}
+              >
+                <ToggleGroupItem value="landscape" aria-label="Paisagem" className="rounded-md data-[state=on]:bg-background data-[state=on]:text-foreground">
+                  <RectangleHorizontal className="w-4 h-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="portrait" aria-label="Retrato" className="rounded-md data-[state=on]:bg-background data-[state=on]:text-foreground">
+                  <RectangleVertical className="w-4 h-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
             <Button onClick={handleGenerateStory} disabled={!prompt.trim() || isLoading || isSessionLoading}>
               <Sparkles className="w-4 h-4 mr-2" />
