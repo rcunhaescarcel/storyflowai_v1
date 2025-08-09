@@ -17,7 +17,6 @@ serve(async (req) => {
       throw new Error("Missing 'text' or 'voice' in request body.");
     }
 
-    // Sanitize the text to remove double quotes, which can cause issues with the OpenAI API
     const sanitizedText = text.replace(/"/g, '');
 
     const openAIApiKey = Deno.env.get("ChatGPT_ vozes");
@@ -33,7 +32,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "tts-1",
-        input: sanitizedText, // Use the sanitized text
+        input: sanitizedText,
         voice: voice,
       }),
     });
@@ -41,10 +40,11 @@ serve(async (req) => {
     if (!openAIResponse.ok) {
       const errorBody = await openAIResponse.text();
       console.error("OpenAI API Error:", errorBody);
-      // Padroniza o erro para ser sempre um JSON
-      throw new Error(`OpenAI API error: ${errorBody}`);
+      // Throw an error that will be caught and returned as a JSON error object
+      throw new Error(`OpenAI API Error (${openAIResponse.status}): ${errorBody}`);
     }
 
+    // On success, return the audio blob
     const audioBlob = await openAIResponse.blob();
     return new Response(audioBlob, {
       headers: { ...corsHeaders, 'Content-Type': 'audio/mpeg' },
@@ -53,9 +53,14 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Edge Function Error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    // On failure, return a JSON error object with a 200 status
+    // to bypass the Supabase client's generic error handling.
+    return new Response(JSON.stringify({ 
+      error: "An error occurred in the edge function.",
+      details: error.message 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
+      status: 200, // IMPORTANT: Always return 200
     });
   }
 })

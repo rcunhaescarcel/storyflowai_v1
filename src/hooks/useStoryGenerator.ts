@@ -191,24 +191,25 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         
         addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
 
-        const { data: audioBlob, error: audioError } = await supabase.functions.invoke('generate-emotional-voice', {
+        const { data: responseBlob, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
           body: {
             text: sceneData.narration,
             voice: selectedVoice,
           },
         });
 
-        if (audioError) {
-          let detailedMessage = audioError.message;
-          if ((audioError as any).context && (audioError as any).context.error) {
-            detailedMessage = (audioError as any).context.error;
-          }
-          throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${detailedMessage}`);
+        if (invokeError) {
+          throw new Error(`Falha na comunicação com a Edge Function: ${invokeError.message}`);
         }
 
-        const audioFile = new File([audioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
+        if (responseBlob.type === 'application/json') {
+          const errorData = JSON.parse(await responseBlob.text());
+          throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${errorData.details || errorData.error}`);
+        }
+
+        const audioFile = new File([responseBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
         const audioDuration = await getAudioDuration(audioFile);
-        const audioDataUrl = await blobToDataURL(audioBlob);
+        const audioDataUrl = await blobToDataURL(responseBlob);
 
         audioResults.push({ audioFile, audioDataUrl, audioDuration });
         setProgress(Math.round(baseProgress + progressPerAudio));

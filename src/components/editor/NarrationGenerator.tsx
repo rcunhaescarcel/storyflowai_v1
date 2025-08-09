@@ -44,24 +44,25 @@ export const NarrationGenerator = ({ narrationText, onAudioGenerated, addDebugLo
       const selectedVoice = profile?.default_voice || 'nova';
       addDebugLog(`[Narração IA] Usando a voz: ${selectedVoice}`);
 
-      const { data: audioBlob, error: audioError } = await supabase.functions.invoke('generate-emotional-voice', {
+      const { data: responseBlob, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
         body: {
           text: narrationText,
           voice: selectedVoice,
         },
       });
 
-      if (audioError) {
-        let detailedMessage = audioError.message;
-        if ((audioError as any).context && (audioError as any).context.error) {
-          detailedMessage = (audioError as any).context.error;
-        }
-        throw new Error(`A geração de áudio falhou: ${detailedMessage}`);
+      if (invokeError) {
+        throw new Error(`Falha na comunicação com a Edge Function: ${invokeError.message}`);
+      }
+
+      if (responseBlob.type === 'application/json') {
+        const errorData = JSON.parse(await responseBlob.text());
+        throw new Error(`A geração de áudio falhou: ${errorData.details || errorData.error}`);
       }
 
       const fileName = `narration_${selectedVoice}.mp3`;
-      const file = new File([audioBlob], fileName, { type: 'audio/mp3' });
-      const dataUrl = await blobToDataURL(audioBlob);
+      const file = new File([responseBlob], fileName, { type: 'audio/mp3' });
+      const dataUrl = await blobToDataURL(responseBlob);
 
       onAudioGenerated(file, dataUrl);
       addDebugLog(`[Narração IA] ✅ Áudio gerado e carregado com sucesso!`);
