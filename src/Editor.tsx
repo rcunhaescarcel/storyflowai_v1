@@ -174,12 +174,22 @@ const Editor = () => {
         0.5,
         0.5
       );
+      addDebugLog(`[Editor] Renderização FFmpeg concluída. URL temporária (blob): ${result}`);
+
       if (result) {
         toast.success("Sucesso!", { description: "Vídeo renderizado com sucesso" });
         if (currentProject.id) {
+          addDebugLog(`[Editor] Salvando vídeo na nuvem para o projeto ${currentProject.id}...`);
           const finalUrl = await saveRenderedVideo(currentProject.id, result);
+          addDebugLog(`[Editor] URL permanente recebida: ${finalUrl}`);
           if (finalUrl) {
-            setCurrentProject(prev => prev ? { ...prev, final_video_url: finalUrl } : null);
+            addDebugLog(`[Editor] Atualizando estado do projeto com a nova URL...`);
+            setCurrentProject(prev => {
+              addDebugLog('[Editor] Estado atualizado.');
+              return prev ? { ...prev, final_video_url: finalUrl } : null;
+            });
+          } else {
+            addDebugLog('[Editor] ❌ URL final não recebida. O player não será atualizado.');
           }
         }
       } else if (!isRendering) { // Only show error if not cancelled

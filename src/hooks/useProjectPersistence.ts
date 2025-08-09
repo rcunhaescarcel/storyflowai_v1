@@ -110,16 +110,19 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
   };
 
   const saveRenderedVideo = async (projectId: string, videoBlobUrl: string): Promise<string | null> => {
+    addDebugLog(`[Persistence] Iniciando saveRenderedVideo para o projeto ${projectId}`);
     if (!session) {
       toast.error("Sessão não encontrada. Não foi possível salvar o vídeo.");
+      addDebugLog("[Persistence] ❌ Erro: Sessão do usuário não encontrada.");
       return null;
     }
     const savingToast = toast.loading("Salvando vídeo na nuvem...");
     try {
       const videoFile = await urlToFile(videoBlobUrl, `final_video_${projectId}.mp4`, 'video/mp4');
+      addDebugLog(`[Persistence] Blob convertido para arquivo: ${videoFile.name}, tamanho: ${videoFile.size} bytes`);
       const filePath = `${session.user.id}/${projectId}/final_video.mp4`;
 
-      addDebugLog(`[Storage] Enviando vídeo para: ${filePath}`);
+      addDebugLog(`[Persistence] Enviando vídeo para: ${filePath}`);
       const { error: uploadError } = await supabase.storage
         .from('final_videos')
         .upload(filePath, videoFile, { upsert: true });
@@ -127,9 +130,8 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       if (uploadError) {
         throw new Error(`Falha no upload do vídeo: ${uploadError.message}`);
       }
+      addDebugLog(`[Persistence] Upload para Supabase Storage concluído com sucesso.`);
       
-      addDebugLog(`[Storage] ✅ Vídeo salvo. Obtendo URL pública...`);
-
       const { data } = supabase.storage
         .from('final_videos')
         .getPublicUrl(filePath);
@@ -139,9 +141,9 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
       }
 
       const publicUrl = data.publicUrl;
-      addDebugLog(`[Storage] ✅ URL pública obtida com sucesso.`);
+      addDebugLog(`[Persistence] URL pública obtida: ${publicUrl}`);
 
-      addDebugLog(`[DB] Atualizando projeto ${projectId} com a URL do vídeo...`);
+      addDebugLog(`[Persistence] Atualizando projeto ${projectId} com a URL do vídeo...`);
       const { error: dbError } = await supabase
         .from('video_projects')
         .update({ final_video_url: publicUrl, status: 'completed', updated_at: new Date().toISOString() })
@@ -151,14 +153,14 @@ export const useProjectPersistence = (addDebugLog: (message: string) => void) =>
         throw new Error(`Falha ao atualizar o projeto no banco de dados: ${dbError.message}`);
       }
       
-      addDebugLog(`[DB] ✅ Registro do projeto atualizado com sucesso.`);
-
+      addDebugLog(`[Persistence] Registro do projeto no DB atualizado com sucesso.`);
       await queryClient.invalidateQueries({ queryKey: ['video_projects'] });
       toast.success("Vídeo salvo na nuvem!", { id: savingToast });
+      addDebugLog(`[Persistence] Retornando URL final: ${publicUrl}`);
       return publicUrl;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
-      addDebugLog(`[Storage] ❌ Falha ao salvar vídeo: ${errorMessage}`);
+      addDebugLog(`[Persistence] ❌ Falha ao salvar vídeo: ${errorMessage}`);
       toast.error("Falha ao salvar o vídeo", { id: savingToast, description: errorMessage });
       return null;
     }
