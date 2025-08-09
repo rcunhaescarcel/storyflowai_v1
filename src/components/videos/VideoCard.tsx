@@ -46,6 +46,7 @@ export const VideoCard = ({ project, onEdit, onDownload, onDelete, isEditing, is
               src={project.final_video_url!}
               controls
               autoPlay
+              crossOrigin="anonymous"
               className="w-full h-full object-contain bg-black"
               onEnded={() => setIsPlaying(false)}
             />

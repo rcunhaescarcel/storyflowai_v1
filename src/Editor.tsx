@@ -380,6 +380,7 @@ const Editor = () => {
                     key={finalVideoUrl}
                     src={finalVideoUrl}
                     controls
+                    crossOrigin="anonymous"
                     className="w-full rounded-lg shadow-lg aspect-video bg-black"
                   />
                 </div>
