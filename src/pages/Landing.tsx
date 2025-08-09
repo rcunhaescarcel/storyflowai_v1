@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Play, ArrowRight, UploadCloud, Palette, FileText, Video } from "lucide-react";
@@ -7,9 +10,34 @@ import { StyleCard } from "@/components/landing/StyleCard";
 import { PricingCard } from "@/components/landing/PricingCard";
 import { TestimonialCard } from "@/components/landing/TestimonialCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { VideoPlayerModal } from "@/components/landing/VideoPlayerModal";
+import { VideoPreviewSkeleton } from "@/components/landing/VideoPreviewSkeleton";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
+
+  const fetchFeaturedProjects = async () => {
+    const { data, error } = await supabase
+      .from('video_projects')
+      .select('id, title, final_video_url, thumbnail_url')
+      .eq('is_featured', true)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    if (error) {
+      console.error("Error fetching featured projects:", error);
+      throw new Error(error.message);
+    }
+    return data;
+  };
+
+  const { data: featuredProjects, isLoading } = useQuery({
+    queryKey: ['featuredProjects'],
+    queryFn: fetchFeaturedProjects,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   const howItWorksSteps = [
     {
@@ -177,16 +205,26 @@ const Landing = () => {
               </span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="relative rounded-lg overflow-hidden group cursor-pointer aspect-video bg-muted/50">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Video className="w-12 h-12 text-muted-foreground/50" />
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, index) => (
+                  <VideoPreviewSkeleton key={index} />
+                ))
+              ) : featuredProjects && featuredProjects.length > 0 ? (
+                featuredProjects.map((project) => (
+                  <div 
+                    key={project.id} 
+                    className="relative rounded-lg overflow-hidden group cursor-pointer aspect-video bg-muted/50"
+                    onClick={() => setSelectedVideoUrl(project.final_video_url)}
+                  >
+                    <img src={project.thumbnail_url || ''} alt={project.title || ''} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Play className="w-12 h-12 text-white fill-white" />
+                    </div>
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Play className="w-12 h-12 text-white fill-white" />
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="col-span-full text-center text-muted-foreground">Nenhum vídeo em destaque ainda. Volte em breve!</p>
+              )}
             </div>
           </div>
         </section>
@@ -264,6 +302,10 @@ const Landing = () => {
         </section>
       </main>
       <Footer />
+      <VideoPlayerModal 
+        videoUrl={selectedVideoUrl}
+        onClose={() => setSelectedVideoUrl(null)}
+      />
     </div>
   );
 };
