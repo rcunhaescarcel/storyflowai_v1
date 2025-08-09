@@ -72,7 +72,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       const languageKey = profile.default_language || 'pt-br';
       const languageName = languages[languageKey as keyof typeof languages];
       
-      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um único objeto JSON válido com EXATAMENTE duas chaves: "title" e "scenes". A chave "scenes" deve ser um array de objetos, onde cada objeto representa uma cena e deve ter EXATAMENTE TRÊS chaves: "narration", "image_prompt", e "emotion". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". A chave "emotion" deve conter uma frase curta em INGLÊS descrevendo o tom da narração (ex: "Calm and inspiring tone", "Excited and energetic voice"). Exemplo: {"title": "As Aventuras do Robô Perdido", "scenes": [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}", "emotion": "A gentle and magical tone"}]}`;
+      const storyPrompt = `Crie um roteiro para um vídeo sobre "${prompt}". O vídeo deve ter aproximadamente ${numParagraphs} cenas. A narração deve ser no idioma: ${languageName}. Retorne a resposta como um único objeto JSON válido com EXATAMENTE duas chaves: "title" e "scenes". A chave "scenes" deve ser um array de objetos, onde cada objeto representa uma cena e deve ter EXATAMENTE duas chaves: "narration" e "image_prompt". A chave "narration" deve conter APENAS o texto da narração em ${languageName}. A chave "image_prompt" deve conter APENAS o prompt para a imagem em inglês, terminando com "${stylePrompt}". Não inclua o prompt da imagem na narração. Exemplo: {"title": "As Aventuras do Robô Perdido", "scenes": [{"narration": "Era uma vez...", "image_prompt": "A magical castle${stylePrompt}"}]}`;
 
       const encodedPrompt = encodeURIComponent(storyPrompt);
       const apiToken = "76b4jfL5SsXI48nS";
@@ -92,7 +92,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       addDebugLog(`[História IA] ✅ Texto recebido da IA.`);
       setProgress(10);
 
-      let storyData: { title: string; scenes: { narration: string; image_prompt: string; emotion: string; }[] };
+      let storyData: { title: string; scenes: { narration: string; image_prompt: string; }[] };
       try {
         const jsonStart = storyText.indexOf('{');
         const jsonEnd = storyText.lastIndexOf('}');
@@ -101,7 +101,7 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         }
         let jsonString = storyText.substring(jsonStart, jsonEnd + 1);
         
-        jsonString = jsonString.replace(/"\s*("image_prompt"|"emotion")/g, '",\n$1');
+        jsonString = jsonString.replace(/"\s*("image_prompt")/g, '",\n$1');
 
         storyData = JSON.parse(jsonString);
       } catch (e) {
@@ -190,12 +190,11 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         const baseProgress = 15 + imageGenerationProgress + (i * progressPerAudio);
         setLoadingMessage(`Gerando narração ${i + 1}/${totalScenes}...`);
         
-        const narrationWithEmotion = `${sceneData.emotion}. ${sceneData.narration}`;
-        addDebugLog(`[Áudio IA] Gerando para o texto com emoção: "${narrationWithEmotion.slice(0, 50)}..."`);
+        addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
 
         const { data: audioBlob, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
           body: {
-            text: narrationWithEmotion,
+            text: sceneData.narration,
             voice: selectedVoice,
           },
         });
@@ -231,7 +230,6 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         newScenes.push({
           id: crypto.randomUUID(),
           narrationText: sceneData.narration,
-          emotion: sceneData.emotion,
           image: imageResult.imageFile,
           imagePreview: imageResult.imagePreview,
           imagePrompt: sceneData.image_prompt,
