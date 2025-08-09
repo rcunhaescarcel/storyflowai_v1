@@ -65,6 +65,7 @@ const Editor = () => {
     clearLogs, 
     addLog,
     startRender,
+    endRender,
     renderingProjectId
   } = useRender();
 
@@ -202,6 +203,8 @@ const Editor = () => {
       } else {
         toast.error("Erro na Renderização", { description: message });
       }
+    } finally {
+      endRender();
     }
   };
 

@@ -371,9 +371,8 @@ export const useFFmpeg = () => {
       }
     } finally {
       renderStageRef.current.stage = 'idle';
-      endRender();
     }
-  }, [ffmpeg, isLoaded, isFontLoaded, loadFFmpeg, addDebugLog, updateProgress, endRender]);
+  }, [ffmpeg, isLoaded, isFontLoaded, loadFFmpeg, addDebugLog, updateProgress]);
 
   useEffect(() => {
     if (!autoLoadAttempted && !isLoaded) {
