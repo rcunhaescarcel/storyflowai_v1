@@ -96,25 +96,20 @@ const Editor = () => {
     zoomEffect, setZoomEffect,
   } = useGlobalSettings();
 
-  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
-  const [projectTitle, setProjectTitle] = useState<string>('');
-  const [persistedVideoUrl, setPersistedVideoUrl] = useState<string | null>(null);
+  const [currentProject, setCurrentProject] = useState<VideoProject | null>(null);
   const [characterImage, setCharacterImage] = useState<File | null>(null);
   const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
 
   const { isProjectLoading } = useProjectLoader({
     onLoad: (project: VideoProject, loadedScenes: Scene[]) => {
       setScenes(loadedScenes);
-      setCurrentProjectId(project.id);
-      setProjectTitle(project.title);
-      setPersistedVideoUrl(project.final_video_url);
+      setCurrentProject(project);
     },
     addDebugLog
   });
 
   const { saveProject, updateProject, saveRenderedVideo } = useProjectPersistence(addDebugLog);
   
-  const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const [editingImageScene, setEditingImageScene] = useState<Scene | null>(null);
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
   const [isRenderModalOpen, setIsRenderModalOpen] = useState(false);
@@ -125,15 +120,12 @@ const Editor = () => {
     const state = location.state as { project?: VideoProject, resumeRender?: boolean } | null;
     if (!state?.project && !state?.resumeRender) {
       setScenes([]);
-      setCurrentProjectId(null);
-      setProjectTitle('');
+      setCurrentProject(null);
       setBackgroundMusic(null);
       setLogoFile(null);
       setLogoPreview(null);
       setCharacterImage(null);
       setCharacterImagePreview(null);
-      setLocalVideoUrl(null);
-      setPersistedVideoUrl(null);
       clearLogs();
       addDebugLog("[Editor] Estado do editor resetado para o modo de criação.");
     }
@@ -144,17 +136,17 @@ const Editor = () => {
       toast.error("Erro", { description: "Adicione pelo menos uma cena para renderizar" });
       return;
     }
-    if (scenes.some(scene => !scene.image)) {
+    if (scenes.some(scene => !scene.image && !scene.imagePreview)) {
       toast.warning("Aviso", { description: "Todas as cenas precisam de uma imagem para renderizar." });
       return;
     }
-    if (!currentProjectId) {
+    if (!currentProject?.id) {
       toast.error("Erro", { description: "ID do projeto não encontrado. Salve o projeto primeiro." });
       return;
     }
 
     setIsRenderModalOpen(false);
-    startRender(currentProjectId);
+    startRender(currentProject.id);
 
     let srtFileToRender: File | null = null;
     if (generateSubtitles) {
@@ -168,7 +160,6 @@ const Editor = () => {
     }
 
     try {
-      setLocalVideoUrl(null);
       const result = await renderVideo(
         scenes, 
         srtFileToRender, 
@@ -184,12 +175,11 @@ const Editor = () => {
         0.5
       );
       if (result) {
-        setLocalVideoUrl(result);
         toast.success("Sucesso!", { description: "Vídeo renderizado com sucesso" });
-        if (currentProjectId) {
-          const finalUrl = await saveRenderedVideo(currentProjectId, result);
+        if (currentProject.id) {
+          const finalUrl = await saveRenderedVideo(currentProject.id, result);
           if (finalUrl) {
-            setPersistedVideoUrl(finalUrl);
+            setCurrentProject(prev => prev ? { ...prev, final_video_url: finalUrl } : null);
           }
         }
       } else if (!isRendering) { // Only show error if not cancelled
@@ -207,7 +197,7 @@ const Editor = () => {
 
   const handleDownload = async (selection: DownloadSelection) => {
     setIsDownloading(true);
-    const finalVideoUrl = persistedVideoUrl || localVideoUrl;
+    const finalVideoUrl = currentProject?.final_video_url;
     const zip = new JSZip();
     let filesToZip = 0;
 
@@ -215,7 +205,7 @@ const Editor = () => {
       if (selection.video && finalVideoUrl) {
         const response = await fetch(finalVideoUrl);
         const blob = await response.blob();
-        zip.file(`${projectTitle || 'video'}.mp4`, blob);
+        zip.file(`${currentProject?.title || 'video'}.mp4`, blob);
         filesToZip++;
       }
 
@@ -224,7 +214,6 @@ const Editor = () => {
         for (let i = 0; i < scenes.length; i++) {
           if (scenes[i].image) {
             imagesFolder?.file(`image_${i + 1}.png`, scenes[i].image!);
-            filesToZip++;
           }
         }
       }
@@ -239,13 +228,13 @@ const Editor = () => {
 
       if (filesToZip > 1) {
         const content = await zip.generateAsync({ type: "blob" });
-        saveAs(content, `${projectTitle || 'projeto'}_assets.zip`);
+        saveAs(content, `${currentProject?.title || 'projeto'}_assets.zip`);
       } else if (filesToZip === 1) {
         // If only one thing was selected, download it directly
-        if (selection.video && finalVideoUrl) saveAs(finalVideoUrl, `${projectTitle || 'video'}.mp4`);
+        if (selection.video && finalVideoUrl) saveAs(finalVideoUrl, `${currentProject?.title || 'video'}.mp4`);
         if (selection.images) {
           const content = await zip.generateAsync({ type: "blob" });
-          saveAs(content, `${projectTitle || 'projeto'}_images.zip`);
+          saveAs(content, `${currentProject?.title || 'projeto'}_images.zip`);
         }
         if (selection.audio) {
           const fullAudio = await concatenateAudio(scenes);
@@ -296,16 +285,15 @@ const Editor = () => {
     if (projectPrompt) {
       const newProject = await saveProject(newScenes, generatedTitle, projectPrompt, projectStyle);
       if (newProject) {
-        setCurrentProjectId(newProject.id);
-        setProjectTitle(newProject.title);
+        setCurrentProject(newProject);
       }
     }
   }, [setScenes, setCharacterImage, setCharacterImagePreview, addDebugLog, saveProject]);
 
   const handleSaveTitle = (newTitle: string) => {
-    setProjectTitle(newTitle);
-    if (currentProjectId) {
-      updateProject(currentProjectId, { title: newTitle });
+    if (currentProject) {
+      setCurrentProject(prev => prev ? { ...prev, title: newTitle } : null);
+      updateProject(currentProject.id, { title: newTitle });
     }
   };
 
@@ -320,8 +308,8 @@ const Editor = () => {
     );
   }
 
-  const showRenderProgress = isRendering && renderingProjectId === currentProjectId;
-  const finalVideoUrl = persistedVideoUrl || localVideoUrl;
+  const showRenderProgress = isRendering && renderingProjectId === currentProject?.id;
+  const finalVideoUrl = currentProject?.final_video_url;
 
   return (
     <>
@@ -339,7 +327,7 @@ const Editor = () => {
           <div className="mt-8">
             <div className="flex items-center gap-4 mb-4">
               <Clapperboard className="w-8 h-8 text-primary" />
-              <EditableProjectTitle initialTitle={projectTitle} onSave={handleSaveTitle} />
+              <EditableProjectTitle initialTitle={currentProject?.title || 'Novo Projeto'} onSave={handleSaveTitle} />
             </div>
             <div className="mb-8">
               <ProjectActions 
@@ -450,7 +438,7 @@ const Editor = () => {
         onClose={() => setIsDownloadModalOpen(false)}
         onDownload={handleDownload}
         isDownloading={isDownloading || isRendering}
-        hasVideo={!!(localVideoUrl || persistedVideoUrl)}
+        hasVideo={!!finalVideoUrl}
         hasImages={scenes.some(s => s.image)}
         hasAudios={scenes.some(s => s.audio)}
       />
