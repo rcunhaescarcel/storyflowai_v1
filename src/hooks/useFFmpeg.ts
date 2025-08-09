@@ -348,7 +348,7 @@ export const useFFmpeg = () => {
         
         finalCmd.push('-filter_complex', filterComplexParts.join(';'));
         finalCmd.push('-map', '[v_out]', '-map', '[a_out]');
-        finalCmd.push('-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-c:a', 'aac', '-y', 'final_video.mp4');
+        finalCmd.push('-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-y', 'final_video.mp4');
       }
 
       addDebugLog(`🔧 Comando FFmpeg final: ${finalCmd.join(' ')}`);
