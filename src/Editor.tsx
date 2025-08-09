@@ -66,7 +66,8 @@ const Editor = () => {
     characterImagePreview, setCharacterImagePreview,
     videoFormat, setVideoFormat,
     isProjectLoading,
-    saveProject, updateProject, saveRenderedVideo
+    saveProject, updateProject, saveRenderedVideo,
+    isSavingToCloud
   } = useEditor();
 
   const addDebugLog = useCallback((message: string) => {
@@ -145,10 +146,7 @@ const Editor = () => {
       toast.success("Sucesso!", { description: "Vídeo renderizado com sucesso. Salvando na nuvem..." });
       
       if (currentProject.id) {
-        const finalUrl = await saveRenderedVideo(currentProject.id, result);
-        if (finalUrl) {
-          setCurrentProject(prev => prev ? { ...prev, final_video_url: finalUrl } : null);
-        }
+        await saveRenderedVideo(currentProject.id, result);
       }
     } else if (!isRendering) {
       toast.error("Erro", { description: "Falha ao renderizar o vídeo. O resultado da renderização estava vazio." });
@@ -283,7 +281,7 @@ const Editor = () => {
                 videoUrl={finalVideoUrl}
               />
             </div>
-            <div className={cn("grid gap-8", finalVideoUrl && "md:grid-cols-2")}>
+            <div className={cn("grid gap-8", (finalVideoUrl || isSavingToCloud) && "md:grid-cols-2")}>
               <div className="space-y-6">
                 {scenes.map((scene, index) => (
                   <SceneCard
@@ -308,15 +306,31 @@ const Editor = () => {
                   </Button>
                 </div>
               </div>
-              {finalVideoUrl && (
+              {(finalVideoUrl || isSavingToCloud) && (
                 <div className="sticky top-24 h-min">
-                  <video
-                    key={finalVideoUrl}
-                    src={finalVideoUrl}
-                    controls
-                    crossOrigin="anonymous"
-                    className="w-full rounded-lg shadow-lg aspect-video bg-black"
-                  />
+                  {isSavingToCloud ? (
+                    <div className={cn(
+                      "relative w-full bg-muted rounded-lg overflow-hidden group border",
+                      videoFormat === 'landscape' ? 'aspect-video' : 'aspect-[9/16]'
+                    )}>
+                      {currentProject?.thumbnail_url && (
+                          <img src={currentProject.thumbnail_url} alt="Miniatura do vídeo" className="w-full h-full object-cover" crossOrigin="anonymous" />
+                      )}
+                      <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white p-4 text-center">
+                          <Loader2 className="w-8 h-8 animate-spin mb-3" />
+                          <p className="font-semibold text-lg">Salvando na nuvem...</p>
+                          <p className="text-sm opacity-80">O player de vídeo aparecerá em breve.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <video
+                      key={finalVideoUrl}
+                      src={finalVideoUrl!}
+                      controls
+                      crossOrigin="anonymous"
+                      className="w-full rounded-lg shadow-lg aspect-video bg-black"
+                    />
+                  )}
                 </div>
               )}
             </div>

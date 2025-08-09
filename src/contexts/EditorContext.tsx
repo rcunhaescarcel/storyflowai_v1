@@ -58,7 +58,8 @@ interface EditorContextType {
   // Persistence
   saveProject: (scenesToSave: Scene[], projectTitle: string, projectDescription: string, projectStyle?: string, videoFormat?: "landscape" | "portrait") => Promise<VideoProject | null>;
   updateProject: (projectId: string, updates: Partial<VideoProject>) => Promise<void>;
-  saveRenderedVideo: (projectId: string, videoBlobUrl: string) => Promise<string | null>;
+  saveRenderedVideo: (projectId: string, videoBlobUrl: string) => Promise<void>;
+  isSavingToCloud: boolean;
 }
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
@@ -80,6 +81,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [characterImage, setCharacterImage] = useState<File | null>(null);
   const [characterImagePreview, setCharacterImagePreview] = useState<string | null>(null);
   const [videoFormat, setVideoFormat] = useState<VideoFormat>('landscape');
+  const [isSavingToCloud, setIsSavingToCloud] = useState(false);
 
   const { isProjectLoading } = useProjectLoader({
     onLoad: (project, loadedScenes, format) => {
@@ -92,7 +94,19 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
 
   const persistence = useProjectPersistence(addDebugLog);
 
-  const value = {
+  const saveRenderedVideo = async (projectId: string, videoBlobUrl: string) => {
+    setIsSavingToCloud(true);
+    try {
+      const finalUrl = await persistence.saveRenderedVideo(projectId, videoBlobUrl);
+      if (finalUrl) {
+        setCurrentProject(prev => prev ? { ...prev, final_video_url: finalUrl, status: 'completed' } : null);
+      }
+    } finally {
+      setIsSavingToCloud(false);
+    }
+  };
+
+  const value: EditorContextType = {
     scenes, setScenes, addNewScene, updateScene, deleteScene, moveSceneUp, moveSceneDown,
     handleImageGenerated, handleImageRemove, handleNarrationUpload,
     ...globalSettings,
@@ -102,6 +116,8 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
     videoFormat, setVideoFormat,
     isProjectLoading,
     ...persistence,
+    saveRenderedVideo,
+    isSavingToCloud,
   };
 
   return (
