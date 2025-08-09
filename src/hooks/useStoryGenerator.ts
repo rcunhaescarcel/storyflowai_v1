@@ -101,7 +101,6 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         }
         let jsonString = storyText.substring(jsonStart, jsonEnd + 1);
         
-        // Adiciona vírgulas faltando entre as propriedades da cena para corrigir o JSON malformado da IA
         jsonString = jsonString.replace(/"\s*("image_prompt")/g, '",\n$1');
 
         storyData = JSON.parse(jsonString);
@@ -193,44 +192,27 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
         
         addDebugLog(`[Áudio IA] Gerando para o texto: "${sceneData.narration.slice(0, 30)}..."`);
 
-        const isFirstAudio = i === 0;
-        const { data: responseData, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
+        const { data: audioBlob, error: invokeError } = await supabase.functions.invoke('generate-emotional-voice', {
           body: {
             text: sceneData.narration,
             voice: selectedVoice,
-            debug: isFirstAudio, // Ativa o modo de depuração apenas para a primeira cena
           },
         });
 
         if (invokeError) {
-          throw new Error(`Falha ao invocar a Edge Function para a cena ${i + 1}: ${invokeError.message}`);
+          addDebugLog(`[Áudio IA] ❌ Erro da Edge Function: ${JSON.stringify(invokeError)}`);
+          throw new Error(`Falha ao gerar áudio para a cena ${i + 1}: ${invokeError.message}`);
+        }
+        
+        if (!audioBlob || !(audioBlob instanceof Blob)) {
+            addDebugLog(`[Áudio IA] ❌ Resposta inesperada da Edge Function. Esperava um Blob, mas recebi: ${JSON.stringify(audioBlob)}`);
+            throw new Error(`Resposta inválida da API de áudio para a cena ${i + 1}.`);
         }
 
-        if (isFirstAudio && responseData.debug_logs) {
-          addDebugLog("[Áudio IA] --- INÍCIO DO RELATÓRIO DE DEPURAÇÃO DE ÁUDIO ---");
-          responseData.debug_logs.forEach((log: string) => addDebugLog(`[Áudio IA DEBUG] ${log}`));
-          addDebugLog("[Áudio IA] --- FIM DO RELATÓRIO DE DEPURAÇÃO DE ÁUDIO ---");
-          if (!responseData.success) {
-            throw new Error("O teste de depuração de áudio falhou. Verifique os logs para detalhes.");
-          }
-          // Se o debug foi bem-sucedido, precisamos chamar a função novamente sem o modo de depuração para obter o áudio real.
-          addDebugLog("[Áudio IA] Teste de depuração bem-sucedido. Gerando áudio real para a primeira cena...");
-          const { data: actualAudioBlob, error: actualAudioError } = await supabase.functions.invoke('generate-emotional-voice', {
-            body: { text: sceneData.narration, voice: selectedVoice },
-          });
-          if (actualAudioError) throw new Error(`Falha ao gerar áudio real para a cena 1: ${actualAudioError.message}`);
-          
-          const audioFile = new File([actualAudioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
-          const audioDuration = await getAudioDuration(audioFile);
-          const audioDataUrl = await blobToDataURL(actualAudioBlob);
-          audioResults.push({ audioFile, audioDataUrl, audioDuration });
-
-        } else {
-          const audioFile = new File([responseData], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
-          const audioDuration = await getAudioDuration(audioFile);
-          const audioDataUrl = await blobToDataURL(responseData);
-          audioResults.push({ audioFile, audioDataUrl, audioDuration });
-        }
+        const audioFile = new File([audioBlob], `narration_${i + 1}.mp3`, { type: 'audio/mp3' });
+        const audioDuration = await getAudioDuration(audioFile);
+        const audioDataUrl = await blobToDataURL(audioBlob);
+        audioResults.push({ audioFile, audioDataUrl, audioDuration });
 
         setProgress(Math.round(baseProgress + progressPerAudio));
       }
@@ -261,8 +243,10 @@ export const useStoryGenerator = ({ onStoryGenerated, addDebugLog }: UseStoryGen
       onStoryGenerated(newScenes, storyTitle, characterImage, characterImagePreview, prompt, styleInfo.label);
 
     } catch (error) {
+      console.error("STORY GENERATION FAILED", error);
       const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
       addDebugLog(`[História IA] ❌ Falha na geração: ${errorMessage}`);
+      addDebugLog(`[História IA] ❌ Detalhes do erro: ${JSON.stringify(error)}`);
       toast.error(`Falha ao gerar a história: ${errorMessage}`);
       
       addDebugLog(`[Coins] Erro na geração. Reembolsando 1 coin...`);
